@@ -1,0 +1,465 @@
+[{
+  "_id": {
+    "$binary": {
+      "base64": "yW5rdwoaCB8hfjNiODsykg==",
+      "subType": "03"
+    }
+  },
+  "leadId": {
+    "$binary": {
+      "base64": "Z2jqcXT/Bx/9UXxFfrMykg==",
+      "subType": "03"
+    }
+  },
+  "businessId": {
+    "$binary": {
+      "base64": "wm6oZ4D0Bx/qlIOyMtUBjA==",
+      "subType": "03"
+    }
+  },
+  "createdById": {
+    "$binary": {
+      "base64": "UmafdC6Y/x70KFEN+6HQmQ==",
+      "subType": "03"
+    }
+  },
+  "subject": "Chusdham agaraa vasthundho ledho mail",
+  "body": "sdssadfafdad ad asda sdas d sad ad sa sa das DAS DS Ad sd sd asD d D s D S dsa&#160;",
+  "createdByName": "anand chikkam",
+  "mailType": "SEND",
+  "toMails": [
+    "anand@tejsoft.com"
+  ],
+  "toCcMails": [],
+  "toBccMails": [],
+  "attachments": [
+    {
+      "name": "Screenshot 2025-08-12 at 5.17.05 PM.png",
+      "url": "https://d2z9497xp8xb12.cloudfront.net/prod-images/541883c1756118740223Screenshot 2025-08-12 at 5.17.05 PM.png",
+      "attachmentType": "IMAGE"
+    }
+  ],
+  "createdTimeStamp": {
+    "$date": "2025-08-25T10:45:45.281Z"
+  },
+  "updatedTimeStamp": {
+    "$date": "2025-08-25T10:44:55.491Z"
+  },
+  "_class": "com.lm.crm.leads.Mail.MailInfo"
+},
+{
+  "_id": {
+    "$binary": {
+      "base64": "kWzO20UACB/+VX/q7Asykg==",
+      "subType": "03"
+    }
+  },
+  "leadId": {
+    "$binary": {
+      "base64": "Z2jqcXT/Bx/9UXxFfrMykg==",
+      "subType": "03"
+    }
+  },
+  "businessId": {
+    "$binary": {
+      "base64": "wm6oZ4D0Bx/qlIOyMtUBjA==",
+      "subType": "03"
+    }
+  },
+  "createdById": {
+    "$binary": {
+      "base64": "UmafdC6Y/x70KFEN+6HQmQ==",
+      "subType": "03"
+    }
+  },
+  "subject": "I LOVE YOU ",
+  "body": "Hey testing <b><font size=\"7\"><u>Love</u></font></b> is reaching you are not",
+  "createdByName": "anand chikkam",
+  "mailType": "SEND",
+  "toMails": [
+    "chant@tejsoft.com",
+    "@anand@tejsoft.com"
+  ],
+  "toCcMails": [],
+  "toBccMails": [],
+  "attachments": [
+    {
+      "name": "Border.png",
+      "url": "https://d2z9497xp8xb12.cloudfront.net/prod-images/790224c1755941665218Border.png",
+      "attachmentType": "IMAGE"
+    }
+  ],
+  "createdTimeStamp": {
+    "$date": "2025-08-23T09:34:28.937Z"
+  },
+  "updatedTimeStamp": {
+    "$date": "2025-08-23T09:30:50.178Z"
+  },
+  "_class": "com.lm.crm.leads.Mail.MailInfo"
+},
+{
+  "_id": {
+    "$binary": {
+      "base64": "S2bmgOiCBB8ilHBobV+Wug==",
+      "subType": "03"
+    }
+  },
+  "leadId": {
+    "$binary": {
+      "base64": "AWrH0uGCBB+l+HerA4OWug==",
+      "subType": "03"
+    }
+  },
+  "businessId": {
+    "$binary": {
+      "base64": "J2LAh2FhAx/iCfHwWuM5kw==",
+      "subType": "03"
+    }
+  },
+  "createdById": {
+    "$binary": {
+      "base64": "ZmP00CbL7R7jYR/J2tudrQ==",
+      "subType": "03"
+    }
+  },
+  "subject": "You Are eligible for loan",
+  "body": "Hi Gaurav,<div><br></div><div>We are happy to inform you are eliglbe for loan. We ll get it processed in next 24 hours.</div>",
+  "createdByName": "Simpo",
+  "mailType": "SEND",
+  "toMails": [
+    "gauravsharma531@gmail.com"
+  ],
+  "toCcMails": [],
+  "toBccMails": [],
+  "attachments": [],
+  "createdTimeStamp": {
+    "$date": "2025-06-13T08:15:13.682Z"
+  },
+  "updatedTimeStamp": {
+    "$date": "2025-06-13T08:14:26.361Z"
+  },
+  "_class": "com.lm.crm.leads.Mail.MailInfo"
+},
+{
+  "_id": {
+    "$binary": {
+      "base64": "UWbXSsXKAh9QVNtyYP1Otg==",
+      "subType": "03"
+    }
+  },
+  "leadId": {
+    "$binary": {
+      "base64": "WGJ4SL/KAh/HiRCdY5dOtg==",
+      "subType": "03"
+    }
+  },
+  "businessId": {
+    "$binary": {
+      "base64": "emhDyCZ/Ah8NoMrFvCs4lA==",
+      "subType": "03"
+    }
+  },
+  "createdById": {
+    "$binary": {
+      "base64": "AWwBxyZ/Ah+7UkijlTeQuA==",
+      "subType": "03"
+    }
+  },
+  "subject": "EVENT BRIEF ",
+  "body": "HELOO WE HAVE SHARED 100 PAX EMAIL&#160;",
+  "createdByName": "PRAKASH",
+  "mailType": "SEND",
+  "toMails": [
+    "GAURAV@SIMPO.AI"
+  ],
+  "toCcMails": [],
+  "toBccMails": [],
+  "attachments": [],
+  "createdTimeStamp": {
+    "$date": "2025-05-09T08:05:11.513Z"
+  },
+  "updatedTimeStamp": {
+    "$date": "2025-05-09T08:04:23.063Z"
+  },
+  "_class": "com.lm.crm.leads.Mail.MailInfo"
+},
+{
+  "_id": {
+    "$binary": {
+      "base64": "imsK6FZ/Ah/O5mx7V1tOtg==",
+      "subType": "03"
+    }
+  },
+  "leadId": {
+    "$binary": {
+      "base64": "wWV/f0Z/Ah8htknoDClOtg==",
+      "subType": "03"
+    }
+  },
+  "businessId": {
+    "$binary": {
+      "base64": "emhDyCZ/Ah8NoMrFvCs4lA==",
+      "subType": "03"
+    }
+  },
+  "createdById": {
+    "$binary": {
+      "base64": "AWwBxyZ/Ah+7UkijlTeQuA==",
+      "subType": "03"
+    }
+  },
+  "subject": "PROFILE ",
+  "body": "HI WE ARE LOOKING TO CONNECT YOU",
+  "createdByName": "PRAKASH",
+  "mailType": "SEND",
+  "toMails": [
+    "PRAKASHYEDE@GMAIL.COM"
+  ],
+  "toCcMails": [],
+  "toBccMails": [],
+  "attachments": [],
+  "createdTimeStamp": {
+    "$date": "2025-05-03T08:05:52.288Z"
+  },
+  "updatedTimeStamp": {
+    "$date": "2025-05-03T08:05:31.845Z"
+  },
+  "_class": "com.lm.crm.leads.Mail.MailInfo"
+},
+{
+  "_id": {
+    "$binary": {
+      "base64": "LmEwvN4/Ah95N7aMHqlOtg==",
+      "subType": "03"
+    }
+  },
+  "leadId": {
+    "$binary": {
+      "base64": "4W+Zx9c/Ah/+AXyXdg1Otg==",
+      "subType": "03"
+    }
+  },
+  "businessId": {
+    "$binary": {
+      "base64": "emaXTtO1AR+0jHS92qU4lA==",
+      "subType": "03"
+    }
+  },
+  "createdById": {
+    "$binary": {
+      "base64": "kW9ITdO1AR9aANvcYy2QuA==",
+      "subType": "03"
+    }
+  },
+  "subject": "Testing ",
+  "body": "Testing&#160;Testing&#160;Testing&#160;Testing&#160;Testing&#160;Testing&#160;Testing&#160;Testing&#160;Testing&#160;Testing&#160;",
+  "createdByName": "vivek",
+  "mailType": "SEND",
+  "toMails": [
+    "vivek@tejsoft.com"
+  ],
+  "toCcMails": [],
+  "toBccMails": [],
+  "attachments": [
+    {
+      "name": "Messenger-cuate 1 (1).png",
+      "url": "https://prod-simpo.s3.ap-south-1.amazonaws.com/prod-images/152355c1745823389009Messenger-cuate%201%20%281%29.png",
+      "attachmentType": "IMAGE"
+    }
+  ],
+  "createdTimeStamp": {
+    "$date": "2025-04-28T06:56:33.760Z"
+  },
+  "updatedTimeStamp": {
+    "$date": "2025-04-28T06:56:06.326Z"
+  },
+  "_class": "com.lm.crm.leads.Mail.MailInfo"
+},
+{
+  "_id": {
+    "$binary": {
+      "base64": "52a3utk/Ah91y4ityYFOtg==",
+      "subType": "03"
+    }
+  },
+  "leadId": {
+    "$binary": {
+      "base64": "4W+Zx9c/Ah/+AXyXdg1Otg==",
+      "subType": "03"
+    }
+  },
+  "businessId": {
+    "$binary": {
+      "base64": "emaXTtO1AR+0jHS92qU4lA==",
+      "subType": "03"
+    }
+  },
+  "createdById": {
+    "$binary": {
+      "base64": "kW9ITdO1AR9aANvcYy2QuA==",
+      "subType": "03"
+    }
+  },
+  "subject": "Testing ",
+  "body": "Testing&#160;Testing&#160;Testing&#160;Testing&#160;Testing&#160;Testing&#160;Testing&#160;Testing&#160;Testing&#160;Testing&#160;Testing&#160;Testing&#160;Testing&#160;Testing&#160;Testing&#160;Testing&#160;Testing&#160;Testing&#160;Testing&#160;Testing&#160;Testing&#160;Testing&#160;Testing&#160;Testing&#160;Testing&#160;Testing&#160;Testing&#160;Testing&#160;Testing&#160;Testing&#160;Testing&#160;Testing&#160;Testing&#160;Testing&#160;Testing&#160;Testing&#160;Testing&#160;Testing&#160;Testing&#160;Testing&#160;Testing&#160;Testing&#160;Testing&#160;Testing&#160;Testing&#160;",
+  "createdByName": "vivek",
+  "mailType": "SEND",
+  "toMails": [
+    "vivek@tejsoft.com"
+  ],
+  "toCcMails": [],
+  "toBccMails": [],
+  "attachments": [
+    {
+      "name": "4064616 Website 1 (1).png",
+      "url": "https://prod-simpo.s3.ap-south-1.amazonaws.com/prod-images/464281c17458232447864064616%20Website%201%20%281%29.png",
+      "attachmentType": "IMAGE"
+    },
+    {
+      "name": "Telecommuting-cuate 1.png",
+      "url": "https://prod-simpo.s3.ap-south-1.amazonaws.com/prod-images/802534c1745823249928Telecommuting-cuate%201.png",
+      "attachmentType": "IMAGE"
+    },
+    {
+      "name": "quotation 2 (1).png",
+      "url": "https://prod-simpo.s3.ap-south-1.amazonaws.com/prod-images/271666c1745823254493quotation%202%20%281%29.png",
+      "attachmentType": "IMAGE"
+    }
+  ],
+  "createdTimeStamp": {
+    "$date": "2025-04-28T06:54:19.388Z"
+  },
+  "updatedTimeStamp": {
+    "$date": "2025-04-28T06:53:34.626Z"
+  },
+  "_class": "com.lm.crm.leads.Mail.MailInfo"
+},
+{
+  "_id": {
+    "$binary": {
+      "base64": "92BqyAHz/x6KCQiMlQ9dtA==",
+      "subType": "03"
+    }
+  },
+  "leadId": {
+    "$binary": {
+      "base64": "z2weldby/x7j2GNZwXVdtA==",
+      "subType": "03"
+    }
+  },
+  "businessId": {
+    "$binary": {
+      "base64": "zWQ5k1Tn/x7qj+dKGkF8jA==",
+      "subType": "03"
+    }
+  },
+  "createdById": {
+    "$binary": {
+      "base64": "om+yhBOM/R6y+OzkSV39oQ==",
+      "subType": "03"
+    }
+  },
+  "subject": "HELLO",
+  "body": "LKAKDJKSHKHS",
+  "createdByName": "21_052 Himasri Reddy K",
+  "mailType": "SEND",
+  "toMails": [
+    "himasri@tejsoft.com"
+  ],
+  "toCcMails": [],
+  "toBccMails": [],
+  "attachments": [],
+  "createdTimeStamp": {
+    "$date": "2025-03-12T10:52:37.387Z"
+  },
+  "updatedTimeStamp": {
+    "$date": "2025-03-12T10:51:53.579Z"
+  },
+  "_class": "com.lm.crm.leads.Mail.MailInfo"
+},
+{
+  "_id": {
+    "$binary": {
+      "base64": "XWKrcvaA/x7hz0EaVutdtA==",
+      "subType": "03"
+    }
+  },
+  "leadId": {
+    "$binary": {
+      "base64": "pGRCCVv3/h4pIn+yJF2wrA==",
+      "subType": "03"
+    }
+  },
+  "businessId": {
+    "$binary": {
+      "base64": "AW83DttE+R7pVJ/RTSE6lA==",
+      "subType": "03"
+    }
+  },
+  "createdById": {
+    "$binary": {
+      "base64": "RmNErF+p+R6wVP6hBKm6og==",
+      "subType": "03"
+    }
+  },
+  "subject": "To call ambika jewellers - mittal",
+  "body": "",
+  "createdByName": "Gauri Gupte",
+  "mailType": "SEND",
+  "toMails": [
+    "gauri@passbookapp.in"
+  ],
+  "toCcMails": [],
+  "toBccMails": [],
+  "attachments": [],
+  "createdTimeStamp": {
+    "$date": "2025-03-03T09:10:51.082Z"
+  },
+  "updatedTimeStamp": {
+    "$date": "2025-03-03T09:10:09.484Z"
+  },
+  "_class": "com.lm.crm.leads.Mail.MailInfo"
+},
+{
+  "_id": {
+    "$binary": {
+      "base64": "LWE5YLSA/x5RQrQB17FdtA==",
+      "subType": "03"
+    }
+  },
+  "leadId": {
+    "$binary": {
+      "base64": "PGgN9gnd/h7U7jROWI+wrA==",
+      "subType": "03"
+    }
+  },
+  "businessId": {
+    "$binary": {
+      "base64": "AW83DttE+R7pVJ/RTSE6lA==",
+      "subType": "03"
+    }
+  },
+  "createdById": {
+    "$binary": {
+      "base64": "RmNErF+p+R6wVP6hBKm6og==",
+      "subType": "03"
+    }
+  },
+  "subject": "to call bhairav for appointment panvel",
+  "body": "",
+  "createdByName": "Gauri Gupte",
+  "mailType": "SEND",
+  "toMails": [
+    "gauri"
+  ],
+  "toCcMails": [],
+  "toBccMails": [],
+  "attachments": [],
+  "createdTimeStamp": {
+    "$date": "2025-03-03T08:41:17.474Z"
+  },
+  "updatedTimeStamp": {
+    "$date": "2025-03-03T08:41:00.852Z"
+  },
+  "_class": "com.lm.crm.leads.Mail.MailInfo"
+}]

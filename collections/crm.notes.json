@@ -1,0 +1,326 @@
+[{
+  "_id": {
+    "$binary": {
+      "base64": "62rv2sqvCR8gqCEvS7Vaow==",
+      "subType": "03"
+    }
+  },
+  "description": "Po awaiting next  tuesday ",
+  "subject": "Follow - up",
+  "leadId": {
+    "$binary": {
+      "base64": "yG3h2Yn0Bx+zftqsktcykg==",
+      "subType": "03"
+    }
+  },
+  "leadName": "Gowtham Srinivas // Maximl",
+  "notesAttachments": [],
+  "createdTimeStamp": {
+    "$date": "2025-09-26T17:16:43.882Z"
+  },
+  "createdById": {
+    "$binary": {
+      "base64": "ZGUzDqlTAx8R6NKwxjfelQ==",
+      "subType": "03"
+    }
+  },
+  "createdByName": "Jyotsna",
+  "_class": "com.lm.crm.leads.notes.Notes"
+},
+{
+  "_id": {
+    "$binary": {
+      "base64": "2mu77UmgCR8zftC2GXFaow==",
+      "subType": "03"
+    }
+  },
+  "description": "Revised Quotation mailed. no response from customer. renewal is only on Oct 10",
+  "subject": "Follow-up",
+  "leadId": {
+    "$binary": {
+      "base64": "dmovnDqgCR8dMsIHSxNaow==",
+      "subType": "03"
+    }
+  },
+  "leadName": "Sushanth// Sunrise legal services",
+  "notesAttachments": [],
+  "createdTimeStamp": {
+    "$date": "2025-09-25T11:41:19.779Z"
+  },
+  "createdById": {
+    "$binary": {
+      "base64": "hm5ewfOGAx/9NzK1fnXelQ==",
+      "subType": "03"
+    }
+  },
+  "createdByName": "Alfia Akshan",
+  "_class": "com.lm.crm.leads.notes.Notes"
+},
+{
+  "_id": {
+    "$binary": {
+      "base64": "s2goV+TJCB/jgUBD6B1aow==",
+      "subType": "03"
+    }
+  },
+  "description": "Error in website",
+  "subject": "Website error and no experience for jewellery E commerce ",
+  "leadId": {
+    "$binary": {
+      "base64": "bWraaBjHCB9P+QiAdj9aow==",
+      "subType": "03"
+    }
+  },
+  "leadName": "Anil Kumar - Chandana Brothers Silks & Jewellers",
+  "notesAttachments": [
+    {
+      "name": "Screenshot 2025-09-08 at 3.55.42 PM.png",
+      "url": "https://d2z9497xp8xb12.cloudfront.net/dev-beeos/invoice/Attachments//363630c1757327183806Screenshot 2025-09-08 at 3.55.42 PM.png",
+      "attachmentType": "IMAGE"
+    }
+  ],
+  "createdTimeStamp": {
+    "$date": "2025-09-08T10:25:53.880Z"
+  },
+  "createdById": {
+    "$binary": {
+      "base64": "RmNErF+p+R6wVP6hBKm6og==",
+      "subType": "03"
+    }
+  },
+  "createdByName": "Gauri Gupte",
+  "_class": "com.lm.crm.leads.notes.Notes"
+},
+{
+  "_id": {
+    "$binary": {
+      "base64": "GWdTbdrJCB/aoz6638daow==",
+      "subType": "03"
+    }
+  },
+  "description": "E Commerce Website is missing only catalog is avaliable and experience is broken\n",
+  "subject": "E Commerce",
+  "leadId": {
+    "$binary": {
+      "base64": "4GYNOgzICB+4rxiuyPtaow==",
+      "subType": "03"
+    }
+  },
+  "leadName": "Mr. Muralikrishna - Manepally Jewellers Pvt ltd",
+  "notesAttachments": [],
+  "createdTimeStamp": {
+    "$date": "2025-09-08T10:21:35.118Z"
+  },
+  "createdById": {
+    "$binary": {
+      "base64": "RmNErF+p+R6wVP6hBKm6og==",
+      "subType": "03"
+    }
+  },
+  "createdByName": "Gauri Gupte",
+  "_class": "com.lm.crm.leads.notes.Notes"
+},
+{
+  "_id": {
+    "$binary": {
+      "base64": "WmMOurvJCB8g0q09XPFaow==",
+      "subType": "03"
+    }
+  },
+  "description": "1)How many Schemes\n2)How much enrollments & Installments from Website\n",
+  "subject": "Gold Scheme Demo notes",
+  "leadId": {
+    "$binary": {
+      "base64": "Y2QQRqjJCB+cUcNM5kVaow==",
+      "subType": "03"
+    }
+  },
+  "leadName": "Nikhil Kasula",
+  "notesAttachments": [],
+  "createdTimeStamp": {
+    "$date": "2025-09-08T10:01:39.210Z"
+  },
+  "createdById": {
+    "$binary": {
+      "base64": "RmNErF+p+R6wVP6hBKm6og==",
+      "subType": "03"
+    }
+  },
+  "createdByName": "Gauri Gupte",
+  "_class": "com.lm.crm.leads.notes.Notes"
+},
+{
+  "_id": {
+    "$binary": {
+      "base64": "OmDlUgRxCB+PKWhbfDtaow==",
+      "subType": "03"
+    }
+  },
+  "description": "Lead is interested in our new product.",
+  "subject": "Related to new deal",
+  "leadId": {
+    "$binary": {
+      "base64": "Z20sKPhwCB8Z75hDAT1aow==",
+      "subType": "03"
+    }
+  },
+  "leadName": "hero1",
+  "notesAttachments": [
+    {
+      "name": "Refer and earn.png",
+      "url": "https://d2z9497xp8xb12.cloudfront.net/dev-beeos/invoice/Attachments//760396c1756716438274Refer and earn.png",
+      "attachmentType": "IMAGE"
+    }
+  ],
+  "createdTimeStamp": {
+    "$date": "2025-09-01T08:46:04.504Z"
+  },
+  "createdById": {
+    "$binary": {
+      "base64": "N2t1vuRwCB9/6j+tpx85uQ==",
+      "subType": "03"
+    }
+  },
+  "createdByName": "Pramod",
+  "_class": "com.lm.crm.leads.notes.Notes"
+},
+{
+  "_id": {
+    "$binary": {
+      "base64": "w2L23DoACB/Adf2bryUykg==",
+      "subType": "03"
+    }
+  },
+  "description": "h",
+  "subject": "ghv",
+  "leadId": {
+    "$binary": {
+      "base64": "Z2jqcXT/Bx/9UXxFfrMykg==",
+      "subType": "03"
+    }
+  },
+  "leadName": "Ananduu",
+  "notesAttachments": [
+    {
+      "name": "ChatGPT Image Aug 12, 2025, 11_50_34 AM.png",
+      "url": "https://d2z9497xp8xb12.cloudfront.net/dev-beeos/invoice/Attachments//240476c1755941368621ChatGPT Image Aug 12, 2025, 11_50_34 AM.png",
+      "attachmentType": "IMAGE"
+    }
+  ],
+  "createdTimeStamp": {
+    "$date": "2025-08-23T09:29:20.618Z"
+  },
+  "createdById": {
+    "$binary": {
+      "base64": "UmafdC6Y/x70KFEN+6HQmQ==",
+      "subType": "03"
+    }
+  },
+  "createdByName": "anand chikkam",
+  "taskId": {
+    "$binary": {
+      "base64": "F2ojAC0ACB/J52H28akykg==",
+      "subType": "03"
+    }
+  },
+  "_class": "com.lm.crm.leads.notes.Notes"
+},
+{
+  "_id": {
+    "$binary": {
+      "base64": "TWiBNToACB/33/+V15cykg==",
+      "subType": "03"
+    }
+  },
+  "description": "jh",
+  "subject": "gc",
+  "leadId": {
+    "$binary": {
+      "base64": "Z2jqcXT/Bx/9UXxFfrMykg==",
+      "subType": "03"
+    }
+  },
+  "leadName": "Ananduu",
+  "notesAttachments": [],
+  "createdTimeStamp": {
+    "$date": "2025-08-23T09:29:12.175Z"
+  },
+  "createdById": {
+    "$binary": {
+      "base64": "UmafdC6Y/x70KFEN+6HQmQ==",
+      "subType": "03"
+    }
+  },
+  "createdByName": "anand chikkam",
+  "taskId": {
+    "$binary": {
+      "base64": "F2ojAC0ACB/J52H28akykg==",
+      "subType": "03"
+    }
+  },
+  "_class": "com.lm.crm.leads.notes.Notes"
+},
+{
+  "_id": {
+    "$binary": {
+      "base64": "BW5Mhnf0Bx/+VSV4KCkykg==",
+      "subType": "03"
+    }
+  },
+  "description": "revised Quotation has been mailed to the Customer. Due to Customer's personal reasons, Ashwen informed to keep it on hold.",
+  "subject": "Follow-up",
+  "leadId": {
+    "$binary": {
+      "base64": "gm/CJyTDBx8t4k8v9ru9rQ==",
+      "subType": "03"
+    }
+  },
+  "leadName": "Savex",
+  "notesAttachments": [],
+  "createdTimeStamp": {
+    "$date": "2025-08-22T11:01:24.714Z"
+  },
+  "createdById": {
+    "$binary": {
+      "base64": "hm5ewfOGAx/9NzK1fnXelQ==",
+      "subType": "03"
+    }
+  },
+  "createdByName": "Alfia Akshan",
+  "_class": "com.lm.crm.leads.notes.Notes"
+},
+{
+  "_id": {
+    "$binary": {
+      "base64": "wmJUf0FqBx8Ltk0nmfdRog==",
+      "subType": "03"
+    }
+  },
+  "description": "work done",
+  "subject": "taskcompleted",
+  "leadId": {
+    "$binary": {
+      "base64": "pm9FYiBqBx8z0ql6X49Rog==",
+      "subType": "03"
+    }
+  },
+  "leadName": "Gaurav sharma",
+  "notesAttachments": [],
+  "createdTimeStamp": {
+    "$date": "2025-08-11T11:12:19.103Z"
+  },
+  "createdById": {
+    "$binary": {
+      "base64": "LmFAfqNTAx8Rg8QPHnfelQ==",
+      "subType": "03"
+    }
+  },
+  "createdByName": "Ganesha",
+  "taskId": {
+    "$binary": {
+      "base64": "7GqfkjNqBx+ntumwkjtRog==",
+      "subType": "03"
+    }
+  },
+  "_class": "com.lm.crm.leads.notes.Notes"
+}]

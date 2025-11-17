@@ -1,0 +1,468 @@
+[{
+  "_id": {
+    "$binary": {
+      "base64": "o2Ngz/eSCR/g0xAfssdaow==",
+      "subType": "03"
+    }
+  },
+  "businessId": {
+    "$binary": {
+      "base64": "AW83DttE+R7pVJ/RTSE6lA==",
+      "subType": "03"
+    }
+  },
+  "leadId": {
+    "$binary": {
+      "base64": "r2mac/GSCR/OJmE79TVaow==",
+      "subType": "03"
+    }
+  },
+  "createdById": {
+    "$binary": {
+      "base64": "Z2CxLKV+/R6QJF+LzoH9oQ==",
+      "subType": "03"
+    }
+  },
+  "remainder": 0,
+  "title": "Return call from Radha ji",
+  "callPurpose": "ADMINISTRATIVE",
+  "description": "To Discuss and setup plan(s) for store to onboard",
+  "leadName": "Radha Ghantasala",
+  "createdByName": "Rithik",
+  "call_variant": "LOG",
+  "callStatus": "ANSWERED",
+  "otherReason": "",
+  "callType": "IN_BOUND",
+  "startDateTime": {
+    "$date": "2025-09-23T00:00:00.000Z"
+  },
+  "createdTimeStamp": {
+    "$date": "2025-09-24T10:15:12.360Z"
+  },
+  "updatedTimeStamp": {
+    "$date": "2025-09-24T10:15:12.360Z"
+  },
+  "_class": "com.lm.crm.leads.calls.CallLog"
+},
+{
+  "_id": {
+    "$binary": {
+      "base64": "Gm8d6v1wCB/LmqcgMwFaow==",
+      "subType": "03"
+    }
+  },
+  "businessId": {
+    "$binary": {
+      "base64": "fGZ0wORwCB9chuBXmT8BjA==",
+      "subType": "03"
+    }
+  },
+  "leadId": {
+    "$binary": {
+      "base64": "Z20sKPhwCB8Z75hDAT1aow==",
+      "subType": "03"
+    }
+  },
+  "createdById": {
+    "$binary": {
+      "base64": "N2t1vuRwCB9/6j+tpx85uQ==",
+      "subType": "03"
+    }
+  },
+  "remainder": 0,
+  "title": "meeting",
+  "callDuration": "",
+  "callPurpose": "DEMO",
+  "description": "",
+  "leadName": "hero1",
+  "createdByName": "Pramod",
+  "call_variant": "SCHEDULE",
+  "callStatus": "SCHEDULED",
+  "otherReason": "",
+  "callType": "OUT_BOUND",
+  "startDateTime": {
+    "$date": "2025-09-03T00:00:00.000Z"
+  },
+  "createdTimeStamp": {
+    "$date": "2025-09-01T08:43:57.685Z"
+  },
+  "updatedTimeStamp": {
+    "$date": "2025-09-01T08:43:57.685Z"
+  },
+  "_class": "com.lm.crm.leads.calls.CallLog"
+},
+{
+  "_id": {
+    "$binary": {
+      "base64": "UGefnKoACB8ob+Vqu8sykg==",
+      "subType": "03"
+    }
+  },
+  "businessId": {
+    "$binary": {
+      "base64": "wm6oZ4D0Bx/qlIOyMtUBjA==",
+      "subType": "03"
+    }
+  },
+  "leadId": {
+    "$binary": {
+      "base64": "Z2jqcXT/Bx/9UXxFfrMykg==",
+      "subType": "03"
+    }
+  },
+  "createdById": {
+    "$binary": {
+      "base64": "UmafdC6Y/x70KFEN+6HQmQ==",
+      "subType": "03"
+    }
+  },
+  "remainder": 0,
+  "title": "call test",
+  "callDuration": "",
+  "callPurpose": "DEMO",
+  "description": "dsdad",
+  "leadName": "Ananduu",
+  "createdByName": "anand chikkam",
+  "call_variant": "SCHEDULE",
+  "callStatus": "ANSWERED",
+  "otherReason": "",
+  "callType": "OUT_BOUND",
+  "startDateTime": {
+    "$date": "2025-08-23T00:00:00.000Z"
+  },
+  "createdTimeStamp": {
+    "$date": "2025-08-23T10:19:10.705Z"
+  },
+  "updatedTimeStamp": {
+    "$date": "2025-08-23T10:19:10.705Z"
+  },
+  "_class": "com.lm.crm.leads.calls.CallLog"
+},
+{
+  "_id": {
+    "$binary": {
+      "base64": "526rwL/CBx8COEps9KW9rQ==",
+      "subType": "03"
+    }
+  },
+  "businessId": {
+    "$binary": {
+      "base64": "CWuSh6i/Bx/IRR2Jiw8BjA==",
+      "subType": "03"
+    }
+  },
+  "leadId": {
+    "$binary": {
+      "base64": "o2bRl7LBBx8LTXEXVNG9rQ==",
+      "subType": "03"
+    }
+  },
+  "createdById": {
+    "$binary": {
+      "base64": "mmhASBA5Bx8uhNiYCH80tQ==",
+      "subType": "03"
+    }
+  },
+  "remainder": 0,
+  "title": "this is call with seema",
+  "callPurpose": "DEMO",
+  "description": "dvbghtnjy",
+  "leadName": "sema",
+  "createdByName": "Rahul Tiwari",
+  "call_variant": "SCHEDULE",
+  "callStatus": "SCHEDULED",
+  "otherReason": "",
+  "callType": "OUT_BOUND",
+  "startDateTime": {
+    "$date": "2025-08-18T00:00:00.000Z"
+  },
+  "createdTimeStamp": {
+    "$date": "2025-08-18T12:00:13.615Z"
+  },
+  "updatedTimeStamp": {
+    "$date": "2025-08-18T12:00:13.615Z"
+  },
+  "_class": "com.lm.crm.leads.calls.CallLog"
+},
+{
+  "_id": {
+    "$binary": {
+      "base64": "9WkfmiVqBx/J3qiaz89Rog==",
+      "subType": "03"
+    }
+  },
+  "businessId": {
+    "$binary": {
+      "base64": "3mYN2LSV9R7dRHbkqBP2nQ==",
+      "subType": "03"
+    }
+  },
+  "leadId": {
+    "$binary": {
+      "base64": "pm9FYiBqBx8z0ql6X49Rog==",
+      "subType": "03"
+    }
+  },
+  "createdById": {
+    "$binary": {
+      "base64": "ZmP00CbL7R7jYR/J2tudrQ==",
+      "subType": "03"
+    }
+  },
+  "remainder": 0,
+  "title": "Test title",
+  "callDuration": "20",
+  "callPurpose": "DEMO",
+  "description": "",
+  "leadName": "Gaurav sharma",
+  "createdByName": "Simpo",
+  "call_variant": "LOG",
+  "callStatus": "ANSWERED",
+  "otherReason": "",
+  "callType": "OUT_BOUND",
+  "startDateTime": {
+    "$date": "2025-08-11T00:00:00.000Z"
+  },
+  "createdTimeStamp": {
+    "$date": "2025-08-11T10:58:47.593Z"
+  },
+  "updatedTimeStamp": {
+    "$date": "2025-08-11T10:58:47.593Z"
+  },
+  "_class": "com.lm.crm.leads.calls.CallLog"
+},
+{
+  "_id": {
+    "$binary": {
+      "base64": "fmaKg8DcBB+LwPswVFdZmA==",
+      "subType": "03"
+    }
+  },
+  "businessId": {
+    "$binary": {
+      "base64": "jGVlbYyQBB9osl6z2hOtkQ==",
+      "subType": "03"
+    }
+  },
+  "leadId": {
+    "$binary": {
+      "base64": "22yyYy3cBB9In0td+HdZmA==",
+      "subType": "03"
+    }
+  },
+  "createdById": {
+    "$binary": {
+      "base64": "xmYCyDx3BB+/mpcm1bfppw==",
+      "subType": "03"
+    }
+  },
+  "remainder": 10,
+  "title": "Sample",
+  "callDuration": "",
+  "callPurpose": "DEMO",
+  "description": "Sample call",
+  "leadName": "Abhilash",
+  "createdByName": "Abhilash Bandanadam 0794",
+  "call_variant": "SCHEDULE",
+  "callStatus": "NEW",
+  "otherReason": "",
+  "callType": "OUT_BOUND",
+  "startDateTime": {
+    "$date": "2025-06-21T00:00:00.000Z"
+  },
+  "createdTimeStamp": {
+    "$date": "2025-06-20T11:40:30.549Z"
+  },
+  "updatedTimeStamp": {
+    "$date": "2025-06-20T11:40:30.549Z"
+  },
+  "_class": "com.lm.crm.leads.calls.CallLog"
+},
+{
+  "_id": {
+    "$binary": {
+      "base64": "I2rgoSpsBB/ZQ/ztfomWug==",
+      "subType": "03"
+    }
+  },
+  "businessId": {
+    "$binary": {
+      "base64": "3mYN2LSV9R7dRHbkqBP2nQ==",
+      "subType": "03"
+    }
+  },
+  "leadId": {
+    "$binary": {
+      "base64": "1WEU/2H4Ax8+0OSd7HNpiQ==",
+      "subType": "03"
+    }
+  },
+  "createdById": {
+    "$binary": {
+      "base64": "hm5ewfOGAx/9NzK1fnXelQ==",
+      "subType": "03"
+    }
+  },
+  "remainder": 0,
+  "title": "test",
+  "callDuration": "",
+  "callPurpose": "DEMO",
+  "description": "",
+  "leadName": "Neeraj Grewal",
+  "createdByName": "Alfia Akshan",
+  "call_variant": "SCHEDULE",
+  "callStatus": "SCHEDULED",
+  "otherReason": "",
+  "callType": "OUT_BOUND",
+  "startDateTime": {
+    "$date": "2025-06-12T00:00:00.000Z"
+  },
+  "createdTimeStamp": {
+    "$date": "2025-06-11T12:48:59.050Z"
+  },
+  "updatedTimeStamp": {
+    "$date": "2025-06-11T12:48:59.050Z"
+  },
+  "_class": "com.lm.crm.leads.calls.CallLog"
+},
+{
+  "_id": {
+    "$binary": {
+      "base64": "m2tIB7YGBB/GgHIgT01piQ==",
+      "subType": "03"
+    }
+  },
+  "businessId": {
+    "$binary": {
+      "base64": "rmU4EWgFBB8exTHB7TE5kw==",
+      "subType": "03"
+    }
+  },
+  "leadId": {
+    "$binary": {
+      "base64": "8m2cCbIGBB8DKxD9jm1piQ==",
+      "subType": "03"
+    }
+  },
+  "createdById": {
+    "$binary": {
+      "base64": "rmOaEGgFBB/ZNIEeilnelQ==",
+      "subType": "03"
+    }
+  },
+  "remainder": 10,
+  "title": "villa sale",
+  "callDuration": "",
+  "callPurpose": "PROJECT",
+  "description": "",
+  "leadName": "Praveen",
+  "createdByName": "Varun Reddy",
+  "call_variant": "SCHEDULE",
+  "callStatus": "SCHEDULED",
+  "otherReason": "",
+  "callType": "OUT_BOUND",
+  "startDateTime": {
+    "$date": "2025-06-03T00:00:00.000Z"
+  },
+  "createdTimeStamp": {
+    "$date": "2025-06-03T11:09:09.043Z"
+  },
+  "updatedTimeStamp": {
+    "$date": "2025-06-03T11:09:09.043Z"
+  },
+  "_class": "com.lm.crm.leads.calls.CallLog"
+},
+{
+  "_id": {
+    "$binary": {
+      "base64": "S2KlAwTTAx8/jKs88+1/kA==",
+      "subType": "03"
+    }
+  },
+  "businessId": {
+    "$binary": {
+      "base64": "3mYN2LSV9R7dRHbkqBP2nQ==",
+      "subType": "03"
+    }
+  },
+  "leadId": {
+    "$binary": {
+      "base64": "yWKDD3yZAx9Z38eE3h1/kA==",
+      "subType": "03"
+    }
+  },
+  "createdById": {
+    "$binary": {
+      "base64": "ZmP00CbL7R7jYR/J2tudrQ==",
+      "subType": "03"
+    }
+  },
+  "remainder": 0,
+  "title": "Discovery Call",
+  "callDuration": "",
+  "callPurpose": "PROSPECTING",
+  "description": "",
+  "leadName": "Rohit Robin",
+  "createdByName": "Simpo",
+  "call_variant": "SCHEDULE",
+  "callStatus": "SCHEDULED",
+  "otherReason": "",
+  "callType": "OUT_BOUND",
+  "startDateTime": {
+    "$date": "2025-05-30T00:00:00.000Z"
+  },
+  "createdTimeStamp": {
+    "$date": "2025-05-30T08:29:20.257Z"
+  },
+  "updatedTimeStamp": {
+    "$date": "2025-05-30T08:29:20.257Z"
+  },
+  "_class": "com.lm.crm.leads.calls.CallLog"
+},
+{
+  "_id": {
+    "$binary": {
+      "base64": "728IWf3SAx9PQeNnu3V/kA==",
+      "subType": "03"
+    }
+  },
+  "businessId": {
+    "$binary": {
+      "base64": "3mYN2LSV9R7dRHbkqBP2nQ==",
+      "subType": "03"
+    }
+  },
+  "leadId": {
+    "$binary": {
+      "base64": "J2VGWGuwAx+nQHXfWWN/kA==",
+      "subType": "03"
+    }
+  },
+  "createdById": {
+    "$binary": {
+      "base64": "ZmP00CbL7R7jYR/J2tudrQ==",
+      "subType": "03"
+    }
+  },
+  "remainder": 0,
+  "title": "Not Answered",
+  "callDuration": "0",
+  "callPurpose": "DEMO",
+  "description": "",
+  "leadName": "Parzon Faridani",
+  "createdByName": "Simpo",
+  "call_variant": "LOG",
+  "callStatus": "NOT_ANSWERED",
+  "otherReason": "",
+  "callType": "OUT_BOUND",
+  "startDateTime": {
+    "$date": "2025-05-27T00:00:00.000Z"
+  },
+  "createdTimeStamp": {
+    "$date": "2025-05-30T08:25:49.572Z"
+  },
+  "updatedTimeStamp": {
+    "$date": "2025-05-30T08:25:49.572Z"
+  },
+  "_class": "com.lm.crm.leads.calls.CallLog"
+}]
