@@ -18,7 +18,6 @@ from mongo.constants import (
     uuid_str_to_mongo_binary,
     COLLECTIONS_WITH_DIRECT_BUSINESS,
     BUSINESS_UUID,
-    MEMBER_UUID,
 )
 
 
@@ -97,14 +96,12 @@ class DirectMongoClient:
 
                 # Prefer runtime websocket context; fall back to env vars (via helpers)
                 biz_uuid: str | None = BUSINESS_UUID()
-                member_uuid: str | None = MEMBER_UUID()
                 enforce_business: bool = _flag("ENFORCE_BUSINESS_FILTER") or bool(biz_uuid)
-                enforce_member: bool = _flag("ENFORCE_MEMBER_FILTER") or bool(member_uuid)
 
-                # Prepare business and member scoping injections (prepend stages)
+                # Prepare business scoping injections (prepend stages)
                 injected_stages: List[Dict[str, Any]] = []
 
-                # 1) Business scoping
+                # Business scoping
                 if enforce_business and biz_uuid:
                     try:
                         biz_bin = uuid_str_to_mongo_binary(biz_uuid)
@@ -116,33 +113,6 @@ class DirectMongoClient:
                     except Exception as e:
                         # Other errors - log and skip business filter
                         logger.error(f"Error applying business filter for {collection}: {e}")
-
-                # 2) Member-level scoping (for CRM, filter by createdById or assignedTo)
-                if enforce_member and member_uuid:
-                    try:
-                        mem_bin = uuid_str_to_mongo_binary(member_uuid)
-                        
-                        if collection == "Lead":
-                            # Filter leads by staffId or createdById
-                            injected_stages.append({"$match": {"$or": [
-                                {"staffId": mem_bin},
-                                {"createdById": mem_bin}
-                            ]}})
-                        elif collection == "Task":
-                            # Filter tasks by assignedTo or createdById
-                            injected_stages.append({"$match": {"$or": [
-                                {"assignedTo": mem_bin},
-                                {"createdById": mem_bin}
-                            ]}})
-                        elif collection in ("Activity", "Meeting", "Notes", "CallLog", "MailInfo"):
-                            # Filter by createdById
-                            injected_stages.append({"$match": {"createdById": mem_bin}})
-                    except ValueError as e:
-                        # Invalid UUID format - log and skip member filter
-                        logger.error(f"Invalid MEMBER_UUID format '{member_uuid}': {e}")
-                    except Exception as e:
-                        # Other errors - log and skip member filter
-                        logger.error(f"Error applying member filter for {collection}: {e}")
 
                 # Execute aggregation - Motor uses persistent connection pool
                 db = self.client[database]

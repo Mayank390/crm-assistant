@@ -136,7 +136,7 @@ class RAGTool:
                 return []
             query_embedding = query_vectors[0]
             # Build filter if content_type is specified
-            from mongo.constants import BUSINESS_UUID, MEMBER_UUID
+            from mongo.constants import BUSINESS_UUID
             must_conditions = []
             if content_type:
                 must_conditions.append(
@@ -159,24 +159,6 @@ class RAGTool:
                     )
                 )
 
-            # Member-level project RBAC scoping
-            member_uuid = MEMBER_UUID()
-            if member_uuid:
-                try:
-                    # Get list of project IDs this member has access to
-                    member_projects = await self._get_member_projects(member_uuid, business_uuid)
-                    if member_projects:
-                        # Only apply member filtering for content types that belong to projects
-                        project_content_types = {"page", "work_item", "cycle", "module", "epic", "feature", "user_story"}
-                        if content_type is None or content_type in project_content_types:
-                            # Filter by accessible project IDs
-                            must_conditions.append(FieldCondition(key="project_id", match=MatchAny(any=member_projects)))
-                        elif content_type == "project":
-                            # For project searches, only show projects the member has access to
-                            must_conditions.append(FieldCondition(key="mongo_id", match=MatchAny(any=member_projects)))
-                except Exception as e:
-                    # Error getting member projects - log and skip member filter
-                    logger.error(f"Error getting member projects for '{member_uuid}': {e}")
             search_filter = Filter(must=must_conditions) if must_conditions else None
 
             # Hybrid fusion: dense + SPLADE sparse (fallback to keyword over full_text)
@@ -325,76 +307,3 @@ class RAGTool:
         except Exception as e:
             logger.warning(f"Failed to normalize business_id '{business_uuid}': {e}, using as-is")
             return business_uuid
-
-    async def _get_member_projects(self, member_uuid: str, business_uuid: str) -> List[str]:
-        """
-        Get list of project IDs that the member has access to.
-
-        Args:
-            member_uuid: The member's UUID
-            business_uuid: The business UUID for additional scoping
-
-        Returns:
-            List of project IDs the member can access
-        """
-        try:
-            # Import here to avoid circular imports
-            from mongo.client import direct_mongo_client
-            from mongo.constants import uuid_str_to_mongo_binary
-
-            # Query MongoDB to get projects the member is associated with
-            # memberId is the staff ID (staff identifier)
-            member_bin = uuid_str_to_mongo_binary(member_uuid)
-            pipeline = [
-                {
-                    "$match": {
-                        "$or": [
-                            {"memberId": member_bin},
-                            {"staff._id": member_bin}
-                        ]
-                    }
-                }
-            ]
-
-            # Add business scoping if available - need to join with project collection first
-            if business_uuid:
-                biz_bin = uuid_str_to_mongo_binary(business_uuid)
-                pipeline.extend([
-                    {
-                        "$lookup": {
-                            "from": "project",
-                            "localField": "project._id",
-                            "foreignField": "_id",
-                            "as": "__biz_proj__"
-                        }
-                    },
-                    {
-                        "$match": {
-                            "__biz_proj__.business._id": biz_bin
-                        }
-                    },
-                    {
-                        "$unset": "__biz_proj__"
-                    }
-                ])
-
-            # Project the project_id
-            pipeline.append({
-                "$project": {
-                    "project_id": "$project._id"
-                }
-            })
-
-            results = await direct_mongo_client.aggregate("ProjectManagement", "members", pipeline)
-
-            # Extract project IDs and convert back to string format using same normalization as Qdrant
-            project_ids = []
-            for result in results:
-                if result.get("project_id"):
-                    project_ids.append(self._normalize_mongo_id(result["project_id"]))
-
-            return project_ids
-
-        except Exception as e:
-            logger.error(f"Error querying member projects: {e}")
-            return [] 
