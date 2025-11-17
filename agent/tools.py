@@ -173,7 +173,14 @@ def filter_meaningful_content(data: Any) -> Any:
         # Estimate and work tracking
         'estimate', 'estimateSystem', 'workLogs',
         # Count/aggregation results
-        'total', 'count', 'group', 'items'
+        'total', 'count', 'group', 'items',
+        # CRM fields
+        'referenceNo', 'leadStatus', 'taskStatus', 'meetingStatus', 'activityStatus', 'callStatus',
+        'notes', 'subject', 'mobile', 'leadName', 'assignedName', 'createdByName', 'parentName',
+        'meetingType', 'meetingLink', 'meetingLocated', 'callType', 'callPurpose', 'callDuration',
+        'mailType', 'toMails', 'toCcMails', 'toBccMails', 'attachments', 'score',
+        'personalInfo', 'company', 'address', 'dueDate', 'startDateTime', 'endDateTime',
+        'description', 'body', 'notesAttachments', 'participantsList', 'emailData'
     }
 
     # Fields to always exclude (metadata)
@@ -343,6 +350,8 @@ def _transform_by_collection(doc: Dict[str, Any], collection: Optional[str]) -> 
         return doc  # type: ignore[return-value]
 
     collection = (collection or "").strip()
+    # Normalize collection name for case-insensitive matching
+    collection_lower = collection.lower()
     out: Dict[str, Any] = {}
 
     def copy_if_present(key: str, alias: Optional[str] = None):
@@ -374,8 +383,8 @@ def _transform_by_collection(doc: Dict[str, Any], collection: Optional[str]) -> 
         if k in doc:
             out[k] = doc[k]
 
-    # Per collection enrichments
-    if collection == "workItem":
+    # Per collection enrichments (using normalized lowercase for matching)
+    if collection_lower == "workitem":
         set_name("project", "projectName")
         set_name("state", "stateName")
         set_name("stateMaster", "stateMasterName")
@@ -418,29 +427,29 @@ def _transform_by_collection(doc: Dict[str, Any], collection: Optional[str]) -> 
                 out["totalLoggedMinutes"] = total_logged_minutes
                 out["totalLoggedHours"] = round(total_logged_minutes / 60, 2)
 
-    elif collection == "project":
+    elif collection_lower == "project":
         set_name("business", "businessName")
         set_name("lead", "leadName")
         set_name("defaultAsignee", "defaultAssigneeName")
         set_name("createdBy", "createdByName")
         copy_if_present("leadMail")
 
-    elif collection == "cycle":
+    elif collection_lower == "cycle":
         # Project may only contain id; we skip if name isn't present
         set_name("project", "projectName")
         set_name("business", "businessName")
 
-    elif collection == "module":
+    elif collection_lower == "module":
         set_name("project", "projectName")
         set_name("lead", "leadName")
         set_name("business", "businessName")
         set_names_list("assignee", "assignees")
 
-    elif collection == "members":
+    elif collection_lower == "members":
         set_name("project", "projectName")
         set_name("staff", "staffName")
 
-    elif collection == "page":
+    elif collection_lower == "page":
         set_name("project", "projectName")
         set_name("createdBy", "createdByName")
         set_name("business", "businessName")
@@ -483,7 +492,7 @@ def _transform_by_collection(doc: Dict[str, Any], collection: Optional[str]) -> 
         set_names_list("linkedModule", "linkedModuleNames")
         set_names_list("linkedPages", "linkedPagesNames")
 
-    elif collection == "projectState":
+    elif collection_lower == "projectstate":
         # Keep core fields and slim subStates
         substates = doc.get("subStates")
         if isinstance(substates, list):
@@ -500,7 +509,7 @@ def _transform_by_collection(doc: Dict[str, Any], collection: Optional[str]) -> 
             if slim:
                 out["subStates"] = slim
 
-    elif collection == "timeline":
+    elif collection_lower == "timeline":
         # Surface friendly names and key attributes
         set_name("project", "projectName")
         # user is actor
@@ -514,7 +523,7 @@ def _transform_by_collection(doc: Dict[str, Any], collection: Optional[str]) -> 
         if isinstance(doc.get("fieldChanged"), str):
             out["fieldChanged"] = doc["fieldChanged"]
 
-    elif collection == "epic":
+    elif collection_lower == "epic":
         set_name("project", "projectName")
         set_name("business", "businessName")
         set_name("createdBy", "createdByName")
@@ -537,7 +546,7 @@ def _transform_by_collection(doc: Dict[str, Any], collection: Optional[str]) -> 
             if prop_types:
                 out["customPropertiesSample"] = prop_types
 
-    elif collection == "features":
+    elif collection_lower == "features":
         set_name("project", "projectName")
         set_name("business", "businessName")
         set_name("lead", "leadName")
@@ -636,7 +645,7 @@ def _transform_by_collection(doc: Dict[str, Any], collection: Optional[str]) -> 
             if criteria_text:
                 out["successCriteriaSample"] = criteria_text
 
-    elif collection == "userStory":
+    elif collection_lower == "userstory":
         set_name("project", "projectName")
         set_name("business", "businessName")
         set_name("createdBy", "createdByName")
@@ -687,8 +696,148 @@ def _transform_by_collection(doc: Dict[str, Any], collection: Optional[str]) -> 
                 out["personaPainPointsCount"] = len(pain_points)
                 # Surface first few pain points
                 pain_texts = [str(p) for p in pain_points[:3] if p]
-                if pain_texts:
-                    out["personaPainPointsSample"] = pain_texts
+            if pain_texts:
+                out["personaPainPointsSample"] = pain_texts
+
+    # CRM collection transformations
+    elif collection_lower == "lead":
+        # Extract personalInfo fields
+        personal_info = doc.get("personalInfo")
+        if isinstance(personal_info, dict):
+            if isinstance(personal_info.get("name"), str):
+                out["leadName"] = personal_info["name"]
+            if isinstance(personal_info.get("email"), str):
+                out["leadEmail"] = personal_info["email"]
+            if isinstance(personal_info.get("mobile"), str):
+                out["leadMobile"] = personal_info["mobile"]
+        
+        # Extract company info
+        company = doc.get("company")
+        if isinstance(company, dict):
+            company_name = company.get("name")
+            if company_name:
+                out["companyName"] = company_name
+        
+        # Extract pipeline info
+        pipeline = doc.get("pipeline")
+        if isinstance(pipeline, dict):
+            pipeline_name = pipeline.get("name")
+            if pipeline_name:
+                out["pipelineName"] = pipeline_name
+        
+        # Copy important fields
+        copy_if_present("referenceNo")
+        copy_if_present("leadStatus")
+        copy_if_present("notes")
+        copy_if_present("type")
+        copy_if_present("status")
+        copy_if_present("score")
+        copy_if_present("createdByName")
+        copy_if_present("staffName")
+
+    elif collection_lower == "task":
+        # Copy important fields
+        copy_if_present("name")
+        copy_if_present("taskStatus")
+        copy_if_present("priority")
+        copy_if_present("dueDate")
+        copy_if_present("description")
+        copy_if_present("assignedName")
+        copy_if_present("parentName")
+        copy_if_present("createdByName")
+        copy_if_present("reminderDate")
+        copy_if_present("notify")
+
+    elif collection_lower == "meeting":
+        # Copy important fields
+        copy_if_present("title")
+        copy_if_present("meetingStatus")
+        copy_if_present("meetingType")
+        copy_if_present("leadName")
+        copy_if_present("description")
+        copy_if_present("startDateTime")
+        copy_if_present("endDateTime")
+        copy_if_present("assignedName")
+        copy_if_present("createdByName")
+        copy_if_present("meetingLink")
+        copy_if_present("meetingLocated")
+        
+        # Handle participants
+        participants = doc.get("participantsList")
+        if isinstance(participants, list) and participants:
+            out["participantsCount"] = len(participants)
+            participant_names = []
+            for p in participants[:5]:  # First 5 participants
+                if isinstance(p, dict):
+                    name = p.get("leadName")
+                    if name:
+                        participant_names.append(name)
+            if participant_names:
+                out["participantsNames"] = participant_names
+
+    elif collection_lower == "notes":
+        # Copy important fields
+        copy_if_present("subject")
+        copy_if_present("description")
+        copy_if_present("leadName")
+        copy_if_present("createdByName")
+        
+        # Handle attachments
+        attachments = doc.get("notesAttachments")
+        if isinstance(attachments, list) and attachments:
+            out["attachmentsCount"] = len(attachments)
+
+    elif collection_lower == "activity":
+        # Extract activity type and status
+        copy_if_present("type")
+        copy_if_present("activityStatus")
+        
+        # Extract nested data (could be task, meeting, etc.)
+        data = doc.get("data")
+        if isinstance(data, dict):
+            data_name = data.get("name") or data.get("title")
+            if data_name:
+                out["activityName"] = data_name
+            data_description = data.get("description")
+            if data_description:
+                out["activityDescription"] = truncate_str(data_description, 200)
+            data_status = data.get("taskStatus") or data.get("meetingStatus")
+            if data_status:
+                out["activityDataStatus"] = data_status
+        
+        # Extract lead name if available
+        copy_if_present("leadName")
+
+    elif collection_lower == "calllog":
+        # Copy important fields
+        copy_if_present("title")
+        copy_if_present("callStatus")
+        copy_if_present("callType")
+        copy_if_present("callPurpose")
+        copy_if_present("callDuration")
+        copy_if_present("description")
+        copy_if_present("leadName")
+        copy_if_present("createdByName")
+        copy_if_present("startDateTime")
+        copy_if_present("otherReason")
+
+    elif collection_lower == "mailinfo":
+        # Copy important fields
+        copy_if_present("subject")
+        copy_if_present("body")
+        copy_if_present("mailType")
+        copy_if_present("createdByName")
+        
+        # Handle email recipients
+        to_mails = doc.get("toMails")
+        if isinstance(to_mails, list) and to_mails:
+            out["toMailsCount"] = len(to_mails)
+            out["toMails"] = to_mails[:5]  # First 5 recipients
+        
+        # Handle attachments
+        attachments = doc.get("attachments")
+        if isinstance(attachments, list) and attachments:
+            out["attachmentsCount"] = len(attachments)
 
     # Drop empty/None values and metadata keys
     out = {k: v for k, v in out.items() if v not in (None, "", [], {}) and k != "_class"}
@@ -796,10 +945,10 @@ async def mongo_query(query: str, show_all: bool = False) -> str:
             return f"❌ Missing 'success' field in query planner result: {result}"
 
         if result["success"]:
-            response = f"🎯 INTELLIGENT QUERY RESULT:\n"
-            response += f"Query: '{query}'\n\n"
-
-            # Show parsed intent with validation
+            # Simplified response format - focus on data, not metadata
+            response = ""
+            
+            # Get parsed intent
             intent = result.get("intent")
             if not intent:
                 return "❌ Query planner did not return intent information."
@@ -807,49 +956,7 @@ async def mongo_query(query: str, show_all: bool = False) -> str:
             if not isinstance(intent, dict):
                 return f"❌ Invalid intent format: {type(intent)}"
             
-            response += f"📋 UNDERSTOOD INTENT:\n"
-            if result.get("planner"):
-                response += f"• Planner: {result['planner']}\n"
-            
-            # Safely access intent fields with defaults
             primary_entity = intent.get('primary_entity', 'Unknown')
-            response += f"• Primary Entity: {primary_entity}\n"
-            
-            target_entities = intent.get('target_entities')
-            if target_entities and isinstance(target_entities, list) and len(target_entities) > 0:
-                response += f"• Related Entities: {', '.join(str(e) for e in target_entities)}\n"
-            
-            filters = intent.get('filters')
-            if filters and isinstance(filters, dict) and len(filters) > 0:
-                response += f"• Filters: {filters}\n"
-            
-            aggregations = intent.get('aggregations')
-            if aggregations:
-                response += f"• Aggregations: {', '.join(intent['aggregations'])}\n"
-            response += "\n"
-
-            # Show the generated pipeline (first few stages)
-            pipeline = result.get("pipeline")
-            pipeline_js = result.get("pipeline_js")
-            if pipeline_js:
-                response += f"🔧 GENERATED PIPELINE:\n"
-                response += pipeline_js
-                response += "\n"
-            elif pipeline:
-                response += f"🔧 GENERATED PIPELINE:\n"
-                if _format_pipeline_for_display:
-                    formatted_pipeline = _format_pipeline_for_display(pipeline)
-                    response += formatted_pipeline
-                else:
-                    for i, stage in enumerate(pipeline):
-                        stage_name = list(stage.keys())[0]
-                        # Format the stage content nicely
-                        stage_content = json.dumps(stage[stage_name], indent=2)
-                        # Truncate very long content for readability but show complete structure
-                        if len(stage_content) > 200:
-                            stage_content = stage_content + "..."
-                        response += f"• {stage_name}: {stage_content}\n"
-                response += "\n"
 
             # Show results (compact preview)
             rows = result.get("result")
@@ -1306,6 +1413,197 @@ async def mongo_query(query: str, show_all: bool = False) -> str:
 
                             base += f", descriptions=[{descriptions_text}]"
                         return base
+                    
+                    # CRM entity rendering
+                    if e == "lead":
+                        ref_no = entity.get("referenceNo")
+                        name = entity.get("leadName") or get_nested(entity, "personalInfo.name")
+                        status = entity.get("leadStatus")
+                        email = entity.get("leadEmail") or get_nested(entity, "personalInfo.email")
+                        mobile = entity.get("leadMobile") or get_nested(entity, "personalInfo.mobile")
+                        notes = entity.get("notes")
+                        lead_type = entity.get("type")
+                        score = entity.get("score")
+                        company = entity.get("companyName") or get_nested(entity, "company.name")
+                        pipeline = entity.get("pipelineName") or get_nested(entity, "pipeline.name")
+                        
+                        base = f"• {ref_no or name or 'Lead'}: {name or ''}"
+                        if status:
+                            base += f" — status={status}"
+                        if email:
+                            base += f", email={email}"
+                        if mobile:
+                            base += f", mobile={mobile}"
+                        if company:
+                            base += f", company={company}"
+                        if lead_type:
+                            base += f", type={lead_type}"
+                        if score is not None:
+                            base += f", score={score}"
+                        if pipeline:
+                            base += f", pipeline={pipeline}"
+                        if notes:
+                            base += f", notes={truncate_str(notes, 100)}"
+                        return base
+                    
+                    if e == "task":
+                        name = entity.get("name")
+                        status = entity.get("taskStatus")
+                        priority = entity.get("priority")
+                        due_date = entity.get("dueDate")
+                        description = entity.get("description")
+                        assigned = entity.get("assignedName")
+                        parent = entity.get("parentName")
+                        created_by = entity.get("createdByName")
+                        
+                        base = f"• {name or 'Task'}"
+                        if status:
+                            base += f" — status={status}"
+                        if priority:
+                            base += f", priority={priority}"
+                        if due_date:
+                            base += f", due={due_date}"
+                        if assigned:
+                            base += f", assigned={assigned}"
+                        if parent:
+                            base += f", parent={parent}"
+                        if created_by:
+                            base += f", createdBy={created_by}"
+                        if description:
+                            base += f", description={truncate_str(description, 120)}"
+                        return base
+                    
+                    if e == "meeting":
+                        title = entity.get("title")
+                        status = entity.get("meetingStatus")
+                        meeting_type = entity.get("meetingType")
+                        lead_name = entity.get("leadName")
+                        description = entity.get("description")
+                        start_dt = entity.get("startDateTime")
+                        end_dt = entity.get("endDateTime")
+                        assigned = entity.get("assignedName")
+                        created_by = entity.get("createdByName")
+                        meeting_link = entity.get("meetingLink")
+                        participants = entity.get("participantsNames")
+                        
+                        base = f"• {title or 'Meeting'}"
+                        if status:
+                            base += f" — status={status}"
+                        if meeting_type:
+                            base += f", type={meeting_type}"
+                        if lead_name:
+                            base += f", lead={lead_name}"
+                        if start_dt and end_dt:
+                            base += f", time={start_dt} → {end_dt}"
+                        elif start_dt:
+                            base += f", start={start_dt}"
+                        if assigned:
+                            base += f", assigned={assigned}"
+                        if created_by:
+                            base += f", createdBy={created_by}"
+                        if meeting_link:
+                            base += f", link={meeting_link[:50]}..."
+                        if participants:
+                            base += f", participants={', '.join(participants[:3])}"
+                        if description:
+                            base += f", description={truncate_str(description, 120)}"
+                        return base
+                    
+                    if e == "notes":
+                        subject = entity.get("subject")
+                        description = entity.get("description")
+                        lead_name = entity.get("leadName")
+                        created_by = entity.get("createdByName")
+                        attachments_count = entity.get("attachmentsCount")
+                        
+                        base = f"• {subject or 'Note'}"
+                        if lead_name:
+                            base += f" — lead={lead_name}"
+                        if created_by:
+                            base += f", createdBy={created_by}"
+                        if attachments_count:
+                            base += f", attachments={attachments_count}"
+                        if description:
+                            base += f", description={truncate_str(description, 120)}"
+                        return base
+                    
+                    if e == "activity":
+                        activity_type = entity.get("type")
+                        status = entity.get("activityStatus")
+                        name = entity.get("activityName")
+                        description = entity.get("activityDescription")
+                        data_status = entity.get("activityDataStatus")
+                        lead_name = entity.get("leadName")
+                        
+                        base = f"• {name or 'Activity'}"
+                        if activity_type:
+                            base += f" — type={activity_type}"
+                        if status:
+                            base += f", status={status}"
+                        if data_status:
+                            base += f", dataStatus={data_status}"
+                        if lead_name:
+                            base += f", lead={lead_name}"
+                        if description:
+                            base += f", description={truncate_str(description, 120)}"
+                        return base
+                    
+                    if e == "calllog":
+                        title = entity.get("title")
+                        call_status = entity.get("callStatus")
+                        call_type = entity.get("callType")
+                        call_purpose = entity.get("callPurpose")
+                        call_duration = entity.get("callDuration")
+                        description = entity.get("description")
+                        lead_name = entity.get("leadName")
+                        created_by = entity.get("createdByName")
+                        start_dt = entity.get("startDateTime")
+                        
+                        base = f"• {title or 'Call'}"
+                        if call_status:
+                            base += f" — status={call_status}"
+                        if call_type:
+                            base += f", type={call_type}"
+                        if call_purpose:
+                            base += f", purpose={call_purpose}"
+                        if call_duration:
+                            base += f", duration={call_duration}"
+                        if lead_name:
+                            base += f", lead={lead_name}"
+                        if created_by:
+                            base += f", createdBy={created_by}"
+                        if start_dt:
+                            base += f", time={start_dt}"
+                        if description:
+                            base += f", description={truncate_str(description, 120)}"
+                        return base
+                    
+                    if e == "mailinfo":
+                        subject = entity.get("subject")
+                        mail_type = entity.get("mailType")
+                        created_by = entity.get("createdByName")
+                        to_mails = entity.get("toMails")
+                        to_mails_count = entity.get("toMailsCount")
+                        attachments_count = entity.get("attachmentsCount")
+                        body = entity.get("body")
+                        
+                        base = f"• {subject or 'Email'}"
+                        if mail_type:
+                            base += f" — type={mail_type}"
+                        if created_by:
+                            base += f", from={created_by}"
+                        if to_mails:
+                            base += f", to={', '.join(to_mails[:3])}"
+                        elif to_mails_count:
+                            base += f", to={to_mails_count} recipients"
+                        if attachments_count:
+                            base += f", attachments={attachments_count}"
+                        if body:
+                            # Strip HTML tags for preview
+                            body_text = re.sub(r'<[^>]+>', '', str(body))
+                            base += f", body={truncate_str(body_text, 120)}"
+                        return base
+                    
                     # Default fallback
                     title = entity.get("title") or entity.get("name") or "Item"
                     return f"• {truncate_str(title, 80)}"
@@ -1423,16 +1721,22 @@ async def mongo_query(query: str, show_all: bool = False) -> str:
             primary_entity = intent.get('primary_entity') if isinstance(intent, dict) else None
             filtered = filter_and_transform_content(filtered, primary_entity=primary_entity)
 
-            # Format in LLM-friendly way
+            # Format in LLM-friendly way - this is the main content
             max_items = None if show_all else 50
             formatted_result = format_llm_friendly(filtered, max_items=max_items, primary_entity=primary_entity)
+            
             # If members primary entity and no rows, proactively hint about filters
             try:
                 if isinstance(result.get("intent"), dict) and result["intent"].get("primary_entity") == "members" and not filtered:
                     formatted_result += "\n(No members matched. Try filtering by name, role, type, or project.)"
             except Exception:
                 pass
-            response += formatted_result
+            
+            # Add the formatted result - this is the actual data the LLM needs
+            if formatted_result:
+                response += formatted_result
+            else:
+                response += "No results found."
             elapsed_ms = (perf_counter() - tool_start_time) * 1000
             print(f"mongo_query (including planner) for '{query[:50]}...' took {elapsed_ms:.2f} ms")
             return response
