@@ -41,7 +41,7 @@ export const ChatInput = ({ onSendMessage, isLoading = false, showSuggestedPromp
           className={cn(
             "relative flex items-center gap-2 rounded-full border border-input bg-card py-2 px-3",
             "shadow-lg transition-all duration-200",
-            "focus-within:border-primary focus-within:shadow-[0_0_20px_rgba(59,130,246,0.2)]",
+            "focus-within:border-primary focus-within:shadow-[0_0_20px_rgba(255,160,100,0.2)]",
             "w-[75%] m-auto",
           )}
         >
@@ -60,7 +60,7 @@ export const ChatInput = ({ onSendMessage, isLoading = false, showSuggestedPromp
             className={cn(
               "h-7 w-7 shrink-0 rounded-full",
               "bg-gradient-to-r from-primary to-accent",
-              "hover:shadow-[0_0_20px_rgba(59,130,246,0.4)]",
+              "hover:shadow-[0_0_20px_rgba(255,160,100,0.4)]",
               "transition-all duration-200",
               "disabled:opacity-50"
             )}

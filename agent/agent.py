@@ -67,15 +67,15 @@ DEFAULT_SYSTEM_PROMPT = (
     "- Keep list items concise (one to two lines maximum)\n"
     "- Use **bold** for key terms within list items\n\n"
     "FORMATTING EXAMPLES:\n"
-    "❌ BAD: 'There are 5 bugs and 3 features assigned to John.'\n"
+    "❌ BAD: 'There are 5 tasks and 3 meetings assigned to John.'\n"
     "✅ GOOD:\n"
     "## John's Assignments\n"
-    "- **5 bugs** - High priority items requiring immediate attention\n"
-    "- **3 features** - New development work in progress\n\n"
-    "❌ BAD: 'The query returned project Alpha with 10 items, project Beta with 5 items.'\n"
+    "- **5 tasks** - High priority items requiring immediate attention\n"
+    "- **3 meetings** - Scheduled appointments this week\n\n"
+    "❌ BAD: 'The query returned Lead Alpha with 10 tasks, Lead Beta with 5 tasks.'\n"
     "✅ GOOD:\n"
-    "## Project Overview\n\n"
-    "| Project | Work Items | Status |\n"
+    "## Lead Overview\n\n"
+    "| Lead | Tasks | Status |\n"
     "| --- | --- | --- |\n"
     "| Alpha | 10 | Active |\n"
     "| Beta | 5 | Active |\n\n"
@@ -101,8 +101,8 @@ DEFAULT_SYSTEM_PROMPT = (
     "TOOL EXECUTION STRATEGY:\n"
     "- When tools are INDEPENDENT (can run without each other's results): Call them together in one batch.\n"
     "- When tools are DEPENDENT (one needs another's output): Call them separately in sequence.\n"
-    "- Examples of INDEPENDENT: 'Show bug counts AND feature counts' → call both tools together\n"
-    "- Examples of DEPENDENT: 'Find bugs by John, THEN search docs about those bugs' → call mongo_query first, wait for results, then call rag_search\n\n"
+    "- Examples of INDEPENDENT: 'Show task counts AND meeting counts' → call both tools together\n"
+    "- Examples of DEPENDENT: 'Find tasks by John, THEN search notes about those tasks' → call mongo_query first, wait for results, then call rag_search\n\n"
     "DECISION GUIDE:\n"
     "1) Use 'mongo_query' for structured questions about entities/fields in collections: Lead, Task, Activity, Meeting, Notes, CallLog, MailInfo, LeadScoreRule.\n"
     "   - Examples: counts, lists, filters, sort, group by, breakdowns by leadStatus/taskStatus/assignedName/priority/date.\n"
@@ -131,7 +131,7 @@ DEFAULT_SYSTEM_PROMPT = (
     "   - REQUIRED: content_type ('lead', 'task', 'meeting', or 'note'), prompt (user's instruction).\n"
     "   - OPTIONAL: template_title, template_content, context.\n"
     "4) Use MULTIPLE tools together when question needs different operations.\n"
-    "   - Example: 'Show bug counts by priority (mongo_query) and find related documentation (rag_search)'.\n"
+    "   - Example: 'Show task counts by priority (mongo_query) and find related notes (rag_search)'.\n"
     "   - Agent decides tool combination based on query complexity and dependencies.\n\n"
     "TOOL CHEATSHEET:\n"
     "- mongo_query(query:str, show_all:bool=False): Natural-language to Mongo aggregation. Safe fields only. Advanced analytics capabilities.\n"
@@ -231,12 +231,22 @@ def _select_tools_for_query(user_query: str):
     Enhanced policy:
     - Always expose all available tools (mongo_query, rag_search, generate_content).
     - Let the LLM decide routing based on instructions; no keyword gating.
-    - Add query analysis hints for complex join decisions.
+    - Add CRM-specific query analysis hints for better tool selection.
     """
     allowed_names = ["mongo_query", "rag_search", "generate_content"]
     selected_tools = [tool for name, tool in _TOOLS_BY_NAME.items() if name in allowed_names]
     if not selected_tools and "mongo_query" in _TOOLS_BY_NAME:
         selected_tools = [_TOOLS_BY_NAME["mongo_query"]]
+    
+    # CRM-specific query hints (for logging/debugging, not filtering)
+    query_lower = user_query.lower()
+    crm_entities = ['lead', 'task', 'activity', 'meeting', 'note', 'call', 'mail', 'email']
+    has_crm_entity = any(entity in query_lower for entity in crm_entities)
+    
+    if has_crm_entity:
+        # Query likely needs CRM tools - ensure they're available
+        pass  # Tools already selected above
+    
     return selected_tools, allowed_names
 
 class AgentExecutor:
@@ -340,10 +350,30 @@ class AgentExecutor:
                 return error_msg, False
 
             try:
-                result = await actual_tool.ainvoke(tool_call["args"])
-                success = True
+                # Validate tool arguments before execution
+                args = tool_call.get("args", {})
+                if args is None:
+                    args = {}
+                if not isinstance(args, dict):
+                    raise ValueError(f"Tool arguments must be a dictionary, got {type(args)}")
+                
+                result = await actual_tool.ainvoke(args)
+                
+                # Validate result is not None
+                if result is None:
+                    result = "Tool returned no result"
+                    success = False
+                else:
+                    success = True
+            except ValueError as ve:
+                result = f"Invalid tool arguments: {ve}"
+                success = False
+            except KeyError as ke:
+                result = f"Missing required tool argument: {ke}"
+                success = False
             except Exception as tool_exc:
-                result = f"Tool execution error: {tool_exc}"
+                logger.error(f"Tool execution error for {tool_call.get('name', 'unknown')}: {tool_exc}", exc_info=True)
+                result = f"Tool execution error: {str(tool_exc)}"
                 success = False
 
             tool_message = ToolMessage(
@@ -461,59 +491,58 @@ class AgentExecutor:
                             "- Use **nested lists** for hierarchical information\n"
                             "- Keep list items concise and use **bold** for key terms\n\n"
                             "DECISION GUIDE:\n"
-                            "1) Use 'mongo_query' for structured questions about entities/fields in collections: project, workItem, cycle, module, epic, members, page, projectState, userStory, features.\n"
-                            "   - Examples: counts, lists, filters, sort, group by, breakdowns by assignee/state/project/priority/date.\n"
-                            "   - Use for: 'count bugs by priority', 'list work items by assignee', 'group projects by business', 'show breakdown by state'.\n"
+                            "1) Use 'mongo_query' for structured questions about entities/fields in collections: Lead, Task, Activity, Meeting, Notes, CallLog, MailInfo, LeadScoreRule.\n"
+                            "   - Examples: counts, lists, filters, sort, group by, breakdowns by leadStatus/taskStatus/assignedName/priority/date.\n"
+                            "   - Use for: 'count leads by status', 'list tasks by assignee', 'group leads by source', 'show breakdown by taskStatus'.\n"
                             "   - The query planner automatically determines when complex joins are beneficial and adds strategic relationships only when they improve query performance.\n"
                             "   - Do NOT answer from memory; run a query.\n"
                             "2) Use 'rag_search' for content-based searches (semantic meaning, not just keywords).\n"
                             "   - Returns FULL chunk content for synthesis - analyze and format the actual content in your response.\n"
-                            "   - Find pages/work items by meaning, analyze content patterns, search documentation.\n"
-                            "   - Examples: 'find notes about OAuth', 'show API docs', 'content mentioning authentication', 'analyze patterns in descriptions'.\n"
+                            "   - Find leads/tasks/meetings/notes by meaning, analyze content patterns, search CRM content.\n"
+                            "   - Examples: 'find notes about follow-up', 'show meeting notes', 'content mentioning customer', 'analyze patterns in descriptions'.\n"
                             "   - SMART CONTENT TYPE SELECTION: Choose appropriate content_type based on query semantics:\n"
-                            "     • 'release', 'documentation', 'notes', 'wiki' keywords → content_type='page'\n"
-                            "     • 'work items', 'bugs', 'tasks', 'issues' keywords → content_type='work_item'\n"
-                            "     • 'cycle', 'sprint', 'iteration' keywords → content_type='cycle'\n"
-                            "     • 'module', 'component' keywords → content_type='module'\n"
-                            "     • 'epic', 'initiative' keywords → content_type='epic'\n"
-                            "     • 'project' keyword → content_type='project'\n"
-                            "     • 'user story', 'story' keywords → content_type='user_story'\n"
-                            "     • 'features', 'feature', 'new feature' keywords → content_type='feature'\n"
+                            "     • 'leads', 'prospects', 'customers' keywords → content_type='lead'\n"
+                            "     • 'tasks', 'todos', 'follow-ups' keywords → content_type='task'\n"
+                            "     • 'meetings', 'calls', 'appointments' keywords → content_type='meeting'\n"
+                            "     • 'notes', 'comments' keywords → content_type='notes'\n"
+                            "     • 'call logs', 'call history' keywords → content_type='callLog'\n"
+                            "     • 'emails', 'mail' keywords → content_type='mailInfo'\n"
+                            "     • 'activities' keywords → content_type='activity'\n"
                             "     • Unclear/multi-type query → content_type=None (all) OR multiple rag_search calls\n"
-                            "3) Use 'generate_content' to CREATE new work items, pages, cycles, modules, or epics.\n"
+                            "3) Use 'generate_content' to CREATE new leads, tasks, meetings, or notes.\n"
                             "   - CRITICAL: Content sent DIRECTLY to frontend, returns only '✅ Content generated'.\n"
                             "   - Do NOT expect details - just acknowledge success to user.\n"
-                            "   - Examples: 'create a bug report', 'generate documentation', 'draft meeting notes', 'create sprint', 'generate module'.\n"
-                            "   - REQUIRED: content_type ('work_item'|'page'|'cycle'|'module'|'epic'), prompt.\n"
+                            "   - Examples: 'create a new lead', 'generate task for follow-up', 'schedule meeting', 'create note'.\n"
+                            "   - REQUIRED: content_type ('lead'|'task'|'meeting'|'note'), prompt.\n"
                             "   - OPTIONAL: template_title, template_content, context.\n"
                             "4) Use MULTIPLE tools together when question needs different operations.\n"
-                            "   - Example: 'Show bug counts by priority (mongo_query) and find related documentation (rag_search)'.\n"
+                            "   - Example: 'Show task counts by priority (mongo_query) and find related notes (rag_search)'.\n"
                             "   - Agent decides tool combination based on query complexity and dependencies.\n\n"
                             "TOOL CHEATSHEET:\n"
-                            "- mongo_query(query:str, show_all:bool=False): Natural-language to Mongo aggregation. Safe fields only.\n"
+                            "- mongo_query(query:str, show_all:bool=False): Natural-language to Mongo aggregation. Safe fields only. Advanced analytics capabilities.\n"
                             "  REQUIRED: 'query' - natural language description of what MongoDB data you want.\n"
+                            "  CAPABILITIES: Array size filtering, complex aggregations, time-series analysis, advanced operators, trend detection.\n"
                             "- rag_search(query:str, content_type:str|None, group_by:str|None, limit:int=10, show_content:bool=True): Universal RAG search.\n"
                             "  REQUIRED: 'query' - semantic search terms.\n"
-                            "  OPTIONAL: content_type ('page'|'work_item'|'project'|'cycle'|'module'|'epic'|'user_story'|'feature'|None), group_by (field), limit, show_content.\n"
-                            "- generate_content(content_type:str, prompt:str, template_title:str='', template_content:str='', context:dict=None): Generate work items/pages/cycles/modules/epics.\n"
-                            "  REQUIRED: content_type ('work_item'|'page'|'cycle'|'module'|'epic'), prompt.\n"
+                            "  OPTIONAL: content_type ('lead'|'task'|'activity'|'meeting'|'notes'|'callLog'|'mailInfo'|None for all), group_by (field name), limit, show_content.\n"
+                            "- generate_content(content_type:str, prompt:str, template_title:str='', template_content:str='', context:dict=None): Generate leads/tasks/meetings/notes.\n"
+                            "  REQUIRED: content_type ('lead'|'task'|'meeting'|'note'), prompt (what to generate).\n"
                             "  OPTIONAL: template_title, template_content, context.\n"
-                            "  NOTE: Returns '✅ Content generated' only - content goes directly to frontend.\n"
+                            "  NOTE: Returns '✅ Content generated' only - full content sent directly to frontend to save tokens.\n"
                             "CONTENT TYPE EXAMPLES:\n"
-                            "- 'What is next release about?' → rag_search(query='next release', content_type='page')\n"
-                            "- 'Recent work items about auth?' → rag_search(query='recent work items auth', content_type='work_item')\n"
-                            "- 'Active cycle details?' → rag_search(query='active cycle', content_type='cycle')\n"
-                            "- 'CRM module overview?' → rag_search(query='CRM module', content_type='module')\n"
-                            "- 'Epic roadmap for onboarding?' → rag_search(query='onboarding epic', content_type='epic')\n"
-                            "- 'Create bug for login' → generate_content(content_type='work_item', prompt='Bug: login fails on mobile')\n"
-                            "- 'Generate API docs' → generate_content(content_type='page', prompt='API documentation for auth')\n"
-                            "- 'Create Q4 sprint' → generate_content(content_type='cycle', prompt='Q4 2024 Sprint')\n"
-                            "- 'Generate auth module' → generate_content(content_type='module', prompt='Authentication Module')\n"
-                            "- 'Draft onboarding epic' → generate_content(content_type='epic', prompt='Customer Onboarding Epic')\n\n"
+                            "- 'What leads are about?' → rag_search(query='leads', content_type='lead')\n"
+                            "- 'Recent tasks about follow-up?' → rag_search(query='recent tasks follow-up', content_type='task')\n"
+                            "- 'Scheduled meetings?' → rag_search(query='scheduled meetings', content_type='meeting')\n"
+                            "- 'Find notes about customer' → rag_search(query='customer notes', content_type='notes')\n"
+                            "- 'Call logs mentioning pricing' → rag_search(query='pricing call logs', content_type='callLog')\n"
+                            "- 'Create a new lead' → generate_content(content_type='lead', prompt='New lead: TechCorp Inc')\n"
+                            "- 'Generate task for follow-up' → generate_content(content_type='task', prompt='Follow-up task: Call customer tomorrow')\n"
+                            "- 'Schedule meeting' → generate_content(content_type='meeting', prompt='Schedule meeting with lead')\n"
+                            "- 'Create note' → generate_content(content_type='note', prompt='Meeting notes: Discussed pricing')\n\n"
                             "WHEN UNSURE WHICH TOOL:\n"
                             "- If the query is ambiguous or entity/field mapping to Mongo is unclear → prefer rag_search first.\n"
-                            "- Question about structured data (counts, filters, group by, breakdown by assignee/state/priority/project/date) → mongo_query.\n"
-                            "- Question about content meaning/semantics (find docs, analyze patterns, content search, descriptions) → rag_search.\n"
+                            "- Question about structured data (counts, filters, group by, breakdown by leadStatus/taskStatus/assignedName/priority/date) → mongo_query.\n"
+                            "- Question about content meaning/semantics (find notes, analyze patterns, content search, descriptions) → rag_search.\n"
                             "- Request to CREATE/GENERATE content → generate_content.\n"
                             "- Question needs both structured + semantic analysis → use BOTH tools together.\n\n"
                             "IMPORTANT: Use valid args: mongo_query needs 'query'; rag_search needs 'query' (optional: content_type, group_by, limit, show_content); generate_content needs content_type + prompt."
@@ -635,15 +664,34 @@ class AgentExecutor:
                                     tool_call_id=response.tool_calls[i].get("id", ""),
                                 )
                                 if callback_handler:
-                                    await callback_handler.on_tool_end(error_msg.content)
+                                    try:
+                                        await callback_handler.on_tool_end(error_msg.content)
+                                    except Exception as e:
+                                        logger.error(f"Error in callback handler: {e}")
                                 messages.append(error_msg)
-                                await conversation_memory.add_message(conversation_id, error_msg)
+                                try:
+                                    await conversation_memory.add_message(conversation_id, error_msg)
+                                except Exception as e:
+                                    logger.error(f"Error saving error message to memory: {e}")
                             else:
                                 tool_message, success = result
+                                # Validate tool message content
+                                if not tool_message.content:
+                                    tool_message.content = "Tool returned empty result"
+                                    success = False
+                                
                                 if callback_handler:
-                                    await callback_handler.on_tool_end(tool_message.content)
+                                    try:
+                                        await callback_handler.on_tool_end(tool_message.content)
+                                    except Exception as e:
+                                        logger.error(f"Error in callback handler: {e}")
+                                
                                 messages.append(tool_message)
-                                await conversation_memory.add_message(conversation_id, tool_message)
+                                try:
+                                    await conversation_memory.add_message(conversation_id, tool_message)
+                                except Exception as e:
+                                    logger.error(f"Error saving tool message to memory: {e}")
+                                
                                 if success:
                                     did_any_tool = True
                     else:
@@ -659,10 +707,24 @@ class AgentExecutor:
                                     pass
                             
                             tool_message, success = await self._execute_single_tool(None, tool_call, selected_tools, None)
+                            
+                            # Validate tool message content
+                            if not tool_message.content:
+                                tool_message.content = "Tool returned empty result"
+                                success = False
+                            
                             if callback_handler:
-                                await callback_handler.on_tool_end(tool_message.content)
+                                try:
+                                    await callback_handler.on_tool_end(tool_message.content)
+                                except Exception as e:
+                                    logger.error(f"Error in callback handler: {e}")
+                            
                             messages.append(tool_message)
-                            await self._add_message_to_memory(conversation_id, tool_message)
+                            try:
+                                await self._add_message_to_memory(conversation_id, tool_message)
+                            except Exception as e:
+                                logger.error(f"Error saving tool message to memory: {e}")
+                            
                             if success:
                                 did_any_tool = True
                     

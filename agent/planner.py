@@ -170,14 +170,36 @@ class Planner:
                 return result is not None
 
             def _generate_pipeline(ctx: Dict[str, Any]) -> List[Dict[str, Any]]:
-                return self.generator.generate_pipeline(ctx["intent"])  # type: ignore[index]
+                intent = ctx.get("intent")
+                if not intent:
+                    raise ValueError("Intent is required for pipeline generation")
+                if not isinstance(intent, QueryIntent):
+                    raise TypeError(f"Intent must be QueryIntent, got {type(intent)}")
+                # Validate intent has required fields
+                if not intent.primary_entity:
+                    raise ValueError("Intent must have a primary_entity")
+                return self.generator.generate_pipeline(intent)  # type: ignore[index]
 
             async def _execute(ctx: Dict[str, Any]) -> Any:
                 intent: QueryIntent = ctx["intent"]  # type: ignore[assignment]
+                pipeline = ctx.get("pipeline")
+                
+                # Validate pipeline
+                if not pipeline:
+                    raise ValueError("Pipeline is required for query execution")
+                if not isinstance(pipeline, list):
+                    raise TypeError(f"Pipeline must be a list, got {type(pipeline)}")
+                if len(pipeline) == 0:
+                    raise ValueError("Pipeline cannot be empty")
+                
+                # Validate intent
+                if not intent or not intent.primary_entity:
+                    raise ValueError("Intent with primary_entity is required")
+                
                 args = {
                     "database": DATABASE_NAME,
                     "collection": intent.primary_entity,
-                    "pipeline": ctx["pipeline"],
+                    "pipeline": pipeline,
                 }
                 return await mongodb_tools.execute_tool("aggregate", args)
 

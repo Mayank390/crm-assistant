@@ -727,7 +727,7 @@ const Index = () => {
               </div>
               <div className="space-y-2">
                 <h1 className="text-4xl font-bold text-gradient">
-                  CRM Assistant
+                  ProspectIQ
                 </h1>
                 <p className="text-md text-muted-foreground">
                   Your AI copilot for lead management, customer relationships, and sales tracking

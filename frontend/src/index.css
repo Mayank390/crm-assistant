@@ -6,7 +6,7 @@
 
 /* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
 All colors MUST be HSL.
-CRM Assistant uses blue/teal color scheme to distinguish from work-management (purple).
+ProspectIQ uses peachy/coral color scheme to distinguish from work-management (purple).
 */
 
 @layer base {
@@ -20,7 +20,7 @@ CRM Assistant uses blue/teal color scheme to distinguish from work-management (p
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
 
-    --primary: 200 70% 50%;
+    --primary: 20 80% 55%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 240 5% 96%;
@@ -29,7 +29,7 @@ CRM Assistant uses blue/teal color scheme to distinguish from work-management (p
     --muted: 240 5% 96%;
     --muted-foreground: 240 4% 46%;
 
-    --accent: 180 70% 45%;
+    --accent: 20 70% 60%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
@@ -37,22 +37,22 @@ CRM Assistant uses blue/teal color scheme to distinguish from work-management (p
 
     --border: 240 6% 90%;
     --input: 240 6% 90%;
-    --ring: 200 70% 63%;
+    --ring: 20 70% 70%;
 
     --radius: 0.75rem;
 
     --sidebar-background: 240 5% 98%;
     --sidebar-foreground: 222 47% 11%;
-    --sidebar-primary: 200 70% 63%;
+    --sidebar-primary: 20 70% 70%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 240 5% 93%;
     --sidebar-accent-foreground: 222 47% 11%;
     --sidebar-border: 240 6% 90%;
-    --sidebar-ring: 200 70% 63%;
+    --sidebar-ring: 20 70% 70%;
 
-    --gradient-primary: linear-gradient(135deg, hsl(200 70% 63%) 0%, hsl(180 70% 55%) 100%);
-    --gradient-glow: linear-gradient(135deg, hsl(200 70% 63% / 0.2) 0%, hsl(180 70% 55% / 0.1) 100%);
-    --shadow-glow: 0 0 40px hsl(200 70% 63% / 0.3);
+    --gradient-primary: linear-gradient(135deg, hsl(20 70% 70%) 0%, hsl(20 80% 60%) 100%);
+    --gradient-glow: linear-gradient(135deg, hsl(20 70% 70% / 0.2) 0%, hsl(20 80% 60% / 0.1) 100%);
+    --shadow-glow: 0 0 40px hsl(20 70% 70% / 0.3);
   }
 }
 
@@ -361,7 +361,7 @@ CRM Assistant uses blue/teal color scheme to distinguish from work-management (p
 
   .react-datepicker__day--selected,
   .react-datepicker__day--keyboard-selected {
-    background: #3b82f6 !important; /* Blue 500 */
+    background: hsl(20 80% 55%) !important; /* Peachy primary */
     color: white !important;
     border-radius: 50% !important;
     font-weight: 600;
@@ -374,7 +374,7 @@ CRM Assistant uses blue/teal color scheme to distinguish from work-management (p
 
   .react-datepicker__day--range-start,
   .react-datepicker__day--range-end {
-    background: #3b82f6 !important; /* Blue 500 */
+    background: hsl(20 80% 55%) !important; /* Peachy primary */
     color: white !important;
     border-radius: 50% !important;
     font-weight: 600;
@@ -383,15 +383,15 @@ CRM Assistant uses blue/teal color scheme to distinguish from work-management (p
   }
 
   .react-datepicker__day--in-range {
-    background: #dbeafe !important; /* Blue 100 */
-    color: #1e40af !important; /* Blue 800 */
+    background: hsl(20 70% 95%) !important; /* Light peachy background */
+    color: hsl(20 80% 45%) !important; /* Darker peachy text */
     font-weight: 500;
   }
 
   /* Ensure range styling overrides other styles */
   .react-datepicker__day--in-range.react-datepicker__day--range-start,
   .react-datepicker__day--in-range.react-datepicker__day--range-end {
-    background: #3b82f6 !important; /* Blue 500 */
+    background: hsl(20 80% 55%) !important; /* Peachy primary */
     color: white !important;
     border-radius: 50% !important;
   }

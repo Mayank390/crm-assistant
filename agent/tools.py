@@ -703,13 +703,29 @@ def truncate_str(s: Any, limit: int = 120) -> str:
 
 
 def filter_and_transform_content(data: Any, primary_entity: Optional[str] = None) -> Any:
-    """Preserve meaningful fields, strip IDs/UUIDs, and flatten references per collection.
+    """Filter and transform content with defensive checks for edge cases.
+    
+    Preserve meaningful fields, strip IDs/UUIDs, and flatten references per collection.
 
     Steps:
     1) Use existing filter to keep meaningful content fields.
     2) Strip any remaining id/uuid-like keys/values.
     3) Apply per-collection flatteners to surface human-friendly names.
     """
+    # Handle None/empty input
+    if data is None:
+        return None
+    
+    if not isinstance(data, (dict, list)):
+        return data
+    
+    # Handle empty collections
+    if isinstance(data, list) and len(data) == 0:
+        return []
+    
+    if isinstance(data, dict) and len(data) == 0:
+        return {}
+    
     base = filter_meaningful_content(data)
     stripped = _strip_ids(base)
 
@@ -763,23 +779,52 @@ async def mongo_query(query: str, show_all: bool = False) -> str:
         return "❌ Intelligent query planner not available. Please ensure query_planner.py is properly configured."
 
     try:
+        # Validate query input
+        if not query or not isinstance(query, str):
+            return "❌ Invalid query: query must be a non-empty string."
+        
+        if len(query.strip()) == 0:
+            return "❌ Invalid query: query cannot be empty."
+        
         result = await plan_and_execute_query(query)
+        
+        # Validate result structure
+        if not isinstance(result, dict):
+            return f"❌ Unexpected result format from query planner: {type(result)}"
+        
+        if "success" not in result:
+            return f"❌ Missing 'success' field in query planner result: {result}"
 
         if result["success"]:
             response = f"🎯 INTELLIGENT QUERY RESULT:\n"
             response += f"Query: '{query}'\n\n"
 
-            # Show parsed intent
-            intent = result["intent"]
+            # Show parsed intent with validation
+            intent = result.get("intent")
+            if not intent:
+                return "❌ Query planner did not return intent information."
+            
+            if not isinstance(intent, dict):
+                return f"❌ Invalid intent format: {type(intent)}"
+            
             response += f"📋 UNDERSTOOD INTENT:\n"
             if result.get("planner"):
                 response += f"• Planner: {result['planner']}\n"
-            response += f"• Primary Entity: {intent['primary_entity']}\n"
-            if intent['target_entities']:
-                response += f"• Related Entities: {', '.join(intent['target_entities'])}\n"
-            if intent['filters']:
-                response += f"• Filters: {intent['filters']}\n"
-            if intent['aggregations']:
+            
+            # Safely access intent fields with defaults
+            primary_entity = intent.get('primary_entity', 'Unknown')
+            response += f"• Primary Entity: {primary_entity}\n"
+            
+            target_entities = intent.get('target_entities')
+            if target_entities and isinstance(target_entities, list) and len(target_entities) > 0:
+                response += f"• Related Entities: {', '.join(str(e) for e in target_entities)}\n"
+            
+            filters = intent.get('filters')
+            if filters and isinstance(filters, dict) and len(filters) > 0:
+                response += f"• Filters: {filters}\n"
+            
+            aggregations = intent.get('aggregations')
+            if aggregations:
                 response += f"• Aggregations: {', '.join(intent['aggregations'])}\n"
             response += "\n"
 
@@ -1394,10 +1439,25 @@ async def mongo_query(query: str, show_all: bool = False) -> str:
         else:
             return f"❌ QUERY FAILED:\nQuery: '{query}'\nError: {result['error']}"
 
+    except KeyError as ke:
+        elapsed_ms = (perf_counter() - tool_start_time) * 1000
+        print(f"mongo_query for '{query[:50]}...' failed in {elapsed_ms:.2f} ms: {ke}")
+        return f"❌ Missing required field in query result: {ke}"
+    except TypeError as te:
+        elapsed_ms = (perf_counter() - tool_start_time) * 1000
+        print(f"mongo_query for '{query[:50]}...' failed in {elapsed_ms:.2f} ms: {te}")
+        return f"❌ Type error in query processing: {te}"
+    except ValueError as ve:
+        elapsed_ms = (perf_counter() - tool_start_time) * 1000
+        print(f"mongo_query for '{query[:50]}...' failed in {elapsed_ms:.2f} ms: {ve}")
+        return f"❌ Invalid value in query: {ve}"
     except Exception as e:
+        import traceback
+        error_details = traceback.format_exc()
+        logger.error(f"Error executing mongo_query: {e}\n{error_details}")
         elapsed_ms = (perf_counter() - tool_start_time) * 1000
         print(f"mongo_query for '{query[:50]}...' failed in {elapsed_ms:.2f} ms: {e}")
-        return f"❌ INTELLIGENT QUERY ERROR:\nQuery: '{query}'\nError: {str(e)}"
+        return f"❌ Error executing query: {str(e)}"
 
 
 @tool

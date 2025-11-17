@@ -816,6 +816,12 @@ class PipelineGenerator:
     def _extract_primary_filters(self, filters: Dict[str, Any], collection: str) -> Dict[str, Any]:
         """Extract filters that apply to the primary collection"""
         primary_filters = {}
+        
+        # Handle None or invalid filters
+        if filters is None:
+            return primary_filters
+        if not isinstance(filters, dict):
+            return primary_filters
 
         # Handle direct _id filters first using $expr with $toObjectId for safety
         def _is_hex24(s: str) -> bool:
@@ -1017,6 +1023,14 @@ class PipelineGenerator:
                 primary_filters['leadStatus'] = filters['leadStatus']
             if 'status' in filters and 'status' not in primary_filters:
                 primary_filters['status'] = filters['status']
+            if 'source' in filters:
+                primary_filters['source'] = filters['source']
+            if 'type' in filters:
+                primary_filters['type'] = filters['type']
+            if 'leadActiveType' in filters:
+                primary_filters['leadActiveType'] = filters['leadActiveType']
+            if 'customerType' in filters:
+                primary_filters['customerType'] = filters['customerType']
             if 'personalInfo.name' in filters and isinstance(filters['personalInfo.name'], str):
                 primary_filters['personalInfo.name'] = {'$regex': filters['personalInfo.name'], '$options': 'i'}
             if 'personalInfo.email' in filters and isinstance(filters['personalInfo.email'], str):
@@ -1025,6 +1039,14 @@ class PipelineGenerator:
                 primary_filters['personalInfo.mobile'] = {'$regex': filters['personalInfo.mobile'], '$options': 'i'}
             if 'referenceNo' in filters and isinstance(filters['referenceNo'], str):
                 primary_filters['referenceNo'] = {'$regex': f"^{filters['referenceNo']}", '$options': 'i'}
+            if 'notes' in filters and isinstance(filters['notes'], str):
+                primary_filters['notes'] = {'$regex': filters['notes'], '$options': 'i'}
+            if 'createdById' in filters:
+                primary_filters['createdById'] = filters['createdById']
+            if 'staffId' in filters:
+                primary_filters['staffId'] = filters['staffId']
+            if 'staffName' in filters and isinstance(filters['staffName'], str):
+                primary_filters['staffName'] = {'$regex': filters['staffName'], '$options': 'i'}
             if 'score' in filters:
                 _apply_numeric_range(primary_filters, 'score', filters)
             if 'emailCount' in filters:
@@ -1041,15 +1063,30 @@ class PipelineGenerator:
                 primary_filters['priority'] = filters['priority']
             if 'name' in filters and isinstance(filters['name'], str):
                 primary_filters['name'] = {'$regex': filters['name'], '$options': 'i'}
+            if 'description' in filters and isinstance(filters['description'], str):
+                primary_filters['description'] = {'$regex': filters['description'], '$options': 'i'}
             if 'assignedName' in filters and isinstance(filters['assignedName'], str):
                 primary_filters['assignedName'] = {'$regex': filters['assignedName'], '$options': 'i'}
             if 'assignedTo' in filters:
                 primary_filters['assignedTo'] = filters['assignedTo']
+            if 'assignToMailId' in filters and isinstance(filters['assignToMailId'], str) and filters['assignToMailId']:
+                primary_filters['assignToMailId'] = {'$regex': filters['assignToMailId'], '$options': 'i'}
             if 'createdByName' in filters and isinstance(filters['createdByName'], str):
                 primary_filters['createdByName'] = {'$regex': filters['createdByName'], '$options': 'i'}
+            if 'createdById' in filters:
+                primary_filters['createdById'] = filters['createdById']
+            if 'notify' in filters:
+                primary_filters['notify'] = filters['notify']
+            if 'reminderDays' in filters:
+                _apply_numeric_range(primary_filters, 'reminderDays', filters)
             if 'leadId' in filters:
                 primary_filters['parentId'] = filters['leadId']  # Tasks use parentId to reference leads
+            if 'parentId' in filters:
+                primary_filters['parentId'] = filters['parentId']
+            if 'parentName' in filters and isinstance(filters['parentName'], str):
+                primary_filters['parentName'] = {'$regex': filters['parentName'], '$options': 'i'}
             _apply_date_range(primary_filters, 'dueDate', filters)
+            _apply_date_range(primary_filters, 'reminderDate', filters)
             _apply_date_range(primary_filters, 'createdTimeStamp', filters)
             _apply_date_range(primary_filters, 'updatedTimeStamp', filters)
 
@@ -1062,7 +1099,12 @@ class PipelineGenerator:
                 primary_filters['leadId'] = filters['leadId']
             if 'parentId' in filters:
                 primary_filters['parentId'] = filters['parentId']
+            if 'createdByName' in filters and isinstance(filters['createdByName'], str):
+                primary_filters['createdByName'] = {'$regex': filters['createdByName'], '$options': 'i'}
+            if 'createdById' in filters:
+                primary_filters['createdById'] = filters['createdById']
             _apply_date_range(primary_filters, 'createdTimeStamp', filters)
+            _apply_date_range(primary_filters, 'reminderDate', filters)
 
         elif collection == "Meeting":
             if 'meetingStatus' in filters:
@@ -1071,27 +1113,48 @@ class PipelineGenerator:
                 primary_filters['meetingType'] = filters['meetingType']
             if 'title' in filters and isinstance(filters['title'], str):
                 primary_filters['title'] = {'$regex': filters['title'], '$options': 'i'}
+            if 'description' in filters and isinstance(filters['description'], str):
+                primary_filters['description'] = {'$regex': filters['description'], '$options': 'i'}
             if 'leadName' in filters and isinstance(filters['leadName'], str):
                 primary_filters['leadName'] = {'$regex': filters['leadName'], '$options': 'i'}
             if 'leadId' in filters:
                 primary_filters['leadId'] = filters['leadId']
             if 'assignedName' in filters and isinstance(filters['assignedName'], str):
                 primary_filters['assignedName'] = {'$regex': filters['assignedName'], '$options': 'i'}
+            if 'assignedTo' in filters:
+                primary_filters['assignedTo'] = filters['assignedTo']
             if 'createdByName' in filters and isinstance(filters['createdByName'], str):
                 primary_filters['createdByName'] = {'$regex': filters['createdByName'], '$options': 'i'}
+            if 'createdById' in filters:
+                primary_filters['createdById'] = filters['createdById']
+            if 'meetingLink' in filters and isinstance(filters['meetingLink'], str) and filters['meetingLink'].strip():
+                primary_filters['meetingLink'] = {'$regex': filters['meetingLink'], '$options': 'i'}
+            if 'meetingLocated' in filters and isinstance(filters['meetingLocated'], str) and filters['meetingLocated'].strip():
+                primary_filters['meetingLocated'] = {'$regex': filters['meetingLocated'], '$options': 'i'}
+            if 'remainder' in filters:
+                _apply_numeric_range(primary_filters, 'remainder', filters)
+            if 'participantsRemainder' in filters:
+                _apply_numeric_range(primary_filters, 'participantsRemainder', filters)
             _apply_date_range(primary_filters, 'startDateTime', filters)
             _apply_date_range(primary_filters, 'endDateTime', filters)
             _apply_date_range(primary_filters, 'createdTimeStamp', filters)
+            _apply_date_range(primary_filters, 'updatedTimeStamp', filters)
 
         elif collection == "Notes":
             if 'subject' in filters and isinstance(filters['subject'], str):
                 primary_filters['subject'] = {'$regex': filters['subject'], '$options': 'i'}
+            if 'description' in filters and isinstance(filters['description'], str):
+                primary_filters['description'] = {'$regex': filters['description'], '$options': 'i'}
             if 'leadName' in filters and isinstance(filters['leadName'], str):
                 primary_filters['leadName'] = {'$regex': filters['leadName'], '$options': 'i'}
             if 'leadId' in filters:
                 primary_filters['leadId'] = filters['leadId']
             if 'createdByName' in filters and isinstance(filters['createdByName'], str):
                 primary_filters['createdByName'] = {'$regex': filters['createdByName'], '$options': 'i'}
+            if 'createdById' in filters:
+                primary_filters['createdById'] = filters['createdById']
+            if 'taskId' in filters:
+                primary_filters['taskId'] = filters['taskId']
             _apply_date_range(primary_filters, 'createdTimeStamp', filters)
 
         elif collection == "CallLog":
@@ -1099,14 +1162,38 @@ class PipelineGenerator:
                 primary_filters['callStatus'] = filters['callStatus']
             if 'callType' in filters:
                 primary_filters['callType'] = filters['callType']
+            if 'call_variant' in filters:
+                primary_filters['call_variant'] = filters['call_variant']
+            if 'callPurpose' in filters:
+                primary_filters['callPurpose'] = filters['callPurpose']
             if 'title' in filters and isinstance(filters['title'], str):
                 primary_filters['title'] = {'$regex': filters['title'], '$options': 'i'}
+            if 'description' in filters and isinstance(filters['description'], str):
+                primary_filters['description'] = {'$regex': filters['description'], '$options': 'i'}
             if 'leadName' in filters and isinstance(filters['leadName'], str):
                 primary_filters['leadName'] = {'$regex': filters['leadName'], '$options': 'i'}
             if 'leadId' in filters:
                 primary_filters['leadId'] = filters['leadId']
             if 'createdByName' in filters and isinstance(filters['createdByName'], str):
                 primary_filters['createdByName'] = {'$regex': filters['createdByName'], '$options': 'i'}
+            if 'createdById' in filters:
+                primary_filters['createdById'] = filters['createdById']
+            if 'callDuration' in filters:
+                # callDuration can be empty string or number string
+                if isinstance(filters['callDuration'], str) and filters['callDuration'].strip():
+                    try:
+                        # Try to parse as number for range filters
+                        float(filters['callDuration'])
+                        _apply_numeric_range(primary_filters, 'callDuration', filters)
+                    except (ValueError, TypeError):
+                        # If not a number, treat as string filter
+                        primary_filters['callDuration'] = {'$regex': filters['callDuration'], '$options': 'i'}
+            if 'otherReason' in filters and isinstance(filters['otherReason'], str):
+                # otherReason can be empty string, handle it gracefully
+                if filters['otherReason'].strip():
+                    primary_filters['otherReason'] = {'$regex': filters['otherReason'], '$options': 'i'}
+            if 'remainder' in filters:
+                _apply_numeric_range(primary_filters, 'remainder', filters)
             _apply_date_range(primary_filters, 'startDateTime', filters)
             _apply_date_range(primary_filters, 'createdTimeStamp', filters)
             _apply_date_range(primary_filters, 'updatedTimeStamp', filters)
@@ -1116,10 +1203,14 @@ class PipelineGenerator:
                 primary_filters['mailType'] = filters['mailType']
             if 'subject' in filters and isinstance(filters['subject'], str):
                 primary_filters['subject'] = {'$regex': filters['subject'], '$options': 'i'}
+            if 'body' in filters and isinstance(filters['body'], str):
+                primary_filters['body'] = {'$regex': filters['body'], '$options': 'i'}
             if 'leadId' in filters:
                 primary_filters['leadId'] = filters['leadId']
             if 'createdByName' in filters and isinstance(filters['createdByName'], str):
                 primary_filters['createdByName'] = {'$regex': filters['createdByName'], '$options': 'i'}
+            if 'createdById' in filters:
+                primary_filters['createdById'] = filters['createdById']
             _apply_date_range(primary_filters, 'createdTimeStamp', filters)
             _apply_date_range(primary_filters, 'updatedTimeStamp', filters)
 
@@ -1366,7 +1457,7 @@ class PipelineGenerator:
             ],
             "Meeting": [
                 "title", "meetingStatus", "meetingType", "leadName", "assignedName", "createdByName",
-                "startDateTime", "endDateTime", "description", "createdTimeStamp"
+                "startDateTime", "endDateTime", "description", "createdTimeStamp", "updatedTimeStamp"
             ],
             "Notes": [
                 "subject", "description", "leadName", "createdByName", "createdTimeStamp"
@@ -1406,12 +1497,15 @@ class PipelineGenerator:
         def date_field_for(entity: str, which: str) -> Optional[str]:
             # which: 'created' | 'updated'
             # CRM entities use createdTimeStamp/updatedTimeStamp consistently
-            # Meeting and CallLog may use startDateTime for created
+            # Meeting and CallLog use startDateTime for created grouping (more meaningful)
             if entity == 'Meeting' and which == 'created':
                 return 'startDateTime'  # Use startDateTime for meeting creation grouping
             if entity == 'CallLog' and which == 'created':
                 return 'startDateTime'  # Use startDateTime for call log creation grouping
             # Default to *TimeStamp for other CRM entities
+            # Activity and Notes don't have updatedTimeStamp in all records, so only use createdTimeStamp
+            if entity in ('Activity', 'Notes') and which == 'updated':
+                return None  # These collections don't consistently have updatedTimeStamp
             return 'createdTimeStamp' if which == 'created' else 'updatedTimeStamp'
 
         def bucket_expr(entity: str, which: str, unit: str):
@@ -1454,6 +1548,7 @@ class PipelineGenerator:
             'Activity': {
                 'activityStatus': 'activityStatus',
                 'type': 'type',
+                'createdByName': 'createdByName',
                 'created_day': bucket_expr('Activity', 'created', 'day'),
                 'created_week': bucket_expr('Activity', 'created', 'week'),
                 'created_month': bucket_expr('Activity', 'created', 'month'),
@@ -1469,6 +1564,7 @@ class PipelineGenerator:
                 'created_month': bucket_expr('Meeting', 'created', 'month'),
             },
             'Notes': {
+                'subject': 'subject',
                 'createdByName': 'createdByName',
                 'lead': 'lead.name',  # If joined
                 'created_day': bucket_expr('Notes', 'created', 'day'),
@@ -1478,6 +1574,8 @@ class PipelineGenerator:
             'CallLog': {
                 'callStatus': 'callStatus',
                 'callType': 'callType',
+                'call_variant': 'call_variant',
+                'callPurpose': 'callPurpose',
                 'createdByName': 'createdByName',
                 'lead': 'lead.name',  # If joined
                 'created_day': bucket_expr('CallLog', 'created', 'day'),

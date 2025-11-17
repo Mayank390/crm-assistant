@@ -128,7 +128,7 @@ Collection = str  # Simplified for tool usage
 ALLOWED_FIELDS: Dict[str, Set[str]] = {
     "Lead": {
         "_id", "referenceNo", "leadStatus", "personalInfo", "personalInfo.name", "personalInfo.email", 
-        "personalInfo.mobile", "address", "type", "leadActiveType", "customerType", "status", 
+        "personalInfo.mobile", "address", "type", "leadActiveType", "customerType", "status", "source",
         "score", "emailCount", "callCount", "emailSentStatus", "callExecutedStatus", 
         "isMasked", "isSpamOrBot", "isRemainderMailSent", "createdTimeStamp", "updatedTimeStamp",
         "businessId", "createdById", "createdByName", "staffId", "staffName", "pipeline", 
@@ -148,17 +148,17 @@ ALLOWED_FIELDS: Dict[str, Set[str]] = {
     "Meeting": {
         "_id", "title", "description", "meetingStatus", "meetingType", "leadId", "leadName",
         "createdById", "createdByName", "assignedTo", "assignedName", "participantsList",
-        "meetingLink", "meetingLocated", "remainder", "participantsRemainder", 
-        "createdTimeStamp", "updatedTimeStamp", "businessId"
+        "meetingLink", "meetingLocated", "remainder", "participantsRemainder", "emailData",
+        "startDateTime", "endDateTime", "createdTimeStamp", "updatedTimeStamp", "businessId"
     },
     "Notes": {
         "_id", "subject", "description", "leadId", "leadName", "createdById", "createdByName",
-        "createdTimeStamp", "updatedTimeStamp", "notesAttachments", "businessId"
+        "taskId", "createdTimeStamp", "updatedTimeStamp", "notesAttachments", "businessId"
     },
     "CallLog": {
         "_id", "title", "description", "callPurpose", "callStatus", "callType", "call_variant",
         "leadId", "leadName", "createdById", "createdByName", "startDateTime", "otherReason",
-        "remainder", "createdTimeStamp", "updatedTimeStamp", "businessId"
+        "callDuration", "remainder", "createdTimeStamp", "updatedTimeStamp", "businessId"
     },
     "MailInfo": {
         "_id", "subject", "body", "mailType", "leadId", "toMails", "toCcMails", "toBccMails",
