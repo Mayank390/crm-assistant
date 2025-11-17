@@ -458,19 +458,6 @@ class PipelineGenerator:
                 # Skip regular group_by handling when using $bucketAuto
                 intent.group_by = []
 
-            # $facet - multiple aggregations
-            elif "facet" in intent.aggregations and intent.facet_fields:
-                facet_stage = {"$facet": {}}
-                for field in intent.facet_fields:
-                    facet_stage["$facet"][f"{field}_breakdown"] = [
-                        {"$group": {"_id": f"${field}", "count": {"$sum": 1}}},
-                        {"$sort": {"count": -1}},
-                        {"$limit": 10}
-                    ]
-                pipeline.append(facet_stage)
-                # Skip regular group_by handling when using $facet
-                intent.group_by = []
-
         # $graphLookup - graph traversal
         # Check if graph lookup is requested (either explicitly or inferred from query)
         # Improved detection: check aggregations, explicit graph fields, or query context
@@ -816,7 +803,7 @@ class PipelineGenerator:
     def _extract_primary_filters(self, filters: Dict[str, Any], collection: str) -> Dict[str, Any]:
         """Extract filters that apply to the primary collection"""
         primary_filters = {}
-        
+
         # Handle None or invalid filters
         if filters is None:
             return primary_filters

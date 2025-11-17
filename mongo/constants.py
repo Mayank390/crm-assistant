@@ -7,16 +7,16 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Database configuration
-DATABASE_NAME = os.getenv("MONGODB_DATABASE", "CRM")
+DATABASE_NAME = os.getenv("MONGODB_DATABASE", "crm")
 MONGODB_CONNECTION_STRING = os.getenv(
     "MONGODB_URI",
-    "mongodb://WebsiteBuilderAdmin:JfOCiOKMVgSIMPOBUILDERGkli8@13.90.63.91:27017,172.171.192.172:27017/CRM?authSource=admin&replicaSet=rs0",
+    "mongodb://Harshit:10_Harshith_29@4.213.88.219:27017/?authMechanism=DEFAULT&authSource=admin",
 )
 
 # Qdrant configuration
 QDRANT_API_KEY = os.getenv("QDRANT_API_KEY", "")
 QDRANT_URL = os.getenv("QDRANT_URL", "http://qdrant:6333")  # Default Qdrant URL
-QDRANT_COLLECTION_NAME = os.getenv("QDRANT_COLLECTION", "CRM")  # Collection for CRM content
+QDRANT_COLLECTION_NAME = os.getenv("QDRANT_COLLECTION", "crm")  # Collection for CRM content
 EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL")  # Sentence transformer model for embeddings
  
 # Retrieval packing configuration

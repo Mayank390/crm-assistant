@@ -54,7 +54,6 @@ class QueryIntent:
     wants_count: bool  # Whether the user asked for a count
     fetch_one: bool  # Whether the user wants a single specific item
     # Advanced aggregation fields
-    facet_fields: Optional[List[str]] = None  # Fields for $facet operation
     bucket_field: Optional[str] = None  # Field for $bucketAuto operation
     union_collection: Optional[str] = None  # Collection for $unionWith
     graph_from: Optional[str] = None  # From collection for $graphLookup

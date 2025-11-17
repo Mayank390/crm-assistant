@@ -13,7 +13,6 @@ import re
 import uuid
 import logging
 from bson import ObjectId, Binary
-from mongo.constants import BUSINESS_UUID, MEMBER_UUID
 from collections import defaultdict
 from dataclasses import dataclass
 import asyncio
@@ -59,8 +58,6 @@ class ChunkAwareRetriever:
     def __init__(self, qdrant_client, embedding_client):
         self.qdrant_client = qdrant_client
         self.embedding_client = embedding_client
-        # ✅ OPTIMIZED: Cache member projects per request to avoid repeated MongoDB queries
-        self._member_projects_cache: Dict[str, List[str]] = {}
         # Minimal English stopword list for lightweight keyword-overlap filtering
         self._STOPWORDS: Set[str] = {
             "a", "an", "the", "and", "or", "but", "if", "then", "else", "when", "at", "by",
@@ -120,41 +117,10 @@ class ChunkAwareRetriever:
             raise RuntimeError("Embedding service returned empty vector")
         query_embedding = vectors[0]
         
-        # Build filter with optional content_type and global business scoping
+        # Build filter with optional content_type
         must_conditions = []
         if content_type:
             must_conditions.append(FieldCondition(key="content_type", match=MatchValue(value=content_type)))
-
-        # Business-level scoping
-        # Note: business_id in Qdrant is stored as normalized UUID string from MongoDB Binary
-        # We need to normalize it the same way as insertdocs.py does
-        business_uuid = BUSINESS_UUID()
-        if business_uuid:
-            normalized_business_id = self._normalize_business_id(business_uuid)
-            must_conditions.append(FieldCondition(key="business_id", match=MatchValue(value=normalized_business_id)))
-
-        # Member-level project RBAC scoping
-        # ✅ OPTIMIZED: Cache member projects at request start
-        member_uuid = MEMBER_UUID()
-        if member_uuid:
-            try:
-                # Check cache first
-                cache_key = f"{member_uuid}:{business_uuid}"
-                if cache_key not in self._member_projects_cache:
-                    self._member_projects_cache[cache_key] = await self._get_member_projects(member_uuid, business_uuid)
-                member_projects = self._member_projects_cache[cache_key]
-                if member_projects:
-                    # Only apply member filtering for content types that belong to projects
-                    project_content_types = {"page", "work_item", "cycle", "module", "epic", "feature", "user_story"}
-                    if content_type is None or content_type in project_content_types:
-                        # Filter by accessible project IDs
-                        must_conditions.append(FieldCondition(key="project_id", match=MatchAny(any=member_projects)))
-                    elif content_type == "project":
-                        # For project searches, only show projects the member has access to
-                        must_conditions.append(FieldCondition(key="mongo_id", match=MatchAny(any=member_projects)))
-            except Exception as e:
-                # Error getting member projects - log and skip member filter
-                logger.error(f"Error getting member projects for '{member_uuid}': {e}")
 
         search_filter = Filter(must=must_conditions) if must_conditions else None
 
@@ -373,20 +339,6 @@ class ChunkAwareRetriever:
             return
         
         # ✅ OPTIMIZED: Batch fetch all chunks in a single query using $or filter
-        business_uuid = BUSINESS_UUID()
-        member_uuid = MEMBER_UUID()
-        
-        # Get member projects once (use cache if available)
-        member_projects = None
-        if member_uuid:
-            try:
-                cache_key = f"{member_uuid}:{business_uuid}"
-                if cache_key not in self._member_projects_cache:
-                    self._member_projects_cache[cache_key] = await self._get_member_projects(member_uuid, business_uuid)
-                member_projects = self._member_projects_cache[cache_key]
-            except Exception as e:
-                logger.error(f"Error getting member projects for adjacent chunks '{member_uuid}': {e}")
-        
         # Build batch filter conditions
         should_conditions = []
         for parent_id, chunk_idx in all_chunks_to_fetch:
@@ -397,18 +349,6 @@ class ChunkAwareRetriever:
             
             if content_type:
                 conditions.append(FieldCondition(key="content_type", match=MatchValue(value=content_type)))
-            
-            if business_uuid:
-                normalized_business_id = self._normalize_business_id(business_uuid)
-                conditions.append(FieldCondition(key="business_id", match=MatchValue(value=normalized_business_id)))
-            
-            # Add member project filter if applicable
-            if member_projects:
-                project_content_types = {"page", "work_item", "cycle", "module", "epic", "feature", "user_story"}
-                if content_type is None or content_type in project_content_types:
-                    conditions.append(FieldCondition(key="project_id", match=MatchAny(any=member_projects)))
-                elif content_type == "project":
-                    conditions.append(FieldCondition(key="mongo_id", match=MatchAny(any=member_projects)))
             
             should_conditions.append(Filter(must=conditions))
         
@@ -470,17 +410,6 @@ class ChunkAwareRetriever:
                     ]
                     if content_type:
                         filter_conditions.append(FieldCondition(key="content_type", match=MatchValue(value=content_type)))
-                    if business_uuid:
-                        normalized_business_id = self._normalize_business_id(business_uuid)
-                        filter_conditions.append(FieldCondition(key="business_id", match=MatchValue(value=normalized_business_id)))
-                    
-                    # Add member project filter if applicable (RBAC compliance)
-                    if member_projects:
-                        project_content_types = {"page", "work_item", "cycle", "module", "epic", "feature", "user_story"}
-                        if content_type is None or content_type in project_content_types:
-                            filter_conditions.append(FieldCondition(key="project_id", match=MatchAny(any=member_projects)))
-                        elif content_type == "project":
-                            filter_conditions.append(FieldCondition(key="mongo_id", match=MatchAny(any=member_projects)))
                     
                     scroll_result = self.qdrant_client.scroll(
                         collection_name=collection_name,

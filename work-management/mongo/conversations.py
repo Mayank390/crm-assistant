@@ -10,16 +10,6 @@ import os
 import logging
 from dotenv import load_dotenv
 
-try:
-    from openinference.semconv.trace import SpanAttributes as OI
-except Exception:
-    class _OI:
-        TOOL_INPUT = "tool.input"
-        TOOL_OUTPUT = "tool.output"
-        ERROR_TYPE = "error.type"
-        ERROR_MESSAGE = "error.message"
-    OI = _OI()
-
 
 # Ensure environment variables are loaded when running locally
 load_dotenv()
@@ -86,7 +76,7 @@ class ConversationMongoClient:
 # Initialize conversations client with the provided connection string
 CONVERSATIONS_CONNECTION_STRING = os.getenv(
     "CONVERSATIONS_MONGODB_URI",
-    os.getenv("MONGODB_URI", "mongodb://WebsiteBuilderAdmin:JfOCiOKMVgSIMPOBUILDERGkli8@13.90.63.91:27017,172.171.192.172:27017/ProjectManagement?authSource=admin&replicaSet=rs0"),
+    os.getenv("MONGODB_URI", "mongodb://Harshit:10_Harshith_29@4.213.88.219:27017/?authMechanism=DEFAULT&authSource=admin"),
 )
 conversation_mongo_client = ConversationMongoClient(CONVERSATIONS_CONNECTION_STRING)
 

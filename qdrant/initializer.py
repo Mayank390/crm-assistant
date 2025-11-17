@@ -136,26 +136,12 @@ class RAGTool:
                 return []
             query_embedding = query_vectors[0]
             # Build filter if content_type is specified
-            from mongo.constants import BUSINESS_UUID
             must_conditions = []
             if content_type:
                 must_conditions.append(
                     FieldCondition(
                         key="content_type",
                         match=MatchValue(value=content_type)
-                    )
-                )
-
-            # Business-level scoping
-            # Note: business_id in Qdrant is stored as normalized UUID string from MongoDB Binary
-            # We need to normalize it the same way as insertdocs.py does
-            business_uuid = BUSINESS_UUID()
-            if business_uuid:
-                normalized_business_id = self._normalize_business_id(business_uuid)
-                must_conditions.append(
-                    FieldCondition(
-                        key="business_id",
-                        match=MatchValue(value=normalized_business_id)
                     )
                 )
 

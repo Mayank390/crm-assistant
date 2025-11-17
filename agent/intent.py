@@ -430,7 +430,6 @@ class LLMIntentParser:
             "- emailData → emailData_count (for Meeting)\n\n"
             "## ADVANCED AGGREGATION STAGES\n"
             "Support for complex aggregation operations:\n"
-            "- 'break down by priority and status' → $facet for multiple aggregations\n"
             "- 'auto-group by priority' → $bucketAuto for automatic range grouping\n"
             "- 'combine with other collection' → $unionWith to merge collections\n"
             "- 'graph traversal queries' → $graphLookup for hierarchical data\n"
@@ -521,7 +520,6 @@ class LLMIntentParser:
             '  "wants_details": true,\n'
             '  "wants_count": false,\n'
             '  "fetch_one": false,\n'
-            '  "facet_fields": null,\n'
             '  "bucket_field": null,\n'
             '  "union_collection": null,\n'
             '  "graph_from": null,\n'
@@ -597,8 +595,6 @@ class LLMIntentParser:
             "  → filters: {\"assignee_elemMatch\": {\"name\": \"John\", \"role\": \"Developer\"}}\n\n"
             "CRITICAL: When users mention 'matching X', 'assignees matching', etc., you MUST add the appropriate $elemMatch filter.\n\n"
             "## ADVANCED AGGREGATION EXAMPLES (MUST FOLLOW THESE PATTERNS)\n"
-            "- Query: 'break down work items by priority and status'\n"
-            "  → aggregations: [\"facet\"], facet_fields: [\"priority\", \"status\"]\n"
             "- Query: 'auto-group work items by estimate'\n"
             "  → aggregations: [\"bucketAuto\"], bucket_field: \"estimate\"\n"
             "- Query: 'combine work items with user stories'\n"
@@ -1009,7 +1005,7 @@ class LLMIntentParser:
         allowed_aggs = {
             "count", "group", "summary",
             "graphLookup", "timeWindow", "trend", "anomaly", "forecast",
-            "facet", "bucketAuto", "unionWith"
+            "bucketAuto", "unionWith"
         }
         aggregations = [a for a in (data.get("aggregations") or []) if a in allowed_aggs]
 
@@ -1189,7 +1185,6 @@ class LLMIntentParser:
         fetch_one = bool(data.get("fetch_one", False)) or (limit == 1)
 
         # Extract advanced aggregation fields
-        facet_fields = data.get("facet_fields")
         bucket_field = data.get("bucket_field")
         union_collection = data.get("union_collection")
         
@@ -1225,7 +1220,6 @@ class LLMIntentParser:
             wants_details: {wants_details}
             wants_count: {wants_count}
             fetch_one: {fetch_one}
-            facet_fields: {facet_fields if facet_fields else None}
             bucket_field: {bucket_field if bucket_field else None}
             union_collection: {union_collection if union_collection else None}
             graph_from: {graph_from if graph_from else None}
@@ -1259,7 +1253,6 @@ class LLMIntentParser:
             wants_details=wants_details,
             wants_count=wants_count,
             fetch_one=fetch_one,
-            facet_fields=facet_fields if facet_fields else None,
             bucket_field=bucket_field if bucket_field else None,
             union_collection=union_collection if union_collection else None,
             graph_from=graph_from if graph_from else None,

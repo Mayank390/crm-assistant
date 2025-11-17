@@ -12,8 +12,8 @@ load_dotenv()
 logger = logging.getLogger(__name__)
 
 # --- Connect to MongoDB ---
-mongo_uri = os.getenv("MONGODB_URI", "mongodb://WebsiteBuilderAdmin:JfOCiOKMVgSIMPOBUILDERGkli8@13.90.63.91:27017,172.171.192.172:27017/ProjectManagement?authSource=admin&replicaSet=rs0")
-mongo_database = os.getenv("MONGODB_DATABASE", "ProjectManagement")
+mongo_uri = os.getenv("MONGODB_URI", "mongodb://Harshit:10_Harshith_29@4.213.88.219:27017/?authMechanism=DEFAULT&authSource=admin")
+mongo_database = os.getenv("MONGODB_DATABASE", "crm")
 
 mongo_client = None
 db = None
@@ -52,7 +52,7 @@ except Exception as e:
 # --- Connect to Qdrant ---
 qdrant_url = os.getenv("QDRANT_URL", "http://qdrant:6333")
 qdrant_api_key = os.getenv("QDRANT_API_KEY", "")
-qdrant_collection = os.getenv("QDRANT_COLLECTION", "ProjectManagement")
+qdrant_collection = os.getenv("QDRANT_COLLECTION", "crm")
 # Alias for backward compatibility
 QDRANT_COLLECTION = qdrant_collection
 
