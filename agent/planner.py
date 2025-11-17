@@ -54,12 +54,6 @@ class QueryIntent:
     wants_count: bool  # Whether the user asked for a count
     fetch_one: bool  # Whether the user wants a single specific item
     # Advanced aggregation fields
-    bucket_field: Optional[str] = None  # Field for $bucketAuto operation
-    union_collection: Optional[str] = None  # Collection for $unionWith
-    graph_from: Optional[str] = None  # From collection for $graphLookup
-    graph_start: Optional[str] = None  # Start expression for $graphLookup
-    graph_connect_from: Optional[str] = None  # Connect from field for $graphLookup
-    graph_connect_to: Optional[str] = None  # Connect to field for $graphLookup
     # Time-series analysis fields
     window_field: Optional[str] = None  # Field for time window operations
     window_size: Optional[str] = None  # Size of sliding window (e.g., "7d", "30d")

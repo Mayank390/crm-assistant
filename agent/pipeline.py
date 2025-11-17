@@ -238,16 +238,6 @@ class PipelineGenerator:
         # Normalize lead fields to scalars for safe filtering/printing (if needed)
         # CRM collections typically don't need this normalization, but keeping structure for future use
 
-        # $unionWith - combine with another collection (MUST come BEFORE grouping)
-        # This allows grouping the combined results from multiple collections
-        if intent.union_collection:
-            union_with_stage = {
-                "$unionWith": {
-                    "coll": intent.union_collection,
-                    "pipeline": [{"$match": {}}]  # Add filters if needed
-                }
-            }
-            pipeline.append(union_with_stage)
 
         # Add grouping if requested
         if intent.group_by:
@@ -442,78 +432,6 @@ class PipelineGenerator:
             effective_limit = 1 if intent.fetch_one else (intent.limit or None)
             if effective_limit:
                 pipeline.append({"$limit": int(effective_limit)})
-
-        # Add advanced aggregation stages (check these BEFORE regular group aggregation)
-        if intent.aggregations:
-            # $bucketAuto - automatic range grouping
-            if "bucketAuto" in intent.aggregations and intent.bucket_field:
-                bucket_auto_stage = {
-                    "$bucketAuto": {
-                        "groupBy": f"${intent.bucket_field}",
-                        "buckets": 5,
-                        "output": {"count": {"$sum": 1}}
-                    }
-                }
-                pipeline.append(bucket_auto_stage)
-                # Skip regular group_by handling when using $bucketAuto
-                intent.group_by = []
-
-        # $graphLookup - graph traversal
-        # Check if graph lookup is requested (either explicitly or inferred from query)
-        # Improved detection: check aggregations, explicit graph fields, or query context
-        has_graph_aggregation = "graphLookup" in intent.aggregations
-        has_explicit_graph_fields = (
-            intent.graph_from and intent.graph_start and 
-            intent.graph_connect_from and intent.graph_connect_to
-        )
-        # Check filters for dependency-related terms
-        filters_str = str(intent.filters).lower() if intent.filters else ""
-        has_dependency_context = (
-            "dependency" in filters_str or 
-            "depends" in filters_str or
-            "graph" in filters_str or
-            "chain" in filters_str or
-            "relationship" in filters_str
-        )
-        
-        needs_graph_lookup = has_graph_aggregation or has_explicit_graph_fields or has_dependency_context
-        
-        if needs_graph_lookup:
-            # Set defaults based on primary entity
-            graph_from = intent.graph_from or intent.primary_entity
-            graph_start = intent.graph_start or "$_id"
-            
-            # Try to infer connection fields based on common patterns
-            if not intent.graph_connect_from or not intent.graph_connect_to:
-                # Common dependency patterns
-                if "dependency" in str(intent.filters).lower() or "depends" in str(intent.filters).lower():
-                    graph_connect_from = intent.graph_connect_from or "_id"
-                    graph_connect_to = intent.graph_connect_to or "dependsOn"
-                elif intent.primary_entity == "Lead":
-                    graph_connect_from = intent.graph_connect_from or "_id"
-                    graph_connect_to = intent.graph_connect_to or "leadId"
-                elif intent.primary_entity == "Task":
-                    graph_connect_from = intent.graph_connect_from or "_id"
-                    graph_connect_to = intent.graph_connect_to or "parentId"
-                else:
-                    graph_connect_from = intent.graph_connect_from or "_id"
-                    graph_connect_to = intent.graph_connect_to or "leadId"
-            else:
-                graph_connect_from = intent.graph_connect_from
-                graph_connect_to = intent.graph_connect_to
-            
-            graph_lookup_stage = {
-                "$graphLookup": {
-                    "from": graph_from,
-                    "startWith": graph_start,
-                    "connectFromField": graph_connect_from,
-                    "connectToField": graph_connect_to,
-                    "as": "graph_path",
-                    "maxDepth": 5,
-                    "depthField": "depth"
-                }
-            }
-            pipeline.append(graph_lookup_stage)
 
         # Add time-series analysis stages (can be combined, so use separate if statements)
         if intent.aggregations:
@@ -932,10 +850,29 @@ class PipelineGenerator:
                     if start:
                         return {"from": start, "to": end}
 
-                m2 = re.fullmatch(r"([0-9]+)\s*(d|h)", s)
+                # Support "now-N{unit}" pattern directly
+                m2 = re.fullmatch(r"now\s*[-+]\s*([0-9]+)\s*(d|w|m|mo|y|h)", s)
                 if m2:
                     n = int(m2.group(1))
                     unit = m2.group(2)
+                    if unit == "d":
+                        start = now - timedelta(days=n)
+                    elif unit == "w":
+                        start = now - timedelta(weeks=n)
+                    elif unit in {"m", "mo"}:
+                        start = now - timedelta(days=30 * n)
+                    elif unit == "y":
+                        start = now - timedelta(days=365 * n)
+                    elif unit == "h":
+                        start = now - timedelta(hours=n)
+                    if start:
+                        return {"from": start, "to": end}
+                
+                # Legacy pattern support
+                m3 = re.fullmatch(r"([0-9]+)\s*(d|h)", s)
+                if m3:
+                    n = int(m3.group(1))
+                    unit = m3.group(2)
                     if unit == "d":
                         start = now - timedelta(days=n)
                     elif unit == "h":
@@ -956,13 +893,22 @@ class PipelineGenerator:
                     s = val.strip().lower()
                     if s == "now":
                         return datetime.now(timezone.utc)
-                    m = re.fullmatch(r"now\s*[-+]\s*([0-9]+)\s*(d|day|days|h|hour|hours)", s)
+                    # Support all time units: d/w/m/y (days/weeks/months/years)
+                    m = re.fullmatch(r"now\s*[-+]\s*([0-9]+)\s*(d|day|days|w|week|weeks|m|month|months|mo|y|year|years|h|hour|hours)", s)
                     if m:
                         n = int(m.group(1))
                         unit = m.group(2)
                         if unit in {"d", "day", "days"}:
                             return datetime.now(timezone.utc) - timedelta(days=n)
-                        if unit in {"h", "hour", "hours"}:
+                        elif unit in {"w", "week", "weeks"}:
+                            return datetime.now(timezone.utc) - timedelta(weeks=n)
+                        elif unit in {"m", "month", "months", "mo"}:
+                            # Approximate: 30 days per month
+                            return datetime.now(timezone.utc) - timedelta(days=30 * n)
+                        elif unit in {"y", "year", "years"}:
+                            # Approximate: 365 days per year
+                            return datetime.now(timezone.utc) - timedelta(days=365 * n)
+                        elif unit in {"h", "hour", "hours"}:
                             return datetime.now(timezone.utc) - timedelta(hours=n)
                     try:
                         return datetime.fromisoformat(val)
@@ -1005,11 +951,55 @@ class PipelineGenerator:
             if range_expr:
                 target[resolved_field] = range_expr
 
+        # Handle negative filters (_not suffix) - convert to MongoDB $nin operator
+        # If a positive filter exists for the same field, merge them together
+        for key, value in filters.items():
+            if key.endswith('_not'):
+                # Extract base field name
+                base_field = key[:-len('_not')]
+                # Resolve field alias
+                from mongo.registry import resolve_field_alias
+                resolved_field = resolve_field_alias(collection, base_field)
+                
+                # Check if positive filter exists for the same field
+                if base_field in filters:
+                    # Merge positive and negative filters
+                    filter_obj = primary_filters.get(resolved_field, {})
+                    positive_value = filters[base_field]
+                    
+                    # Convert positive filter to $in if it's a scalar or list
+                    if isinstance(positive_value, (str, int, bool)):
+                        filter_obj["$in"] = [positive_value]
+                    elif isinstance(positive_value, list):
+                        filter_obj["$in"] = positive_value
+                    else:
+                        # If it's already a dict (e.g., from regex), preserve it but add $nin
+                        filter_obj = positive_value.copy() if isinstance(positive_value, dict) else {}
+                        if not isinstance(positive_value, dict):
+                            filter_obj["$in"] = [positive_value] if not isinstance(positive_value, list) else positive_value
+                    
+                    # Add negative filter as $nin
+                    if isinstance(value, list):
+                        filter_obj["$nin"] = value
+                    else:
+                        filter_obj["$nin"] = [value]
+                    
+                    primary_filters[resolved_field] = filter_obj
+                else:
+                    # Only negative filter exists - use simple $nin
+                    if isinstance(value, list):
+                        primary_filters[resolved_field] = {"$nin": value}
+                    else:
+                        primary_filters[resolved_field] = {"$nin": [value]}
+        
         if collection == "Lead":
-            if 'leadStatus' in filters:
-                primary_filters['leadStatus'] = filters['leadStatus']
+            # Only add positive filter if it wasn't already merged with negative filter
+            if 'leadStatus' in filters and 'leadStatus' not in primary_filters:
+                if 'leadStatus_not' not in filters:
+                    primary_filters['leadStatus'] = filters['leadStatus']
             if 'status' in filters and 'status' not in primary_filters:
-                primary_filters['status'] = filters['status']
+                if 'status_not' not in filters:
+                    primary_filters['status'] = filters['status']
             if 'source' in filters:
                 primary_filters['source'] = filters['source']
             if 'type' in filters:
@@ -1044,10 +1034,13 @@ class PipelineGenerator:
             _apply_date_range(primary_filters, 'updatedTimeStamp', filters)
 
         elif collection == "Task":
-            if 'taskStatus' in filters:
-                primary_filters['taskStatus'] = filters['taskStatus']
-            if 'priority' in filters:
-                primary_filters['priority'] = filters['priority']
+            # Only add positive filter if it wasn't already merged with negative filter
+            if 'taskStatus' in filters and 'taskStatus' not in primary_filters:
+                if 'taskStatus_not' not in filters:
+                    primary_filters['taskStatus'] = filters['taskStatus']
+            if 'priority' in filters and 'priority' not in primary_filters:
+                if 'priority_not' not in filters:
+                    primary_filters['priority'] = filters['priority']
             if 'name' in filters and isinstance(filters['name'], str):
                 primary_filters['name'] = {'$regex': filters['name'], '$options': 'i'}
             if 'description' in filters and isinstance(filters['description'], str):
@@ -1078,8 +1071,10 @@ class PipelineGenerator:
             _apply_date_range(primary_filters, 'updatedTimeStamp', filters)
 
         elif collection == "Activity":
-            if 'activityStatus' in filters:
-                primary_filters['activityStatus'] = filters['activityStatus']
+            # Only add positive filter if it wasn't already merged with negative filter
+            if 'activityStatus' in filters and 'activityStatus' not in primary_filters:
+                if 'activityStatus_not' not in filters:
+                    primary_filters['activityStatus'] = filters['activityStatus']
             if 'type' in filters:
                 primary_filters['type'] = filters['type']
             if 'leadId' in filters:
@@ -1094,10 +1089,13 @@ class PipelineGenerator:
             _apply_date_range(primary_filters, 'reminderDate', filters)
 
         elif collection == "Meeting":
-            if 'meetingStatus' in filters:
-                primary_filters['meetingStatus'] = filters['meetingStatus']
-            if 'meetingType' in filters:
-                primary_filters['meetingType'] = filters['meetingType']
+            # Only add positive filter if it wasn't already merged with negative filter
+            if 'meetingStatus' in filters and 'meetingStatus' not in primary_filters:
+                if 'meetingStatus_not' not in filters:
+                    primary_filters['meetingStatus'] = filters['meetingStatus']
+            if 'meetingType' in filters and 'meetingType' not in primary_filters:
+                if 'meetingType_not' not in filters:
+                    primary_filters['meetingType'] = filters['meetingType']
             if 'title' in filters and isinstance(filters['title'], str):
                 primary_filters['title'] = {'$regex': filters['title'], '$options': 'i'}
             if 'description' in filters and isinstance(filters['description'], str):
@@ -1145,10 +1143,13 @@ class PipelineGenerator:
             _apply_date_range(primary_filters, 'createdTimeStamp', filters)
 
         elif collection == "CallLog":
-            if 'callStatus' in filters:
-                primary_filters['callStatus'] = filters['callStatus']
-            if 'callType' in filters:
-                primary_filters['callType'] = filters['callType']
+            # Only add positive filter if it wasn't already merged with negative filter
+            if 'callStatus' in filters and 'callStatus' not in primary_filters:
+                if 'callStatus_not' not in filters:
+                    primary_filters['callStatus'] = filters['callStatus']
+            if 'callType' in filters and 'callType' not in primary_filters:
+                if 'callType_not' not in filters:
+                    primary_filters['callType'] = filters['callType']
             if 'call_variant' in filters:
                 primary_filters['call_variant'] = filters['call_variant']
             if 'callPurpose' in filters:
@@ -1186,8 +1187,10 @@ class PipelineGenerator:
             _apply_date_range(primary_filters, 'updatedTimeStamp', filters)
 
         elif collection == "MailInfo":
-            if 'mailType' in filters:
-                primary_filters['mailType'] = filters['mailType']
+            # Only add positive filter if it wasn't already merged with negative filter
+            if 'mailType' in filters and 'mailType' not in primary_filters:
+                if 'mailType_not' not in filters:
+                    primary_filters['mailType'] = filters['mailType']
             if 'subject' in filters and isinstance(filters['subject'], str):
                 primary_filters['subject'] = {'$regex': filters['subject'], '$options': 'i'}
             if 'body' in filters and isinstance(filters['body'], str):

@@ -358,20 +358,20 @@ class LLMIntentParser:
             "Your task is to convert natural language queries into structured JSON intent objects.\n\n"
 
             "## DOMAIN CONTEXT\n"
-            "This is a CRM system with these main entities:\n"
+            "This is a CRM (Customer Relationship Management) system with these main entities:\n"
             f"- {', '.join(self.entities)}\n\n"
-            "Users ask questions in many different ways. Be flexible with their wording.\n"
-            "Focus on understanding their intent, not exact keywords.\n\n"
+            "Users ask questions about leads, customer interactions, and sales activities.\n"
+            "Focus on understanding their intent about customer management, not exact keywords.\n\n"
 
             "## KEY RELATIONSHIPS\n"
-            "- Leads are the central entity - they have tasks, activities, meetings, notes, call logs, and mail info\n"
-            "- Tasks belong to leads (via parentId)\n"
-            "- Activities reference leads and optionally tasks\n"
-            "- Meetings reference leads\n"
-            "- Notes reference leads\n"
-            "- CallLogs reference leads\n"
-            "- MailInfo references leads\n"
-            "- LeadScoreRule defines scoring rules for leads\n\n"
+            "- Leads are the central entity - they represent potential customers and their journey\n"
+            "- Tasks track work items and follow-ups for leads (via leadId)\n"
+            "- Activities log all customer interactions and engagement activities\n"
+            "- Meetings schedule customer appointments and sales calls\n"
+            "- Notes capture important information and conversation details for leads\n"
+            "- CallLogs record phone conversations and call outcomes\n"
+            "- MailInfo stores email communications and marketing campaigns\n"
+            "- LeadScoreRule defines automated scoring criteria for lead qualification\n\n"
 
             "## VERY IMPORTANT\n"
             "## AVAILABLE FILTERS (use these exact keys):\n"
@@ -428,12 +428,6 @@ class LLMIntentParser:
             "- toCcMails → toCcMails_count (for MailInfo)\n"
             "- toBccMails → toBccMails_count (for MailInfo)\n"
             "- emailData → emailData_count (for Meeting)\n\n"
-            "## ADVANCED AGGREGATION STAGES\n"
-            "Support for complex aggregation operations:\n"
-            "- 'auto-group by priority' → $bucketAuto for automatic range grouping\n"
-            "- 'combine with other collection' → $unionWith to merge collections\n"
-            "- 'graph traversal queries' → $graphLookup for hierarchical data\n"
-            "- Use natural language to express these complex analytical queries\n\n"
             "## TIME-SERIES ANALYSIS\n"
             "Support for time-based analytical operations:\n"
             "- 'sliding window of 7 days' → $setWindowFields for moving averages\n"
@@ -448,6 +442,8 @@ class LLMIntentParser:
             "- 'recent', 'latest', 'newest', 'most recent' → {\"createdTimeStamp\": -1}\n"
             "- 'oldest', 'earliest', 'older first' → {\"createdTimeStamp\": 1}\n"
             "- If 'ascending/descending' is mentioned with created/time/date/timestamp, map to 1/-1 respectively on 'createdTimeStamp'.\n"
+            "- For CRM: 'recent leads' = most recently created leads\n"
+            "- For CRM: 'oldest calls' = earliest call logs\n"
             "Only include sort_order when relevant; otherwise set it to null.\n\n"
 
             "## LIMIT EXTRACTION (CRITICAL)\n"
@@ -460,48 +456,86 @@ class LLMIntentParser:
             "- No specific mention → limit: 50 (reasonable default)\n"
             "- For count/aggregation queries → limit: null (no limit needed)\n"
             "IMPORTANT: When 'top N' is used, also infer appropriate sorting:\n"
-            "  - 'top N' with priority context → sort_order: {\"priority\": -1}\n"
-            "  - 'top N' with date/recent context → sort_order: {\"createdTimeStamp\": -1}\n\n"
+            "  - 'top N' with score context → sort_order: {\"score\": -1}\n"
+            "  - 'top N' with date/recent context → sort_order: {\"createdTimeStamp\": -1}\n"
+            "  - 'top N' with activity context → sort_order: {\"emailCount\": -1} or {\"callCount\": -1}\n\n"
 
             "## NAME EXTRACTION RULES - CRITICAL\n"
             "ALWAYS extract ONLY the core entity name, NEVER include descriptive phrases:\n"
-            "- Query: 'tasks for TechCorp lead' → leadName: 'TechCorp' (NOT 'TechCorp lead')\n"
-            "- Query: 'tasks from test module' → module_name: 'test' (NOT 'test module')\n"
-            "- Query: 'bugs assigned to alice' → assignee_name: 'alice' (NOT 'alice assigned')\n"
-            "- Query: 'items in upcoming cycle' → cycle_name: 'upcoming' (NOT 'upcoming cycle')\n"
-            "❌ WRONG: {'project_name': 'PMS project'} - this breaks regex matching!\n"
-            "✅ CORRECT: {'project_name': 'PMS'} - this works with regex matching\n\n"
+            "- Query: 'tasks for John Smith lead' → leadName: 'John Smith' (NOT 'John Smith lead')\n"
+            "- Query: 'meetings with TechCorp customer' → leadName: 'TechCorp' (NOT 'TechCorp customer')\n"
+            "- Query: 'activities assigned to alice' → assignedName: 'alice' (NOT 'alice assigned')\n"
+            "- Query: 'calls for qualified leads' → leadStatus: 'QUALIFIED' (NOT status filter)\n"
+            "❌ WRONG: {'leadName': 'ABC Corp lead'} - this breaks regex matching!\n"
+            "✅ CORRECT: {'leadName': 'ABC Corp'} - this works with regex matching\n\n"
 
             "## COMPOUND FILTER PARSING\n"
-            "When users write queries like 'cycles where state.active = true':\n"
-            "- 'state.active = true' should map to cycle_status: 'ACTIVE' for cycle entities\n"
-            "- 'state.open = true' should map to state: 'Open' for workItem entities\n"
-            "- 'status.completed = true' should map to project_status: 'COMPLETED' for project entities\n"
+            "When users write queries like 'leads where leadStatus = WON':\n"
+            "- 'leadStatus = WON' should map to leadStatus: 'WON' for Lead entities\n"
+            "- 'taskStatus = COMPLETED' should map to taskStatus: 'COMPLETED' for Task entities\n"
+            "- 'activityStatus = CLOSE' should map to activityStatus: 'CLOSE' for Activity entities\n"
+            "- 'meetingStatus.scheduled = true' should map to meetingStatus: 'SCHEDULED' for Meeting entities\n"
             "- Parse 'entity.field = value' patterns and map to appropriate filter keys\n\n"
 
             "## COMMON QUERY PATTERNS\n"
             "- 'Show me X' → list/get details (aggregations: [])\n"
             "- 'How many X' → count (aggregations: ['count'])\n"
             "- 'Breakdown by X' → group results (aggregations: ['group'])\n"
-            "- 'X assigned to Y' → filter by assignee name (Y = assignee_name)\n"
-            "- 'X from/in/belonging to/associated with Y' → filter by project/cycle/module name (Y = project_name/cycle_name/module_name)\n"
-            "- 'X in Y status' → filter by status/priority\n"
-            "- 'work items with title containing Z' → filter by title field (Z = search term)\n"
-            "- 'work items with label Z' → filter by label field (Z = exact label value)\n"
-            "- 'find items containing X in title' → {\"primary_entity\": \"workItem\", \"filters\": {\"title\": \"X\"}, \"aggregations\": []}\n"
-            "- 'search for Y in descriptions' → {\"primary_entity\": \"workItem\", \"filters\": {\"description\": \"Y\"}, \"aggregations\": []}\n"
-            "- 'IMPORTANT: For \"containing\" queries, extract ONLY the search term (e.g., \"component\"), not the full phrase'\n"
-            "- 'Y project' → if asking about work items: workItem with project_name filter\n"
-            "  → Context matters: 'details of Y project' vs 'work items associated with Y project'\n"
-            "- 'cycles that are active/currently active' → cycle with cycle_status: 'ACTIVE'\n"
-            "- 'active cycles' → cycle with cycle_status: 'ACTIVE'\n"
-            "- 'what is the email address for X' → members with name filter and email projection\n"
-            "- 'member X' → members entity with name filter\n"
-            "- 'project member X' → members entity with name filter\n"
-            "- 'work items updated in the last 30 days' → {\"primary_entity\": \"workItem\", \"filters\": {\"updatedTimeStamp_from\": \"now-30d\"}}\n"
-            "- 'tasks created since last week' → {\"primary_entity\": \"workItem\", \"filters\": {\"createdTimeStamp_from\": \"last_week\"}}\n"
-            "- 'issues modified after 2024-01-01' → {\"primary_entity\": \"workItem\", \"filters\": {\"updatedTimeStamp_from\": \"2024-01-01\"}}\n"
-            "- 'workItem.last_date >= current_date - 30 days' → {\"primary_entity\": \"workItem\", \"filters\": {\"updatedTimeStamp_from\": \"now-30d\"}}\n\n"
+            "- 'X assigned to Y' → filter by assignee name (Y = assignedName)\n"
+            "- 'X from/in/belonging to/associated with Y' → filter by lead name (Y = leadName)\n"
+            "- 'X in Y status' → filter by status/leadStatus/taskStatus/etc\n"
+            "- 'leads with name containing Z' → filter by personalInfo.name field (Z = search term)\n"
+            "- 'leads with email Z' → filter by personalInfo.email field (Z = exact email)\n"
+            "- 'find leads containing X in notes' → {\"primary_entity\": \"Lead\", \"filters\": {\"notes\": \"X\"}, \"aggregations\": []}\n"
+            "- 'search for Y in lead names' → {\"primary_entity\": \"Lead\", \"filters\": {\"personalInfo.name\": \"Y\"}, \"aggregations\": []}\n"
+            "- 'IMPORTANT: For \"containing\" queries, extract ONLY the search term, not the full phrase'\n"
+            "- 'Y lead' → if asking about tasks: Task with leadName filter\n"
+            "  → Context matters: 'details of Y lead' vs 'tasks for Y lead'\n"
+            "- 'leads that are active/currently active' → Lead with leadActiveType: 'ACTIVE'\n"
+            "- 'active leads' → Lead with leadActiveType: 'ACTIVE'\n"
+            "- 'what is the email address for lead X' → Lead with name filter and personalInfo.email projection\n"
+            "- 'lead X' → Lead entity with name filter\n"
+            "- 'customer X' → Lead entity with name filter\n"
+            "- 'leads updated in the last 30 days' → {\"primary_entity\": \"Lead\", \"filters\": {\"updatedTimeStamp_from\": \"now-30d\"}}\n"
+            "- 'tasks created since last week' → {\"primary_entity\": \"Task\", \"filters\": {\"createdTimeStamp_from\": \"last_week\"}}\n"
+            "- 'meetings scheduled after 2024-01-01' → {\"primary_entity\": \"Meeting\", \"filters\": {\"createdTimeStamp_from\": \"2024-01-01\"}}\n"
+            "- 'Lead.last_date >= current_date - 30 days' → {\"primary_entity\": \"Lead\", \"filters\": {\"updatedTimeStamp_from\": \"now-30d\"}}\n\n"
+            
+            "## NEGATIVE FILTERS (CRITICAL)\n"
+            "When users use negative language (not, without, haven't, hasn't, excluding, don't have, etc.), use the _not suffix:\n"
+            "- Format: Use `field_not: [value]` or `field_not: [value1, value2]` for multiple exclusions\n"
+            "- 'leads who have not purchased' → {\"primary_entity\": \"Lead\", \"filters\": {\"leadStatus_not\": [\"WON\"]}}\n"
+            "- 'leads who haven't purchased' → {\"primary_entity\": \"Lead\", \"filters\": {\"leadStatus_not\": [\"WON\"]}}\n"
+            "- 'leads without contact' → {\"primary_entity\": \"Lead\", \"filters\": {\"leadStatus_not\": [\"CONTACTED\"]}}\n"
+            "- 'leads who did not convert' → {\"primary_entity\": \"Lead\", \"filters\": {\"leadStatus_not\": [\"WON\"]}}\n"
+            "- 'tasks not completed' → {\"primary_entity\": \"Task\", \"filters\": {\"taskStatus_not\": [\"COMPLETED\"]}}\n"
+            "- 'tasks without assignee' → {\"primary_entity\": \"Task\", \"filters\": {\"assignedTo_not\": [null]}}\n"
+            "- 'meetings not scheduled' → {\"primary_entity\": \"Meeting\", \"filters\": {\"meetingStatus_not\": [\"SCHEDULED\"]}}\n"
+            "- 'activities not closed' → {\"primary_entity\": \"Activity\", \"filters\": {\"activityStatus_not\": [\"CLOSE\"]}}\n"
+            "- 'call logs not answered' → {\"primary_entity\": \"CallLog\", \"filters\": {\"callStatus_not\": [\"ANSWERED\"]}}\n"
+            "- 'leads excluding won and lost' → {\"primary_entity\": \"Lead\", \"filters\": {\"leadStatus_not\": [\"WON\", \"LOST\"]}}\n"
+            "- Pattern: For any status field, 'not X' → `{statusField}_not: [\"X\"]`\n"
+            "- Pattern: 'X without Y' → `{field}_not: [\"Y\"]`\n"
+            "- Pattern: 'X excluding Y' → `{field}_not: [\"Y\"]`\n\n"
+            
+            "## DATE/TIME RANGE FILTERS (ALL UNITS)\n"
+            "Support all time units: days (d), weeks (w), months (m), years (y)\n"
+            "- Format: `{dateField}_from: \"now-N{unit}\"` where unit is d/w/m/y\n"
+            "- 'leads from the last 6 months' → {\"primary_entity\": \"Lead\", \"filters\": {\"updatedTimeStamp_from\": \"now-6m\"}}\n"
+            "- 'leads created in the last 3 months' → {\"primary_entity\": \"Lead\", \"filters\": {\"createdTimeStamp_from\": \"now-3m\"}}\n"
+            "- 'tasks from the past 2 weeks' → {\"primary_entity\": \"Task\", \"filters\": {\"createdTimeStamp_from\": \"now-2w\"}}\n"
+            "- 'meetings in the last year' → {\"primary_entity\": \"Meeting\", \"filters\": {\"updatedTimeStamp_from\": \"now-1y\"}}\n"
+            "- 'leads updated in the last 30 days' → {\"primary_entity\": \"Lead\", \"filters\": {\"updatedTimeStamp_from\": \"now-30d\"}}\n"
+            "- 'activities from the past week' → {\"primary_entity\": \"Activity\", \"filters\": {\"createdTimeStamp_from\": \"now-1w\"}}\n"
+            "- Pattern: 'last N {days|weeks|months|years}' → `updatedTimeStamp_from: \"now-N{unit}\"`\n"
+            "- Pattern: 'past N {days|weeks|months|years}' → `createdTimeStamp_from: \"now-N{unit}\"`\n"
+            "- Pattern: 'in the last N {unit}' → `updatedTimeStamp_from: \"now-N{unit}\"`\n\n"
+            
+            "## COMPLEX FILTER COMBINATIONS\n"
+            "You can combine multiple filters together:\n"
+            "- 'leads not won in the last 6 months' → {\"primary_entity\": \"Lead\", \"filters\": {\"leadStatus_not\": [\"WON\"], \"updatedTimeStamp_from\": \"now-6m\"}}\n"
+            "- 'tasks not completed in the past week' → {\"primary_entity\": \"Task\", \"filters\": {\"taskStatus_not\": [\"COMPLETED\"], \"createdTimeStamp_from\": \"now-1w\"}}\n"
+            "- 'meetings not scheduled assigned to John' → {\"primary_entity\": \"Meeting\", \"filters\": {\"meetingStatus_not\": [\"SCHEDULED\"], \"assignedName\": \"John\"}}\n\n"
             
             "## OUTPUT FORMAT\n"
             "CRITICAL: Output ONLY the JSON object, nothing else.\n"
@@ -520,12 +554,6 @@ class LLMIntentParser:
             '  "wants_details": true,\n'
             '  "wants_count": false,\n'
             '  "fetch_one": false,\n'
-            '  "bucket_field": null,\n'
-            '  "union_collection": null,\n'
-            '  "graph_from": null,\n'
-            '  "graph_start": null,\n'
-            '  "graph_connect_from": null,\n'
-            '  "graph_connect_to": null,\n'
             '  "window_field": null,\n'
             '  "window_size": null,\n'
             '  "window_unit": null,\n'
@@ -540,74 +568,57 @@ class LLMIntentParser:
             "}\n\n"
 
             "## EXAMPLES\n"
-            "- 'show me tasks assigned to alice' → {\"primary_entity\": \"workItem\", \"filters\": {\"assignee_name\": \"alice\"}, \"aggregations\": []}\n"
-            "- 'how many bugs are there' → {\"primary_entity\": \"workItem\", \"aggregations\": [\"count\"]}\n"
-            "- 'count active projects' → {\"primary_entity\": \"project\", \"filters\": {\"project_status\": \"STARTED\"}, \"aggregations\": [\"count\"]}\n"
-            "- 'group tasks by priority' → {\"primary_entity\": \"workItem\", \"aggregations\": [\"group\"], \"group_by\": [\"priority\"]}\n"
-            "- 'show archived projects' → {\"primary_entity\": \"project\", \"filters\": {\"isArchived\": true}, \"aggregations\": []}\n"
-            "- 'find favourite modules' → {\"primary_entity\": \"module\", \"filters\": {\"isFavourite\": true}, \"aggregations\": []}\n"
-            "- 'show work items with bug label' → {\"primary_entity\": \"workItem\", \"filters\": {\"label\": \"bug\"}, \"aggregations\": []}\n"
-            "- 'find work items with title containing component' → {\"primary_entity\": \"workItem\", \"filters\": {\"title\": \"component\"}, \"aggregations\": []}\n"
-            "- 'who created this project' → {\"primary_entity\": \"project\", \"filters\": {\"createdBy_name\": \"john\"}, \"aggregations\": []}\n"
-            "- 'find active cycles' → {\"primary_entity\": \"cycle\", \"filters\": {\"cycle_status\": \"ACTIVE\"}, \"aggregations\": []}\n"
-            "- 'list cycles where state.active = true' → {\"primary_entity\": \"cycle\", \"filters\": {\"cycle_status\": \"ACTIVE\"}, \"aggregations\": []}\n"
-            "- 'list all cycles that currently active' → {\"primary_entity\": \"cycle\", \"filters\": {\"cycle_status\": \"ACTIVE\"}, \"aggregations\": []}\n"
-            "- 'show upcoming cycles' → {\"primary_entity\": \"cycle\", \"filters\": {\"cycle_status\": \"UPCOMING\"}, \"aggregations\": []}\n"
-            "- 'count completed cycles' → {\"primary_entity\": \"cycle\", \"filters\": {\"cycle_status\": \"COMPLETED\"}, \"aggregations\": [\"count\"]}\n"
-            "- 'what is the email address for the project member Vikas' → {\"primary_entity\": \"members\", \"filters\": {\"name\": \"Vikas\"}, \"projections\": [\"email\"], \"aggregations\": []}\n"
-            "- 'what is the role of Vikas in Simpo Builder project' → {\"primary_entity\": \"members\", \"target_entities\": [\"project\"], \"filters\": {\"name\": \"Vikas\", \"business_name\": \"Simpo.ai\"}, \"aggregations\": []}\n"
-            "- 'show members in Simpo project' → {\"primary_entity\": \"members\", \"target_entities\": [\"project\"], \"filters\": {\"project_name\": \"Simpo\"}, \"aggregations\": []}\n\n"
-            "- 'show recent tasks' → {\"primary_entity\": \"workItem\", \"aggregations\": [], \"sort_order\": {\"createdTimeStamp\": -1}}\n"
-            "- 'list oldest projects' → {\"primary_entity\": \"project\", \"aggregations\": [], \"sort_order\": {\"createdTimeStamp\": 1}}\n"
-            "- 'bugs in ascending created order' → {\"primary_entity\": \"workItem\", \"aggregations\": [], \"sort_order\": {\"createdTimeStamp\": 1}}\n"
-            "- 'work items updated in the last 30 days' → {\"primary_entity\": \"workItem\", \"filters\": {\"updatedTimeStamp_from\": \"now-30d\"}, \"aggregations\": []}\n"
-            "- 'tasks created since yesterday' → {\"primary_entity\": \"workItem\", \"filters\": {\"createdTimeStamp_from\": \"yesterday\"}, \"aggregations\": []}\n"
-            "- 'issues from the last week' → {\"primary_entity\": \"workItem\", \"filters\": {\"updatedTimeStamp_from\": \"last_week\"}, \"aggregations\": []}\n"
-            "- 'workItem.last_date >= current_date - 30 days' → {\"primary_entity\": \"workItem\", \"filters\": {\"updatedTimeStamp_from\": \"now-30d\"}, \"aggregations\": []}\n"
-            "- 'top 5 priority work items' → {\"primary_entity\": \"workItem\", \"aggregations\": [], \"sort_order\": {\"priority\": -1}, \"limit\": 5}\n"
-            "- 'first 10 projects' → {\"primary_entity\": \"project\", \"aggregations\": [], \"limit\": 10}\n"
-            "- 'all active cycles' → {\"primary_entity\": \"cycle\", \"filters\": {\"cycle_status\": \"ACTIVE\"}, \"aggregations\": [], \"limit\": 1000}\n"
-            "- 'show me a few bugs' → {\"primary_entity\": \"workItem\", \"filters\": {\"label\": \"bug\"}, \"aggregations\": [], \"limit\": 5}\n"
-            "- 'find one project named X' → {\"primary_entity\": \"project\", \"filters\": {\"name\": \"X\"}, \"aggregations\": [], \"limit\": 1, \"fetch_one\": true}\n"
-            "- 'show work items with estimates' → {\"primary_entity\": \"workItem\", \"projections\": [\"displayBugNo\", \"title\", \"estimate\", \"estimateSystem\"], \"aggregations\": []}\n"
-            "- 'show work logs for tasks' → {\"primary_entity\": \"workItem\", \"projections\": [\"displayBugNo\", \"title\", \"workLogs\"], \"aggregations\": []}\n\n"
+            "- 'show me tasks for john' → {\"primary_entity\": \"Task\", \"filters\": {\"leadName\": \"john\"}, \"aggregations\": []}\n"
+            "- 'how many leads are there' → {\"primary_entity\": \"Lead\", \"aggregations\": [\"count\"]}\n"
+            "- 'count active leads' → {\"primary_entity\": \"Lead\", \"filters\": {\"leadActiveType\": \"ACTIVE\"}, \"aggregations\": [\"count\"]}\n"
+            "- 'group leads by status' → {\"primary_entity\": \"Lead\", \"aggregations\": [\"group\"], \"group_by\": [\"leadStatus\"]}\n"
+            "- 'show qualified leads' → {\"primary_entity\": \"Lead\", \"filters\": {\"leadStatus\": \"QUALIFIED\"}, \"aggregations\": []}\n"
+            "- 'find leads with high score' → {\"primary_entity\": \"Lead\", \"filters\": {\"score\": {\"$gte\": 80}}, \"aggregations\": []}\n"
+            "- 'find leads with name containing john' → {\"primary_entity\": \"Lead\", \"filters\": {\"personalInfo.name\": \"john\"}, \"aggregations\": []}\n"
+            "- 'who is assigned to this lead' → {\"primary_entity\": \"Lead\", \"filters\": {\"staffName\": \"assigned_person\"}, \"aggregations\": []}\n"
+            "- 'find active meetings' → {\"primary_entity\": \"Meeting\", \"filters\": {\"meetingStatus\": \"SCHEDULED\"}, \"aggregations\": []}\n"
+            "- 'show completed meetings' → {\"primary_entity\": \"Meeting\", \"filters\": {\"meetingStatus\": \"COMPLETED\"}, \"aggregations\": []}\n"
+            "- 'count closed activities' → {\"primary_entity\": \"Activity\", \"filters\": {\"activityStatus\": \"CLOSE\"}, \"aggregations\": [\"count\"]}\n"
+            "- 'what is the email address for lead John' → {\"primary_entity\": \"Lead\", \"filters\": {\"personalInfo.name\": \"John\"}, \"projections\": [\"personalInfo.email\"], \"aggregations\": []}\n"
+            "- 'show activities for ABC Corp' → {\"primary_entity\": \"Activity\", \"filters\": {\"leadName\": \"ABC Corp\"}, \"aggregations\": []}\n\n"
+            "- 'show recent leads' → {\"primary_entity\": \"Lead\", \"aggregations\": [], \"sort_order\": {\"createdTimeStamp\": -1}}\n"
+            "- 'list oldest tasks' → {\"primary_entity\": \"Task\", \"aggregations\": [], \"sort_order\": {\"createdTimeStamp\": 1}}\n"
+            "- 'calls in ascending created order' → {\"primary_entity\": \"CallLog\", \"aggregations\": [], \"sort_order\": {\"createdTimeStamp\": 1}}\n"
+            "- 'leads updated in the last 30 days' → {\"primary_entity\": \"Lead\", \"filters\": {\"updatedTimeStamp_from\": \"now-30d\"}, \"aggregations\": []}\n"
+            "- 'tasks created since yesterday' → {\"primary_entity\": \"Task\", \"filters\": {\"createdTimeStamp_from\": \"yesterday\"}, \"aggregations\": []}\n"
+            "- 'meetings from the last week' → {\"primary_entity\": \"Meeting\", \"filters\": {\"createdTimeStamp_from\": \"last_week\"}, \"aggregations\": []}\n"
+            "- 'top 5 scoring leads' → {\"primary_entity\": \"Lead\", \"aggregations\": [], \"sort_order\": {\"score\": -1}, \"limit\": 5}\n"
+            "- 'first 10 meetings' → {\"primary_entity\": \"Meeting\", \"aggregations\": [], \"limit\": 10}\n"
+            "- 'all active leads' → {\"primary_entity\": \"Lead\", \"filters\": {\"leadActiveType\": \"ACTIVE\"}, \"aggregations\": [], \"limit\": 1000}\n"
+            "- 'show me a few qualified leads' → {\"primary_entity\": \"Lead\", \"filters\": {\"leadStatus\": \"QUALIFIED\"}, \"aggregations\": [], \"limit\": 5}\n"
+            "- 'find one lead named John' → {\"primary_entity\": \"Lead\", \"filters\": {\"personalInfo.name\": \"John\"}, \"aggregations\": [], \"limit\": 1, \"fetch_one\": true}\n"
+            "- 'show leads with contact info' → {\"primary_entity\": \"Lead\", \"projections\": [\"personalInfo.name\", \"personalInfo.email\", \"personalInfo.mobile\"], \"aggregations\": []}\n"
+            "- 'show activity history for leads' → {\"primary_entity\": \"Lead\", \"projections\": [\"personalInfo.name\", \"emailCount\", \"callCount\"], \"aggregations\": []}\n\n"
             "## ARRAY SIZE EXAMPLES (MUST FOLLOW THESE PATTERNS)\n"
-            "- 'how many work items have multiple assignees?' → {\"primary_entity\": \"workItem\", \"filters\": {\"assignee_count\": \">1\"}, \"aggregations\": [\"count\"]}\n"
-            "- 'show work items with more than 2 assignees' → {\"primary_entity\": \"workItem\", \"filters\": {\"assignee_count\": \">2\"}, \"aggregations\": []}\n"
-            "- 'work items with at least 2 labels' → {\"primary_entity\": \"workItem\", \"filters\": {\"label_count\": \">=2\"}, \"aggregations\": []}\n"
-            "- 'find work items with exactly 3 labels' → {\"primary_entity\": \"workItem\", \"filters\": {\"label_count\": \"3\"}, \"aggregations\": []}\n"
-            "- 'unassigned work items' → {\"primary_entity\": \"workItem\", \"filters\": {\"assignee_count\": \"0\"}, \"aggregations\": []}\n"
-            "- 'work items with no assignees' → {\"primary_entity\": \"workItem\", \"filters\": {\"assignee_count\": \"0\"}, \"aggregations\": []}\n"
-            "- 'work items with labels' → {\"primary_entity\": \"workItem\", \"filters\": {\"label_count\": \">=1\"}, \"aggregations\": []}\n"
-            "- 'work items with 2 assignees' → {\"primary_entity\": \"workItem\", \"filters\": {\"assignee_count\": \"2\"}, \"aggregations\": []}\n"
-            "- 'find epics with custom properties' → {\"primary_entity\": \"epic\", \"filters\": {\"customProperties_count\": \">=1\"}, \"aggregations\": []}\n"
-            "- 'features with multiple dependencies' → {\"primary_entity\": \"features\", \"filters\": {\"dependencies_count\": \">1\"}, \"aggregations\": []}\n"
-            "- 'count features with multiple dependencies' → {\"primary_entity\": \"features\", \"filters\": {\"dependencies_count\": \">1\"}, \"aggregations\": [\"count\"]}\n"
-            "- 'show user stories with multiple labels' → {\"primary_entity\": \"userStory\", \"filters\": {\"label_count\": \">1\"}, \"aggregations\": []}\n"
-            "- 'find modules with no assignees' → {\"primary_entity\": \"module\", \"filters\": {\"assignee_count\": \"0\"}, \"aggregations\": []}\n"
-            "- 'pages linked to exactly 2 cycles' → {\"primary_entity\": \"page\", \"filters\": {\"linkedCycle_count\": \"2\"}, \"aggregations\": []}\n"
+            "- 'how many meetings have multiple participants?' → {\"primary_entity\": \"Meeting\", \"filters\": {\"participantsList_count\": \">1\"}, \"aggregations\": [\"count\"]}\n"
+            "- 'show meetings with more than 2 participants' → {\"primary_entity\": \"Meeting\", \"filters\": {\"participantsList_count\": \">2\"}, \"aggregations\": []}\n"
+            "- 'leads with at least 2 email communications' → {\"primary_entity\": \"Lead\", \"filters\": {\"emailCount\": \">=2\"}, \"aggregations\": []}\n"
+            "- 'find leads with exactly 3 calls' → {\"primary_entity\": \"Lead\", \"filters\": {\"callCount\": \"3\"}, \"aggregations\": []}\n"
+            "- 'unassigned tasks' → {\"primary_entity\": \"Task\", \"filters\": {\"assignedTo\": null}, \"aggregations\": []}\n"
+            "- 'tasks with no assignee' → {\"primary_entity\": \"Task\", \"filters\": {\"assignedTo\": null}, \"aggregations\": []}\n"
+            "- 'leads with email addresses' → {\"primary_entity\": \"Lead\", \"filters\": {\"personalInfo.email\": {\"$ne\": null}}, \"aggregations\": []}\n"
+            "- 'meetings with 2 participants' → {\"primary_entity\": \"Meeting\", \"filters\": {\"participantsList_count\": \"2\"}, \"aggregations\": []}\n"
+            "- 'find notes with attachments' → {\"primary_entity\": \"Notes\", \"filters\": {\"notesAttachments_count\": \">=1\"}, \"aggregations\": []}\n"
+            "- 'emails with multiple recipients' → {\"primary_entity\": \"MailInfo\", \"filters\": {\"toMails_count\": \">1\"}, \"aggregations\": []}\n"
+            "- 'count emails with multiple recipients' → {\"primary_entity\": \"MailInfo\", \"filters\": {\"toMails_count\": \">1\"}, \"aggregations\": [\"count\"]}\n"
             "- 'epics with at least 3 custom properties' → {\"primary_entity\": \"epic\", \"filters\": {\"customProperties_count\": \">=3\"}, \"aggregations\": []}\n\n"
             "CRITICAL: When you see phrases like 'multiple', 'more than', 'at least', 'exactly', 'no', 'unassigned', 'with X', 'has X' combined with array field names (assignees, labels, dependencies, etc.), you MUST add the corresponding _count filter.\n\n"
             "## ADVANCED OPERATOR EXAMPLES (MUST FOLLOW THESE PATTERNS)\n"
-            "- Query: 'work items with assignees matching role Developer'\n"
-            "  → filters: {\"assignee_elemMatch\": {\"role\": \"Developer\"}}\n"
-            "- Query: 'work items with assignees matching name John and role Developer'\n"
-            "  → filters: {\"assignee_elemMatch\": {\"name\": \"John\", \"role\": \"Developer\"}}\n\n"
-            "CRITICAL: When users mention 'matching X', 'assignees matching', etc., you MUST add the appropriate $elemMatch filter.\n\n"
-            "## ADVANCED AGGREGATION EXAMPLES (MUST FOLLOW THESE PATTERNS)\n"
-            "- Query: 'auto-group work items by estimate'\n"
-            "  → aggregations: [\"bucketAuto\"], bucket_field: \"estimate\"\n"
-            "- Query: 'combine work items with user stories'\n"
-            "  → aggregations: [\"unionWith\"], union_collection: \"userStory\"\n"
-            "- Query: 'find project dependencies'\n"
-            "  → aggregations: [\"graphLookup\"], graph_from: \"project\", graph_start: \"$_id\", graph_connect_from: \"_id\", graph_connect_to: \"dependsOn\"\n\n"
-            "CRITICAL: When users mention 'break down by', 'auto-group', 'combine with', 'graph traversal', etc., you MUST add the appropriate aggregation.\n"
-            "Do NOT skip this - these aggregations require special handling that cannot be achieved with basic operations.\n\n"
+            "- Query: 'meetings with participants matching role Manager'\n"
+            "  → filters: {\"participantsList_elemMatch\": {\"role\": \"Manager\"}}\n"
+            "- Query: 'meetings with participants matching name John and department Sales'\n"
+            "  → filters: {\"participantsList_elemMatch\": {\"name\": \"John\", \"department\": \"Sales\"}}\n\n"
+            "CRITICAL: When users mention 'matching X', 'participants matching', etc., you MUST add the appropriate $elemMatch filter.\n\n"
             "## TIME-SERIES EXAMPLES\n"
-            "- '7-day rolling average of work items' → {\"primary_entity\": \"workItem\", \"aggregations\": [\"timeWindow\"], \"window_field\": \"createdTimeStamp\", \"window_size\": \"7d\", \"window_unit\": \"day\"}\n"
-            "- 'trend analysis for last month' → {\"primary_entity\": \"workItem\", \"aggregations\": [\"trend\"], \"trend_field\": \"createdTimeStamp\", \"trend_period\": \"month\", \"trend_metric\": \"count\"}\n"
-            "- 'detect anomalies in work item creation' → {\"primary_entity\": \"workItem\", \"aggregations\": [\"anomaly\"], \"anomaly_field\": \"createdTimeStamp\", \"anomaly_metric\": \"count\", \"anomaly_threshold\": 2.0}\n"
-            "- 'forecast work item creation for next week' → {\"primary_entity\": \"workItem\", \"aggregations\": [\"forecast\"], \"forecast_field\": \"createdTimeStamp\", \"forecast_periods\": 7, \"forecast_metric\": \"count\"}\n\n"
+            "- '7-day rolling average of leads' → {\"primary_entity\": \"Lead\", \"aggregations\": [\"timeWindow\"], \"window_field\": \"createdTimeStamp\", \"window_size\": \"7d\", \"window_unit\": \"day\"}\n"
+            "- 'trend analysis for last month' → {\"primary_entity\": \"Lead\", \"aggregations\": [\"trend\"], \"trend_field\": \"createdTimeStamp\", \"trend_period\": \"month\", \"trend_metric\": \"count\"}\n"
+            "- 'detect anomalies in lead creation' → {\"primary_entity\": \"Lead\", \"aggregations\": [\"anomaly\"], \"anomaly_field\": \"createdTimeStamp\", \"anomaly_metric\": \"count\", \"anomaly_threshold\": 2.0}\n"
+            "- 'forecast lead creation for next week' → {\"primary_entity\": \"Lead\", \"aggregations\": [\"forecast\"], \"forecast_field\": \"createdTimeStamp\", \"forecast_periods\": 7, \"forecast_metric\": \"count\"}\n\n"
 
             "Always output valid JSON. No explanations, no thinking, just the JSON object."
         )
@@ -617,6 +628,10 @@ class LLMIntentParser:
         try:
             ai = await self.llm.ainvoke([SystemMessage(content=system), HumanMessage(content=user)])
             content = ai.content.strip()
+            
+            # DEBUG: Log raw LLM response
+            logger.debug(f"Raw LLM response for query '{query[:100]}': {content[:500]}")
+            
             import re
             content = re.sub(r'<think>.*?</think>', '', content, flags=re.DOTALL)
             content = re.sub(r'<think>.*', '', content, flags=re.DOTALL)  # Handle incomplete tags
@@ -637,6 +652,9 @@ class LLMIntentParser:
                 return None
 
             data = json.loads(content)
+            
+            # DEBUG: Log parsed JSON data
+            logger.debug(f"Parsed JSON data for query '{query[:100]}': filters={data.get('filters', {})}")
         except Exception as e:
             logger.error(f"LLM parsing exception: {e}")
             return None
@@ -665,6 +683,10 @@ class LLMIntentParser:
 
         # Simplified filter processing - keep valid filters, expanded to cover all collections
         raw_filters = data.get("filters") or {}
+        
+        # DEBUG: Log raw filters before sanitization
+        logger.debug(f"Raw filters before sanitization for query '{original_query[:100] if original_query else 'unknown'}': {raw_filters}")
+        
         filters: Dict[str, Any] = {}
 
         # Map legacy 'status' to 'state' for workItem if present
@@ -785,6 +807,16 @@ class LLMIntentParser:
                 # Add to known_filter_keys if base field is valid
                 if base_field in allowed_primary_fields or base_field in {"assignee", "label", "description", "_id"}:
                     known_filter_keys.add(key)
+        
+        # Also accept negative filters with suffix (_not)
+        # These are dynamically detected based on field names + suffix
+        for key in list(raw_filters.keys()):
+            if key.endswith('_not'):
+                # Extract base field name
+                base_field = key[:-len('_not')]
+                # Add to known_filter_keys if base field is valid
+                if base_field in allowed_primary_fields or base_field in known_filter_keys:
+                    known_filter_keys.add(key)
         # Add dynamic range keys for each date-like field
         for f in date_like_fields:
             known_filter_keys.add(f + "_from")
@@ -795,6 +827,9 @@ class LLMIntentParser:
 
         for k, v in raw_filters.items():
             if k not in known_filter_keys or self._is_placeholder(v):
+                # Log warning when filters are dropped (except for placeholders)
+                if not self._is_placeholder(v):
+                    logger.warning(f"Filter '{k}' dropped during sanitization (not in known_filter_keys) for query: '{original_query[:100] if original_query else 'unknown'}'")
                 continue
             # Normalize values where appropriate
             if k == "state" and isinstance(v, str):
@@ -858,6 +893,13 @@ class LLMIntentParser:
             elif k.endswith("_elemMatch") and isinstance(v, dict):
                 # $elemMatch operator filters: keep as-is (values are objects)
                 filters[k] = v
+            elif k.endswith("_not"):
+                # Negative filters: keep as-is (values are arrays or single values to exclude)
+                # Convert single values to arrays for consistency
+                if isinstance(v, list):
+                    filters[k] = v
+                else:
+                    filters[k] = [v]
             else:
                 # Keep other valid filters (including direct field filters and date range tokens)
                 filters[k] = v
@@ -911,19 +953,6 @@ class LLMIntentParser:
 
         # 3) Advanced feature detection from query text (heuristic fallback)
         
-        
-        # Graph lookup detection
-        if re.search(r"\bdependenc(?:y|ies)\b.*\bgraph\b|\bgraph\b.*\bdependenc(?:y|ies)\b|\bdependency\s+chain\b|\bdepends?\s+on\b.*\bgraph\b", oq_text):
-            if "graphLookup" not in (data.get("aggregations") or []):
-                aggregations = data.get("aggregations") or []
-                aggregations.append("graphLookup")
-                data["aggregations"] = aggregations
-            # Infer graph connection fields if not provided
-            if not data.get("graph_connect_to"):
-                if "depends" in oq_text or "dependency" in oq_text:
-                    data["graph_connect_to"] = "dependsOn"
-                elif primary == "project":
-                    data["graph_connect_to"] = "parentProjectId"
         
         # Time window detection (rolling/moving averages)
         if re.search(r"\b(\d+)[\s-]?day\s+rolling\s+averages?\b|\brolling\s+averages?\s+.*\b(\d+)\s+days?\b|\bmoving\s+averages?\s+.*\b(\d+)\s+days?\b|\b(\d+)[\s-]?day\s+window\b", oq_text):
@@ -1004,8 +1033,7 @@ class LLMIntentParser:
         # Aggregations - include new advanced aggregation types
         allowed_aggs = {
             "count", "group", "summary",
-            "graphLookup", "timeWindow", "trend", "anomaly", "forecast",
-            "bucketAuto", "unionWith"
+            "timeWindow", "trend", "anomaly", "forecast"
         }
         aggregations = [a for a in (data.get("aggregations") or []) if a in allowed_aggs]
 
@@ -1185,14 +1213,6 @@ class LLMIntentParser:
         fetch_one = bool(data.get("fetch_one", False)) or (limit == 1)
 
         # Extract advanced aggregation fields
-        bucket_field = data.get("bucket_field")
-        union_collection = data.get("union_collection")
-        
-        # Graph lookup fields
-        graph_from = data.get("graph_from")
-        graph_start = data.get("graph_start")
-        graph_connect_from = data.get("graph_connect_from")
-        graph_connect_to = data.get("graph_connect_to")
         
         # Time-series analysis fields
         window_field = data.get("window_field")
@@ -1206,39 +1226,6 @@ class LLMIntentParser:
         anomaly_threshold = data.get("anomaly_threshold")
         forecast_field = data.get("forecast_field")
         forecast_periods = data.get("forecast_periods")
-        print(f"""
-            ---- QueryIntent DEBUG ----
-            primary_entity: {primary}
-            target_entities: {target_entities}
-            filters: {filters}
-            aggregations: {aggregations}
-            group_by: {group_by}
-            projections: {projections}
-            sort_order: {sort_order}
-            limit: {limit}
-            skip: {skip}
-            wants_details: {wants_details}
-            wants_count: {wants_count}
-            fetch_one: {fetch_one}
-            bucket_field: {bucket_field if bucket_field else None}
-            union_collection: {union_collection if union_collection else None}
-            graph_from: {graph_from if graph_from else None}
-            graph_start: {graph_start if graph_start else None}
-            graph_connect_from: {graph_connect_from if graph_connect_from else None}
-            graph_connect_to: {graph_connect_to if graph_connect_to else None}
-            window_field: {window_field if window_field else None}
-            window_size: {window_size if window_size else None}
-            window_unit: {window_unit if window_unit else None}
-            trend_field: {trend_field if trend_field else None}
-            trend_period: {trend_period if trend_period else None}
-            trend_metric: {trend_metric if trend_metric else None}
-            anomaly_field: {anomaly_field if anomaly_field else None}
-            anomaly_metric: {anomaly_metric if anomaly_metric else None}
-            anomaly_threshold: {float(anomaly_threshold) if anomaly_threshold is not None else None}
-            forecast_field: {forecast_field if forecast_field else None}
-            forecast_periods: {int(forecast_periods) if forecast_periods is not None else None}
-            ---------------------------
-            """)
 
         return QueryIntent(
             primary_entity=primary,
@@ -1253,12 +1240,6 @@ class LLMIntentParser:
             wants_details=wants_details,
             wants_count=wants_count,
             fetch_one=fetch_one,
-            bucket_field=bucket_field if bucket_field else None,
-            union_collection=union_collection if union_collection else None,
-            graph_from=graph_from if graph_from else None,
-            graph_start=graph_start if graph_start else None,
-            graph_connect_from=graph_connect_from if graph_connect_from else None,
-            graph_connect_to=graph_connect_to if graph_connect_to else None,
             window_field=window_field if window_field else None,
             window_size=window_size if window_size else None,
             window_unit=window_unit if window_unit else None,
