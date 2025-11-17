@@ -24,7 +24,7 @@ qdrant-client>=1.9.1
 sentence-transformers
 huggingface-hub>=0.36.0
 transformers==4.57.1
-sentencepiece==0.2.0
+sentencepiece
 safetensors==0.4.5
 numpy==1.26.4
 

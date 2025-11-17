@@ -25,8 +25,8 @@ logger = logging.getLogger(__name__)
 #     SentenceTransformer = None
 #     np = None
 
-mongodb_tools = crm.mongo.constants.mongodb_tools
-DATABASE_NAME = crm.mongo.constants.DATABASE_NAME
+mongodb_tools = mongo.constants.mongodb_tools
+DATABASE_NAME = mongo.constants.DATABASE_NAME
 try:
     from agent.planner import plan_and_execute_query, _format_pipeline_for_display
 except ImportError:

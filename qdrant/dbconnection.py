@@ -53,6 +53,8 @@ except Exception as e:
 qdrant_url = os.getenv("QDRANT_URL", "http://qdrant:6333")
 qdrant_api_key = os.getenv("QDRANT_API_KEY", "")
 qdrant_collection = os.getenv("QDRANT_COLLECTION", "ProjectManagement")
+# Alias for backward compatibility
+QDRANT_COLLECTION = qdrant_collection
 
 try:
     qdrant_client = QdrantClient(
