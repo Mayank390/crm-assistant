@@ -135,7 +135,6 @@ async def handle_chat_websocket(websocket: WebSocket, mongodb_agent):
         user_context = {
             "user_id": None,
             "businessId": None,
-            "preferences": None,  # Cached user preferences
         }
 
         # Set a timeout for handshake completion (30 seconds)
@@ -199,28 +198,6 @@ async def handle_chat_websocket(websocket: WebSocket, mongodb_agent):
                 # Connect with the actual user_id
                 await ws_manager.connect(websocket, user_context["user_id"])
 
-                # Load user preferences from MongoDB
-                if user_context["user_id"] and user_context["businessId"]:
-                    try:
-                        from mongo.user_preferences import user_preferences
-                        prefs_data = await user_preferences.get_preferences(
-                            user_context["user_id"],
-                            user_context["businessId"]
-                        )
-                        user_context["preferences"] = prefs_data.get("preferences", {})
-                        
-                        # If preferences are sent in handshake, update them
-                        if data.get("preferences"):
-                            await user_preferences.update_preferences(
-                                user_context["user_id"],
-                                user_context["businessId"],
-                                data.get("preferences")
-                            )
-                            user_context["preferences"] = data.get("preferences")
-                    except Exception as e:
-                        logger.warning(f"Failed to load user preferences: {e}")
-                        user_context["preferences"] = {}
-
                 # Mark as authenticated now that handshake is complete
                 authenticated = True
 
@@ -265,19 +242,6 @@ async def handle_chat_websocket(websocket: WebSocket, mongodb_agent):
             message = data.get("message", "")
             conversation_id = data.get("conversation_id") or f"conv_{user_id}"
             force_planner = data.get("planner", False)
-            
-            # Handle preferences update in message
-            if data.get("preferences") and user_context["user_id"] and user_context["businessId"]:
-                try:
-                    from mongo.user_preferences import user_preferences
-                    await user_preferences.update_preferences(
-                        user_context["user_id"],
-                        user_context["businessId"],
-                        data.get("preferences")
-                    )
-                    user_context["preferences"] = data.get("preferences")
-                except Exception as e:
-                    logger.warning(f"Failed to update preferences: {e}")
 
             # Handle new vs existing conversations
             from agent.memory import conversation_memory

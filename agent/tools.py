@@ -47,7 +47,6 @@ CONTENT_TYPE_DEFAULT_LIMITS: Dict[str, int] = {
     "notes": 10,
     "callLog": 10,
     "mailInfo": 10,
-    # Note: user_context is NOT a content_type - it's handled via mem0_hybrid_layer.py
 }
 
 # Fallback when content_type is unknown or not provided
@@ -65,7 +64,6 @@ CONTENT_TYPE_CHUNKS_PER_DOC: Dict[str, int] = {
     "notes": 2,
     "callLog": 2,
     "mailInfo": 2,
-    # Note: user_context is NOT a content_type - it's handled via mem0_hybrid_layer.py
 }
 
 CONTENT_TYPE_INCLUDE_ADJACENT: Dict[str, bool] = {
@@ -76,7 +74,6 @@ CONTENT_TYPE_INCLUDE_ADJACENT: Dict[str, bool] = {
     "notes": False,
     "callLog": False,
     "mailInfo": False,
-    # Note: user_context is NOT a content_type - it's handled via mem0_hybrid_layer.py
 }
 
 CONTENT_TYPE_MIN_SCORE: Dict[str, float] = {
@@ -87,7 +84,6 @@ CONTENT_TYPE_MIN_SCORE: Dict[str, float] = {
     "notes": 0.55,
     "callLog": 0.55,
     "mailInfo": 0.55,
-    # Note: user_context is NOT a content_type - it's handled via mem0_hybrid_layer.py
 }
 
 
@@ -1441,7 +1437,6 @@ async def rag_search(
     Args:
         query: Search query (semantic meaning, not just keywords)
         content_type: Filter by type - 'lead', 'task', 'activity', 'meeting', 'notes', 'callLog', 'mailInfo' or None (all)
-                     Note: User context is handled via Mem0 hybrid layer, not as a content_type
         group_by: Group results by field - 'leadStatus', 'taskStatus', 'meetingStatus', 'updatedAt', 'priority', 
                  'content_type', 'assignedName', etc. (None = no grouping)
         limit: Max results to retrieve (default 10, increase for broader searches)

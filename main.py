@@ -23,8 +23,6 @@ from mongo.conversations import ensure_conversation_client_connected
 from mongo.conversations import conversation_mongo_client, CONVERSATIONS_DB_NAME, CONVERSATIONS_COLLECTION_NAME, TEMPLATES_COLLECTION_NAME
 from mongo.conversations import update_message_reaction
 from mongo.constants import mongodb_tools, DATABASE_NAME
-from mongo.user_context import user_context as user_context_service
-from mongo.user_preferences import user_preferences
 
 # Pydantic models for API requests/responses
 class ChatRequest(BaseModel):
@@ -598,47 +596,6 @@ async def set_reaction(req: ReactionRequest):
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-class UserContextRequest(BaseModel):
-    user_id: str
-    business_id: str
-    content: str
-    metadata: Optional[Dict[str, Any]] = None
-
-
-class UserContextResponse(BaseModel):
-    id: str
-    success: bool
-    message: str
-
-
-@app.post("/api/user-context", response_model=UserContextResponse)
-async def create_user_context(req: UserContextRequest):
-    """Create or update long-term user context document."""
-    try:
-        # Store in MongoDB
-        doc_id = await user_context_service.create_context_document(
-            user_id=req.user_id,
-            business_id=req.business_id,
-            content=req.content,
-            metadata=req.metadata,
-            source="explicit"
-        )
-        
-        if not doc_id:
-            raise HTTPException(status_code=500, detail="Failed to create context document")
-        
-        return UserContextResponse(
-            id=doc_id,
-            success=True,
-            message="User context created successfully"
-        )
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Failed to create user context: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
