@@ -350,6 +350,54 @@ class LLMIntentParser:
 
         return None
 
+    def _infer_pagination_from_query(self, query_text: str) -> Optional[Dict[str, Any]]:
+        """Infer pagination preferences from free-form query text.
+
+        Recognizes phrases like:
+        - 'page 2', 'second page' → skip based on assumed page size
+        - 'skip 10', 'offset 10' → skip: 10
+        - 'next page' → skip increment (context-aware)
+        - 'results 21-40' → skip: 20, limit: 20
+        """
+        if not query_text:
+            return None
+
+        text = query_text.lower()
+
+        # Page-based pagination
+        page_match = re.search(r'\b(?:page|pg)\s+(\d+)\b', text)
+        if page_match:
+            page_num = int(page_match.group(1))
+            if page_num > 1:
+                # Assume standard page size of 50 for page-based queries
+                return {"skip": (page_num - 1) * 50, "limit": 50}
+
+        # Direct skip/offset
+        skip_match = re.search(r'\b(?:skip|offset)(?:\s+(?:the\s+)?(?:first\s+)?)?(\d+)\b', text)
+        if skip_match:
+            skip_value = int(skip_match.group(1))
+            return {"skip": skip_value}
+
+        # Range-based pagination (e.g., "results 21-40", "show 11 to 20")
+        range_match = re.search(r'\b(?:results?|show)\s+(\d+)\s*(?:to|-)\s*(\d+)\b', text)
+        if range_match:
+            start = int(range_match.group(1))
+            end = int(range_match.group(2))
+            if start > 0 and end > start:
+                return {"skip": start - 1, "limit": end - start + 1}
+
+        # Next page (context-aware - assumes previous query had limit)
+        if re.search(r'\bnext\s+page\b', text):
+            # This would need context from previous queries, but for now we'll use a reasonable default
+            return {"skip": 50, "limit": 50}  # Assume previous page was 0-50
+
+        # Previous page
+        if re.search(r'\bprevious\s+page\b|\blast\s+page\b', text):
+            # For previous page, we'd need to track state, but for now return default
+            return {"skip": 0, "limit": 50}
+
+        return None
+
 
     async def parse(self, query: str) -> Optional[QueryIntent]:
         """Use the LLM to produce a structured intent. Returns None on failure."""
@@ -459,6 +507,40 @@ class LLMIntentParser:
             "  - 'top N' with score context → sort_order: {\"score\": -1}\n"
             "  - 'top N' with date/recent context → sort_order: {\"createdTimeStamp\": -1}\n"
             "  - 'top N' with activity context → sort_order: {\"emailCount\": -1} or {\"callCount\": -1}\n\n"
+
+            "## PAGINATION CONTROL (IMPORTANT)\n"
+            "This system supports full pagination control with skip and limit:\n"
+            "- limit: Controls how many results to return (default: 50, max: 1000)\n"
+            "- skip: Controls how many results to skip (for pagination, default: 0)\n"
+            "- Use skip and limit together for proper pagination: skip = (page_number - 1) * limit\n"
+            "\n"
+            "PAGINATION EXTRACTION RULES:\n"
+            "- 'page 2', 'second page', 'next page' → skip: previous_limit, limit: previous_limit\n"
+            "- 'skip 10', 'offset 10' → skip: 10\n"
+            "- 'show 20 results' → limit: 20\n"
+            "- 'show results 21-40' → skip: 20, limit: 20\n"
+            "- Default behavior: skip: 0, limit: 50\n"
+            "- For large datasets: Consider using pagination hints in responses\n"
+            "\n"
+            "PAGINATION EXAMPLES:\n"
+            "- 'show me page 2 of leads' → skip: 50, limit: 50 (assuming page 1 was limit: 50)\n"
+            "- 'skip the first 100 tasks' → skip: 100, limit: 50\n"
+            "- 'show next 25 meetings' → skip: previous_skip + previous_limit, limit: 25\n\n"
+
+            "## SYSTEM CAPABILITIES\n"
+            "This CRM system supports:\n"
+            "- Filtering, sorting, and aggregation\n"
+            "- Pagination with skip/limit for large result sets\n"
+            "- Multi-entity joins and complex queries\n"
+            "- Time-series analysis and forecasting\n"
+            "\n"
+            "PAGINATION WORKS WITH ALL QUERY TYPES:\n"
+            "- List queries: Use skip/limit for browsing large datasets\n"
+            "- Count queries: Usually don't need pagination (limit: null)\n"
+            "- Grouped queries: Pagination applied after grouping\n"
+            "- Detail queries: Pagination ensures manageable response sizes\n"
+            "\n"
+            "When users mention 'page', 'next', 'previous', or 'skip', always set appropriate skip and limit values.\n\n"
 
             "## NAME EXTRACTION RULES - CRITICAL\n"
             "ALWAYS extract ONLY the core entity name, NEVER include descriptive phrases:\n"
@@ -926,7 +1008,21 @@ class LLMIntentParser:
             _maybe_add_group("cycle")
         if re.search(r"\b(group\s+by|breakdown\s+by|distribution\s+by|by|per)\s+module\b", oq_text):
             _maybe_add_group("module")
-        if re.search(r"\b(group\s+by|breakdown\s+by|distribution\s+by|by|per)\s+(state|status)\b", oq_text):
+        if re.search(r"\b(group\s+by|breakdown\s+by|distribution\s+by|by|per)\s+status\b", oq_text):
+            # For CRM entities, map "status" to entity-specific status field
+            if primary == "Lead":
+                _maybe_add_group("status")  # or "leadStatus" depending on field name
+            elif primary == "Task":
+                _maybe_add_group("taskStatus")
+            elif primary == "Meeting":
+                _maybe_add_group("meetingStatus")
+            elif primary == "Activity":
+                _maybe_add_group("activityStatus")
+            elif primary == "CallLog":
+                _maybe_add_group("callStatus")
+            else:
+                _maybe_add_group("status")  # Generic fallback
+        if re.search(r"\b(group\s+by|breakdown\s+by|distribution\s+by|by|per)\s+state\b", oq_text):
             _maybe_add_group("state")
         if re.search(r"\b(group\s+by|breakdown\s+by|distribution\s+by|by|per)\s+business\b", oq_text):
             _maybe_add_group("business")
@@ -1194,6 +1290,16 @@ class LLMIntentParser:
                     filters["timestamp_within"] = "this_month"
                 elif re.search(r"\blast\s+month\b", oq):
                     filters["timestamp_within"] = "last_month"
+
+        # Infer pagination from query text if not explicitly set by LLM
+        if not data.get("skip") or data.get("skip") == 0:
+            inferred_pagination = self._infer_pagination_from_query(original_query or "")
+            if inferred_pagination:
+                # Only override if LLM didn't provide explicit pagination
+                if "skip" in inferred_pagination and not data.get("skip"):
+                    data["skip"] = inferred_pagination["skip"]
+                if "limit" in inferred_pagination and not data.get("limit"):
+                    data["limit"] = inferred_pagination["limit"]
 
         # If no explicit sort provided and no grouping/count, infer time-based sort from phrasing
         if not sort_order and not group_by and not wants_count:

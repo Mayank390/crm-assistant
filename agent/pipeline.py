@@ -258,8 +258,30 @@ class PipelineGenerator:
                     else:
                         id_fields[token] = resolved
             if not id_fields:
-                # Fallback: do nothing if we can't resolve
-                pass
+                # Fallback: if we can't resolve, try using the token directly as field name
+                # This handles cases where the token matches a field name directly
+                for token in intent.group_by:
+                    # Try the token as-is (might be a direct field name)
+                    if token in ALLOWED_FIELDS.get(intent.primary_entity, set()):
+                        id_fields[token] = f"${token}"
+                    # Also try common field name variations
+                    elif intent.primary_entity == 'Lead' and token == 'status':
+                        # Map generic 'status' to 'status' field for Lead
+                        id_fields[token] = "$status"
+                    elif intent.primary_entity == 'Lead' and token in ['leadStatus', 'lead_status']:
+                        id_fields[token] = "$leadStatus"
+                    elif intent.primary_entity == 'Task' and token in ['taskStatus', 'task_status']:
+                        id_fields[token] = "$taskStatus"
+                    elif intent.primary_entity == 'Meeting' and token in ['meetingStatus', 'meeting_status']:
+                        id_fields[token] = "$meetingStatus"
+                    elif intent.primary_entity == 'Activity' and token in ['activityStatus', 'activity_status']:
+                        id_fields[token] = "$activityStatus"
+                    elif intent.primary_entity == 'CallLog' and token in ['callStatus', 'call_status']:
+                        id_fields[token] = "$callStatus"
+            
+            if not id_fields:
+                # Still no fields resolved - log warning but continue
+                logger.warning(f"Could not resolve group_by tokens {intent.group_by} for entity {intent.primary_entity}")
             else:
                 group_id_expr = list(id_fields.values())[0] if len(id_fields) == 1 else id_fields
 
@@ -348,9 +370,7 @@ class PipelineGenerator:
                 if intent.primary_entity == 'timeline' and ('work_item_title' in (intent.group_by or [])) and is_timeline_time_logged:
                     project_shape["totalMinutes"] = 1
                 pipeline.append({"$project": project_shape})
-                # Respect limit on grouped results
-                if intent.limit:
-                    pipeline.append({"$limit": intent.limit})
+                # Note: Limit is now handled globally at the end of the pipeline
 
         # Add aggregations like count (skip count when details are requested)
         if intent.aggregations and not intent.wants_details and not intent.group_by:
@@ -421,19 +441,8 @@ class PipelineGenerator:
         if added_priority_rank:
             pipeline.append({"$unset": "_priorityRank"})
 
-        # Add pagination: skip then limit (only for non-grouped queries; grouped handled above)
-        if not intent.group_by:
-            # Apply skip before limit
-            try:
-                if intent.skip and int(intent.skip) > 0:
-                    pipeline.append({"$skip": int(intent.skip)})
-            except Exception:
-                pass
-            effective_limit = 1 if intent.fetch_one else (intent.limit or None)
-            if effective_limit:
-                pipeline.append({"$limit": int(effective_limit)})
-
         # Add time-series analysis stages (can be combined, so use separate if statements)
+        # NOTE: Pagination is added AFTER all aggregation/grouping stages (see end of function)
         if intent.aggregations:
             # Time window aggregations ($setWindowFields)
             # Support multiple aggregation name variations
@@ -715,6 +724,26 @@ class PipelineGenerator:
                         "intercept": 1
                     }
                 })
+        
+        # Add pagination: skip then limit (apply AFTER all aggregation/grouping stages)
+        # This ensures pagination works correctly for grouped/aggregated queries
+        # For count queries, pagination is not needed (they return early)
+        if intent.skip is not None:
+            try:
+                skip_value = int(intent.skip)
+                if skip_value > 0:
+                    pipeline.append({"$skip": skip_value})
+            except (ValueError, TypeError):
+                # Skip invalid skip values silently
+                pass
+
+        effective_limit = 1 if intent.fetch_one else (intent.limit or None)
+        if effective_limit:
+            try:
+                pipeline.append({"$limit": int(effective_limit)})
+            except Exception:
+                pass
+        
         print("The generated pipeline is:",pipeline)
         return pipeline
 

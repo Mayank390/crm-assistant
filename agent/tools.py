@@ -49,6 +49,292 @@ CONTENT_TYPE_DEFAULT_LIMITS: Dict[str, int] = {
     "mailInfo": 10,
 }
 
+# ------------------ Enum Transformation Mappings ------------------
+# Comprehensive mapping of enum values to human-readable formats
+# Organized by collection and field name for efficient lookup
+
+ENUM_TRANSFORMATIONS: Dict[str, Dict[str, Dict[str, str]]] = {
+    "Lead": {
+        "leadStatus": {
+            "NEW": "New",
+            "CONTACTED": "Contacted",
+            "QUALIFIED": "Qualified",
+            "ENGAGED": "Engaged",
+            "PROPOSAL": "Proposal",
+            "NEGOTIATION": "Negotiation",
+            "WON": "Won",
+            "LOST": "Lost",
+            "UNQUALIFIED": "Unqualified",
+            "FOLLOW_UP": "Follow Up",
+            "CALL_BACK_REQUEST": "Call Back Request",
+            "NOT_INTERESTED": "Not Interested",
+            "INTERESTED": "Interested",
+            "REGISTERED": "Registered",
+            "APPLICATION_STARTED": "Application Started",
+        },
+        "status": {  # Alias for leadStatus
+            "NEW": "New",
+            "CONTACTED": "Contacted",
+            "QUALIFIED": "Qualified",
+            "ENGAGED": "Engaged",
+            "PROPOSAL": "Proposal",
+            "NEGOTIATION": "Negotiation",
+            "WON": "Won",
+            "LOST": "Lost",
+            "UNQUALIFIED": "Unqualified",
+            "FOLLOW_UP": "Follow Up",
+            "CALL_BACK_REQUEST": "Call Back Request",
+            "NOT_INTERESTED": "Not Interested",
+            "INTERESTED": "Interested",
+            "REGISTERED": "Registered",
+            "APPLICATION_STARTED": "Application Started",
+        },
+        "type": {
+            "LEAD": "Lead",
+            "CUSTOMER": "Customer",
+            "VENDOR": "Vendor",
+        },
+        "customerType": {
+            "BUSINESS": "Business",
+            "INDIVIDUAL": "Individual",
+        },
+        "source": {
+            "COLD_CALL": "Cold Call",
+            "REFERRAL": "Referral",
+            "WEBSITE": "Website",
+            "EVENT": "Event",
+            "SOCIAL_MEDIA": "Social Media",
+            "ADVERTISEMENT": "Advertisement",
+            "INBOUND_CALLS": "Inbound Calls",
+            "NETWORKING": "Networking",
+            "CAMPAIGNS": "Campaigns",
+            "OTHERS": "Others",
+            "INVOICE": "Invoice",
+        },
+        "leadActiveType": {
+            "ACTIVE": "Active",
+            "IN_ACTIVE": "Inactive",
+            "DELETED": "Deleted",
+        },
+        "gender": {  # For personalInfo.gender if present
+            "MALE": "Male",
+            "FEMALE": "Female",
+            "OTHERS": "Others",
+        },
+    },
+    "Task": {
+        "taskStatus": {
+            "NEW": "New",
+            "NOT_STARTED": "Not Started",
+            "IN_PROGRESS": "In Progress",
+            "COMPLETED": "Completed",
+            "WAITING_FOR_INPUT": "Waiting for Input",
+            "CANCELLED": "Cancelled",
+        },
+        "status": {  # Alias for taskStatus
+            "NEW": "New",
+            "NOT_STARTED": "Not Started",
+            "IN_PROGRESS": "In Progress",
+            "COMPLETED": "Completed",
+            "WAITING_FOR_INPUT": "Waiting for Input",
+            "CANCELLED": "Cancelled",
+        },
+        "priority": {
+            "NEW": "New",
+            "HIGH": "High",
+            "MEDIUM": "Medium",
+            "LOW": "Low",
+        },
+        "notify": {
+            "EMAIL": "Email",
+            "POPUP": "Popup",
+            "BOTH": "Both",
+        },
+        "repeatType": {
+            "DAILY": "Daily",
+            "WEEKLY": "Weekly",
+            "MONTHLY": "Monthly",
+            "YEARLY": "Yearly",
+        },
+        "endOn": {
+            "NEVER": "Never",
+            "AFTER_N_TIME": "After N Time",
+            "ON_DATE": "On Date",
+        },
+    },
+    "Activity": {
+        "type": {
+            "NOTES": "Notes",
+            "EMAILS": "Emails",
+            "TASKS": "Tasks",
+            "CALLS": "Calls",
+            "MEETING": "Meeting",
+        },
+        "activityStatus": {
+            "OPEN": "Open",
+            "CLOSE": "Close",
+            "CANCELLED": "Cancelled",
+        },
+        "status": {  # Alias for activityStatus
+            "OPEN": "Open",
+            "CLOSE": "Close",
+            "CANCELLED": "Cancelled",
+        },
+    },
+    "Meeting": {
+        "meetingStatus": {
+            "NEW": "New",
+            "SCHEDULED": "Scheduled",
+            "IN_PROGRESS": "In Progress",
+            "COMPLETED": "Completed",
+            "CANCELLED": "Cancelled",
+            "RESCHEDULED": "Rescheduled",
+        },
+        "status": {  # Alias for meetingStatus
+            "NEW": "New",
+            "SCHEDULED": "Scheduled",
+            "IN_PROGRESS": "In Progress",
+            "COMPLETED": "Completed",
+            "CANCELLED": "Cancelled",
+            "RESCHEDULED": "Rescheduled",
+        },
+        "meetingType": {
+            "PHYSICAL": "Physical",
+            "VIRTUAL": "Virtual",
+        },
+    },
+    "CallLog": {
+        "callStatus": {
+            "NEW": "New",
+            "ANSWERED": "Answered",
+            "NO_RESPONSE": "No Response",
+            "DO_NOT_CALL": "Do Not Call",
+            "FAILED": "Failed",
+            "MISSED_CALL": "Missed Call",
+            "COMPLETED": "Completed",
+            "SCHEDULED": "Scheduled",
+            "NOT_ANSWERED": "Not Answered",
+        },
+        "status": {  # Alias for callStatus
+            "NEW": "New",
+            "ANSWERED": "Answered",
+            "NO_RESPONSE": "No Response",
+            "DO_NOT_CALL": "Do Not Call",
+            "FAILED": "Failed",
+            "MISSED_CALL": "Missed Call",
+            "COMPLETED": "Completed",
+            "SCHEDULED": "Scheduled",
+            "NOT_ANSWERED": "Not Answered",
+        },
+        "callType": {
+            "IN_BOUND": "Inbound",
+            "OUT_BOUND": "Outbound",
+        },
+        "call_variant": {
+            "SCHEDULE": "Schedule",
+            "LOG": "Log",
+        },
+        "callPurpose": {
+            "PROSPECTING": "Prospecting",
+            "ADMINISTRATIVE": "Administrative",
+            "NEGOTIATION": "Negotiation",
+            "DEMO": "Demo",
+            "PROJECT": "Project",
+            "DESK": "Desk",
+            "OTHERS": "Others",
+        },
+    },
+    "MailInfo": {
+        "mailType": {
+            "SEND": "Send",
+            "SCHEDULED": "Scheduled",
+            "DRAFTS": "Drafts",
+        },
+    },
+    # Common enum values that might appear in multiple collections
+    "_common": {
+        "attachmentType": {
+            "IMAGE": "Image",
+            "VIDEO": "Video",
+            "FILE": "File",
+        },
+        "socialMedia": {
+            "INSTAGRAM": "Instagram",
+            "FACEBOOK": "Facebook",
+            "TWITTER": "Twitter",
+            "LINKED_IN": "LinkedIn",
+            "YOUTUBE": "YouTube",
+            "PINTEREST": "Pinterest",
+            "REDDIT": "Reddit",
+            "TELEGRAM": "Telegram",
+        },
+    },
+}
+
+# Global helper function to transform enum/field values to readable format
+# Moved from inside format_llm_friendly so it can be accessed by _transform_by_collection
+def transform_field_value(key: str, value: Any, collection: Optional[str] = None) -> str:
+    """Transform raw field values to readable format using enum mappings.
+
+    Args:
+        key: Field name (e.g., 'status', 'leadStatus', 'type')
+        value: Field value (e.g., 'NEW', 'CONTACTED')
+        collection: Collection name (e.g., 'Lead', 'Task') for context-aware transformation
+
+    Returns:
+        Transformed readable value
+    """
+    if value is None:
+        return "N/A"
+
+    if not isinstance(value, str):
+        return str(value)
+
+    # Normalize collection name (handle case variations)
+    coll = (collection or "").strip()
+    if coll:
+        # Try exact match first
+        if coll not in ENUM_TRANSFORMATIONS:
+            # Try title case
+            coll = coll.capitalize()
+
+    # Try collection-specific transformation first
+    if coll and coll in ENUM_TRANSFORMATIONS:
+        field_mappings = ENUM_TRANSFORMATIONS[coll]
+        # Check exact field name match
+        if key in field_mappings:
+            enum_map = field_mappings[key]
+            if value.upper() in enum_map:
+                return enum_map[value.upper()]
+
+        # Check for status/state aliases
+        if key.lower() in ['status', 'state'] and 'status' in field_mappings:
+            enum_map = field_mappings['status']
+            if value.upper() in enum_map:
+                return enum_map[value.upper()]
+
+    # Try common enum transformations
+    if "_common" in ENUM_TRANSFORMATIONS:
+        common_mappings = ENUM_TRANSFORMATIONS["_common"]
+        for common_key, enum_map in common_mappings.items():
+            if key.lower() == common_key.lower() or key.lower().endswith(common_key.lower()):
+                if value.upper() in enum_map:
+                    return enum_map[value.upper()]
+
+    # Fallback: Generic transformation for UPPERCASE_SNAKE_CASE values
+    if '_' in value or value.isupper():
+        # Split by underscore and title case each word
+        parts = value.replace('_', ' ').split()
+        transformed = ' '.join(word.capitalize() for word in parts)
+        return transformed
+
+    # Already formatted, just capitalize first letter if all uppercase
+    if value.isupper() and len(value) > 1:
+        return value.capitalize()
+
+    # Return as-is if already formatted
+    return value
+
 # Fallback when content_type is unknown or not provided
 DEFAULT_RAG_LIMIT: int = 10
 
@@ -725,34 +1011,71 @@ def _transform_by_collection(doc: Dict[str, Any], collection: Optional[str]) -> 
             if pipeline_name:
                 out["pipelineName"] = pipeline_name
         
-        # Copy important fields
+        # Copy important fields with enum transformations
         copy_if_present("referenceNo")
-        copy_if_present("leadStatus")
+        # Transform enum fields
+        lead_status = doc.get("leadStatus")
+        if lead_status is not None:
+            out["leadStatus"] = transform_field_value("leadStatus", lead_status, collection)
+        status = doc.get("status")
+        if status is not None:
+            out["status"] = transform_field_value("status", status, collection)
+        lead_type = doc.get("type")
+        if lead_type is not None:
+            out["type"] = transform_field_value("type", lead_type, collection)
+        customer_type = doc.get("customerType")
+        if customer_type is not None:
+            out["customerType"] = transform_field_value("customerType", customer_type, collection)
+        source = doc.get("source")
+        if source is not None:
+            out["source"] = transform_field_value("source", source, collection)
+        lead_active_type = doc.get("leadActiveType")
+        if lead_active_type is not None:
+            out["leadActiveType"] = transform_field_value("leadActiveType", lead_active_type, collection)
+
         copy_if_present("notes")
-        copy_if_present("type")
-        copy_if_present("status")
         copy_if_present("score")
         copy_if_present("createdByName")
         copy_if_present("staffName")
 
     elif collection_lower == "task":
-        # Copy important fields
+        # Copy important fields with enum transformations
         copy_if_present("name")
-        copy_if_present("taskStatus")
-        copy_if_present("priority")
+        # Transform enum fields
+        task_status = doc.get("taskStatus")
+        if task_status is not None:
+            out["taskStatus"] = transform_field_value("taskStatus", task_status, collection)
+        status = doc.get("status")
+        if status is not None:
+            out["status"] = transform_field_value("status", status, collection)
+        priority = doc.get("priority")
+        if priority is not None:
+            out["priority"] = transform_field_value("priority", priority, collection)
+        notify = doc.get("notify")
+        if notify is not None:
+            out["notify"] = transform_field_value("notify", notify, collection)
+
         copy_if_present("dueDate")
         copy_if_present("description")
         copy_if_present("assignedName")
         copy_if_present("parentName")
         copy_if_present("createdByName")
         copy_if_present("reminderDate")
-        copy_if_present("notify")
 
     elif collection_lower == "meeting":
-        # Copy important fields
+        # Copy important fields with enum transformations
         copy_if_present("title")
-        copy_if_present("meetingStatus")
-        copy_if_present("meetingType")
+        # Transform enum fields
+        meeting_status = doc.get("meetingStatus")
+        if meeting_status is not None:
+            out["meetingStatus"] = transform_field_value("meetingStatus", meeting_status, collection)
+        status = doc.get("status")
+        if status is not None:
+            out["status"] = transform_field_value("status", status, collection)
+        meeting_type = doc.get("meetingType")
+        if meeting_type is not None:
+            out["meetingType"] = transform_field_value("meetingType", meeting_type, collection)
+
         copy_if_present("leadName")
         copy_if_present("description")
         copy_if_present("startDateTime")
@@ -788,10 +1111,17 @@ def _transform_by_collection(doc: Dict[str, Any], collection: Optional[str]) -> 
             out["attachmentsCount"] = len(attachments)
 
     elif collection_lower == "activity":
-        # Extract activity type and status
-        copy_if_present("type")
-        copy_if_present("activityStatus")
-        
+        # Extract activity type and status with transformations
+        activity_type = doc.get("type")
+        if activity_type is not None:
+            out["type"] = transform_field_value("type", activity_type, collection)
+        activity_status = doc.get("activityStatus")
+        if activity_status is not None:
+            out["activityStatus"] = transform_field_value("activityStatus", activity_status, collection)
+        status = doc.get("status")
+        if status is not None:
+            out["status"] = transform_field_value("status", status, collection)
+
         # Extract nested data (could be task, meeting, etc.)
         data = doc.get("data")
         if isinstance(data, dict):
@@ -804,16 +1134,30 @@ def _transform_by_collection(doc: Dict[str, Any], collection: Optional[str]) -> 
             data_status = data.get("taskStatus") or data.get("meetingStatus")
             if data_status:
                 out["activityDataStatus"] = data_status
-        
+
         # Extract lead name if available
         copy_if_present("leadName")
 
     elif collection_lower == "calllog":
-        # Copy important fields
+        # Copy important fields with enum transformations
         copy_if_present("title")
-        copy_if_present("callStatus")
-        copy_if_present("callType")
-        copy_if_present("callPurpose")
+        # Transform enum fields
+        call_status = doc.get("callStatus")
+        if call_status is not None:
+            out["callStatus"] = transform_field_value("callStatus", call_status, collection)
+        status = doc.get("status")
+        if status is not None:
+            out["status"] = transform_field_value("status", status, collection)
+        call_type = doc.get("callType")
+        if call_type is not None:
+            out["callType"] = transform_field_value("callType", call_type, collection)
+        call_purpose = doc.get("callPurpose")
+        if call_purpose is not None:
+            out["callPurpose"] = transform_field_value("callPurpose", call_purpose, collection)
+        call_variant = doc.get("call_variant")
+        if call_variant is not None:
+            out["call_variant"] = transform_field_value("call_variant", call_variant, collection)
+
         copy_if_present("callDuration")
         copy_if_present("description")
         copy_if_present("leadName")
@@ -822,10 +1166,14 @@ def _transform_by_collection(doc: Dict[str, Any], collection: Optional[str]) -> 
         copy_if_present("otherReason")
 
     elif collection_lower == "mailinfo":
-        # Copy important fields
+        # Copy important fields with enum transformations
         copy_if_present("subject")
         copy_if_present("body")
-        copy_if_present("mailType")
+        # Transform enum fields
+        mail_type = doc.get("mailType")
+        if mail_type is not None:
+            out["mailType"] = transform_field_value("mailType", mail_type, collection)
+
         copy_if_present("createdByName")
         
         # Handle email recipients
@@ -916,12 +1264,25 @@ async def mongo_query(query: str, show_all: bool = False) -> str:
         - Cross-collection analysis: "members working on projects by business"
         - Complex grouping that spans multiple collections
     - Only adds joins that provide clear benefits for the specific query, avoiding unnecessary complexity.
+    
+    PAGINATION SUPPORT:
+    - Pagination is automatically handled via natural language in queries.
+    - Use phrases like "page 2", "skip 100", "show results 21-40", "next page" to paginate.
+    - Pagination works with all query types: list queries, grouped queries, and aggregated queries.
+    - Default page size is 50 items. Use "all" or "every" for maximum results (up to 1000).
+    - For large datasets, pagination ensures manageable response sizes.
+    - Examples:
+      * "show me page 2 of leads" → returns items 51-100
+      * "skip the first 100 tasks" → skips first 100, returns next 50
+      * "show results 21-40 of meetings" → returns items 21-40
+      * "group leads by status, page 2" → paginated grouped results
 
     Args:
-        query: Natural language, structured data request about CRM entities.
-        show_all: If True, output full details instead of a summary. Use sparingly.
+    query: Natural language, structured data request about CRM entities.
+    show_all: If True, output full details instead of a summary. Use sparingly.
 
-    Returns: A compact result suitable for direct user display.
+    Returns: A compact result suitable for direct user display. Results are automatically
+    formatted based on query type: lists, counts, grouped results, or trend/aggregated data.
     """
     tool_start_time = perf_counter()
     if not plan_and_execute_query:
@@ -1049,8 +1410,17 @@ async def mongo_query(query: str, show_all: bool = False) -> str:
                         return str(s)
                     return s if len(s) <= limit else s[:limit] + "..."
 
+                # transform_field_value is now defined at module level above
+
                 def render_line(entity: Dict[str, Any]) -> str:
                     e = (primary_entity or "").lower()
+                    
+                    # Helper to transform enum values in render_line
+                    def transform_val(field_name: str, value: Any) -> str:
+                        """Transform enum value for display in render_line."""
+                        if value is None:
+                            return None
+                        return transform_field_value(field_name, value, primary_entity)
                     if e == "workitem":
                         bug = entity.get("displayBugNo") or entity.get("title") or "Item"
                         title = entity.get("title") or entity.get("name") or ""
@@ -1418,18 +1788,29 @@ async def mongo_query(query: str, show_all: bool = False) -> str:
                     if e == "lead":
                         ref_no = entity.get("referenceNo")
                         name = entity.get("leadName") or get_nested(entity, "personalInfo.name")
-                        status = entity.get("leadStatus")
+                        status = transform_val("leadStatus", entity.get("leadStatus"))
                         email = entity.get("leadEmail") or get_nested(entity, "personalInfo.email")
                         mobile = entity.get("leadMobile") or get_nested(entity, "personalInfo.mobile")
                         notes = entity.get("notes")
-                        lead_type = entity.get("type")
+                        lead_type = transform_val("type", entity.get("type"))
                         score = entity.get("score")
                         company = entity.get("companyName") or get_nested(entity, "company.name")
                         pipeline = entity.get("pipelineName") or get_nested(entity, "pipeline.name")
+                        source = transform_val("source", entity.get("source"))
+                        customer_type = transform_val("customerType", entity.get("customerType"))
+                        active_type = transform_val("leadActiveType", entity.get("leadActiveType"))
                         
                         base = f"• {ref_no or name or 'Lead'}: {name or ''}"
                         if status:
                             base += f" — status={status}"
+                        if lead_type:
+                            base += f", type={lead_type}"
+                        if customer_type:
+                            base += f", customerType={customer_type}"
+                        if source:
+                            base += f", source={source}"
+                        if active_type:
+                            base += f", activeType={active_type}"
                         if email:
                             base += f", email={email}"
                         if mobile:
@@ -1448,19 +1829,22 @@ async def mongo_query(query: str, show_all: bool = False) -> str:
                     
                     if e == "task":
                         name = entity.get("name")
-                        status = entity.get("taskStatus")
-                        priority = entity.get("priority")
+                        status = transform_val("taskStatus", entity.get("taskStatus"))
+                        priority = transform_val("priority", entity.get("priority"))
                         due_date = entity.get("dueDate")
                         description = entity.get("description")
                         assigned = entity.get("assignedName")
                         parent = entity.get("parentName")
                         created_by = entity.get("createdByName")
+                        notify = transform_val("notify", entity.get("notify"))
                         
                         base = f"• {name or 'Task'}"
                         if status:
                             base += f" — status={status}"
                         if priority:
                             base += f", priority={priority}"
+                        if notify:
+                            base += f", notify={notify}"
                         if due_date:
                             base += f", due={due_date}"
                         if assigned:
@@ -1475,8 +1859,8 @@ async def mongo_query(query: str, show_all: bool = False) -> str:
                     
                     if e == "meeting":
                         title = entity.get("title")
-                        status = entity.get("meetingStatus")
-                        meeting_type = entity.get("meetingType")
+                        status = transform_val("meetingStatus", entity.get("meetingStatus"))
+                        meeting_type = transform_val("meetingType", entity.get("meetingType"))
                         lead_name = entity.get("leadName")
                         description = entity.get("description")
                         start_dt = entity.get("startDateTime")
@@ -1528,8 +1912,8 @@ async def mongo_query(query: str, show_all: bool = False) -> str:
                         return base
                     
                     if e == "activity":
-                        activity_type = entity.get("type")
-                        status = entity.get("activityStatus")
+                        activity_type = transform_val("type", entity.get("type"))
+                        status = transform_val("activityStatus", entity.get("activityStatus"))
                         name = entity.get("activityName")
                         description = entity.get("activityDescription")
                         data_status = entity.get("activityDataStatus")
@@ -1550,14 +1934,15 @@ async def mongo_query(query: str, show_all: bool = False) -> str:
                     
                     if e == "calllog":
                         title = entity.get("title")
-                        call_status = entity.get("callStatus")
-                        call_type = entity.get("callType")
-                        call_purpose = entity.get("callPurpose")
+                        call_status = transform_val("callStatus", entity.get("callStatus"))
+                        call_type = transform_val("callType", entity.get("callType"))
+                        call_purpose = transform_val("callPurpose", entity.get("callPurpose"))
                         call_duration = entity.get("callDuration")
                         description = entity.get("description")
                         lead_name = entity.get("leadName")
                         created_by = entity.get("createdByName")
                         start_dt = entity.get("startDateTime")
+                        call_variant = transform_val("call_variant", entity.get("call_variant"))
                         
                         base = f"• {title or 'Call'}"
                         if call_status:
@@ -1566,6 +1951,8 @@ async def mongo_query(query: str, show_all: bool = False) -> str:
                             base += f", type={call_type}"
                         if call_purpose:
                             base += f", purpose={call_purpose}"
+                        if call_variant:
+                            base += f", variant={call_variant}"
                         if call_duration:
                             base += f", duration={call_duration}"
                         if lead_name:
@@ -1580,7 +1967,7 @@ async def mongo_query(query: str, show_all: bool = False) -> str:
                     
                     if e == "mailinfo":
                         subject = entity.get("subject")
-                        mail_type = entity.get("mailType")
+                        mail_type = transform_val("mailType", entity.get("mailType"))
                         created_by = entity.get("createdByName")
                         to_mails = entity.get("toMails")
                         to_mails_count = entity.get("toMailsCount")
@@ -1612,6 +1999,59 @@ async def mongo_query(query: str, show_all: bool = False) -> str:
                     if len(data) == 1 and isinstance(data[0], dict) and "total" in data[0]:
                         return f"📊 RESULTS:\nTotal: {data[0]['total']}"
 
+                    # Handle trend/aggregated results (with _id, count, period fields)
+                    if len(data) > 0 and isinstance(data[0], dict):
+                        first_item = data[0]
+                        # Check for trend pattern: _id (date), count, period
+                        # This pattern appears in trend analysis queries
+                        if "_id" in first_item and "count" in first_item and "period" in first_item:
+                            response = "📊 TREND RESULTS:\n"
+                            for item in data:
+                                period = item.get("period") or item.get("_id")
+                                count = item.get("count", 0)
+                                # Format period nicely - handle date strings
+                                if isinstance(period, str):
+                                    # Try to format date string nicely
+                                    period_str = period
+                                    # If it's a date string like "2024-11-01 00:00:00", extract just the date part
+                                    if " " in period_str:
+                                        period_str = period_str.split(" ")[0]
+                                elif isinstance(period, dict):
+                                    period_str = str(period.get("$dateTrunc", period))
+                                else:
+                                    period_str = str(period)
+                                response += f"• {period_str}: {count} items\n"
+                            return response
+                        
+                        # Check for trend pattern without period field (just _id and count)
+                        # This handles aggregated results from $group stages
+                        if "_id" in first_item and "count" in first_item and "period" not in first_item and "group" not in first_item:
+                            response = "📊 AGGREGATED RESULTS:\n"
+                            for item in data:
+                                period_id = item.get("_id")
+                                count = item.get("count", 0)
+                                # Format _id nicely
+                                if isinstance(period_id, dict):
+                                    # Handle date trunc results
+                                    date_trunc = period_id.get("$dateTrunc", {})
+                                    if date_trunc:
+                                        unit = date_trunc.get('unit', 'period')
+                                        date_field = date_trunc.get('date', '')
+                                        period_str = f"{unit} ({date_field})"
+                                    else:
+                                        # Handle other dict structures
+                                        period_str = str(period_id)
+                                elif isinstance(period_id, str):
+                                    # Handle date strings - extract date part if it's a datetime string
+                                    if " " in period_id:
+                                        period_str = period_id.split(" ")[0]
+                                    else:
+                                        period_str = period_id
+                                else:
+                                    period_str = str(period_id)
+                                response += f"• {period_str}: {count} items\n"
+                            return response
+
                     # Handle grouped/aggregated results
                     if len(data) > 0 and isinstance(data[0], dict) and ("count" in data[0] or "totalMinutes" in data[0]):
                         response = "📊 RESULTS SUMMARY:\n"
@@ -1636,17 +2076,45 @@ async def mongo_query(query: str, show_all: bool = False) -> str:
                             else:
                                 sorted_data = sorted(data, key=lambda x: x.get('count', 0), reverse=True)
 
+                            # transform_field_value is now defined at format_llm_friendly level above
+                            
+                            # Calculate percentages for grouped results
+                            def format_grouped_item(item: Dict[str, Any], total: int, has_mins: bool) -> str:
+                                """Format a single grouped item with percentage."""
+                                # If single group key, show just the transformed value (cleaner format)
+                                if len(group_keys) == 1:
+                                    key = group_keys[0]
+                                    if key in item:
+                                        transformed_val = transform_field_value(key, item[key], primary_entity)
+                                        group_label = transformed_val
+                                    else:
+                                        group_label = "Unknown"
+                                else:
+                                    # Multiple group keys - show all with field names
+                                    group_parts = []
+                                    for k in group_keys:
+                                        if k in item:
+                                            transformed_val = transform_field_value(k, item[k], primary_entity)
+                                            group_parts.append(f"{k}: {transformed_val}")
+                                    group_label = ', '.join(group_parts) if group_parts else "Unknown"
+                                
+                                if has_mins:
+                                    mins = int(item.get('totalMinutes', 0) or 0)
+                                    if total_minutes and total_minutes > 0:
+                                        pct = (mins / total_minutes) * 100
+                                        return f"• {group_label}: {mins:,} min ({pct:.1f}%)\n"
+                                    return f"• {group_label}: {mins:,} min\n"
+                                else:
+                                    count = item.get('count', 0)
+                                    if total > 0:
+                                        pct = (count / total) * 100
+                                        return f"• {group_label}: {count:,} ({pct:.1f}%)\n"
+                                    return f"• {group_label}: {count:,}\n"
+                            
                             # Show all groups if max_items is None, otherwise limit
                             display_limit = len(sorted_data) if max_items is None else 25
                             for item in sorted_data[:display_limit]:
-                                group_values = [f"{k}: {item[k]}" for k in group_keys if k in item]
-                                group_label = ', '.join(group_values)
-                                if has_minutes:
-                                    mins = int(item.get('totalMinutes', 0) or 0)
-                                    response += f"• {group_label}: {mins} min\n"
-                                else:
-                                    count = item.get('count', 0)
-                                    response += f"• {group_label}: {count} items\n"
+                                response += format_grouped_item(item, total_items, has_minutes)
 
                             if max_items is not None and len(data) > 25:
                                 if has_minutes:
