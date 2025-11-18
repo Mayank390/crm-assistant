@@ -1,0 +1,249 @@
+[{
+  "_id": {
+    "$binary": {
+      "base64": "FGjxGAXRBx9hlBX4P+M1ig==",
+      "subType": "03"
+    }
+  },
+  "business": {
+    "_id": {
+      "$binary": {
+        "base64": "img60ibL7R4pstoZnVdjvQ==",
+        "subType": "03"
+      }
+    },
+    "name": "Simpo.ai"
+  },
+  "name": "Name based segment",
+  "description": "",
+  "conditions": [
+    {
+      "field": "Name",
+      "operator": "CONTAINS",
+      "value": "Godwin"
+    }
+  ],
+  "tags": [],
+  "createdAt": {
+    "$date": "2025-08-19T15:22:28.976Z"
+  },
+  "updatedAt": {
+    "$date": "2025-08-19T15:22:28.976Z"
+  },
+  "isActive": true,
+  "_class": "com.lm.crm.segmentation.model.Segmentation"
+},
+{
+  "_id": {
+    "$binary": {
+      "base64": "wm9apvP9Bx+F7ybk4JMykg==",
+      "subType": "03"
+    }
+  },
+  "business": {
+    "_id": {
+      "$binary": {
+        "base64": "wm6oZ4D0Bx/qlIOyMtUBjA==",
+        "subType": "03"
+      }
+    },
+    "name": "GRow More"
+  },
+  "name": "Duplicates",
+  "description": "",
+  "conditions": [
+    {
+      "field": "Mobile Number",
+      "operator": "EQUALS",
+      "value": "7207487702"
+    }
+  ],
+  "tags": [],
+  "createdAt": {
+    "$date": "2025-08-23T05:08:38.266Z"
+  },
+  "updatedAt": {
+    "$date": "2025-08-23T05:08:38.266Z"
+  },
+  "isActive": true,
+  "_class": "com.lm.crm.segmentation.model.Segmentation"
+},
+{
+  "_id": {
+    "$binary": {
+      "base64": "mW3CzEBNCB9gb4VN9TNXlw==",
+      "subType": "03"
+    }
+  },
+  "business": {
+    "_id": {
+      "$binary": {
+        "base64": "P2RHpupACB8NCfS/KgUBjA==",
+        "subType": "03"
+      }
+    },
+    "name": "Cosmetics ecomm test"
+  },
+  "name": "",
+  "description": "",
+  "conditions": [
+    {
+      "field": "Email",
+      "operator": "EQUALS",
+      "value": "vivek@tejsoft.com"
+    }
+  ],
+  "tags": [],
+  "createdAt": {
+    "$date": "2025-08-29T12:36:29.385Z"
+  },
+  "updatedAt": {
+    "$date": "2025-08-29T12:36:29.385Z"
+  },
+  "isActive": true,
+  "_class": "com.lm.crm.segmentation.model.Segmentation"
+},
+{
+  "_id": {
+    "$binary": {
+      "base64": "3Gf6XkFNCB9GeVcgDslXlw==",
+      "subType": "03"
+    }
+  },
+  "business": {
+    "_id": {
+      "$binary": {
+        "base64": "zmuFYdPABB/FgyDnlRmtkQ==",
+        "subType": "03"
+      }
+    },
+    "name": "Gardening"
+  },
+  "name": "Segmentation Name Rule",
+  "description": "",
+  "conditions": [
+    {
+      "field": "Name",
+      "operator": "EQUALS",
+      "value": "Ram"
+    }
+  ],
+  "tags": [
+    "Supper Hit"
+  ],
+  "createdAt": {
+    "$date": "2025-08-29T12:31:28.444Z"
+  },
+  "updatedAt": {
+    "$date": "2025-08-29T12:31:28.444Z"
+  },
+  "isActive": true,
+  "_class": "com.lm.crm.segmentation.model.Segmentation"
+},
+{
+  "_id": {
+    "$binary": {
+      "base64": "NmmzZEpNCB8ZHv4ApK1Xlw==",
+      "subType": "03"
+    }
+  },
+  "business": {
+    "_id": {
+      "$binary": {
+        "base64": "zmuFYdPABB/FgyDnlRmtkQ==",
+        "subType": "03"
+      }
+    },
+    "name": "Gardening"
+  },
+  "name": "Number Equals",
+  "description": "",
+  "conditions": [
+    {
+      "field": "Mobile Number",
+      "operator": "EQUALS",
+      "value": "7207487702"
+    }
+  ],
+  "tags": [],
+  "createdAt": {
+    "$date": "2025-08-29T12:35:30.636Z"
+  },
+  "updatedAt": {
+    "$date": "2025-08-29T12:35:30.636Z"
+  },
+  "isActive": true,
+  "_class": "com.lm.crm.segmentation.model.Segmentation"
+},
+{
+  "_id": {
+    "$binary": {
+      "base64": "LWw8U5fWCB+cTiAhJt9aow==",
+      "subType": "03"
+    }
+  },
+  "business": {
+    "_id": {
+      "$binary": {
+        "base64": "VmkUHIzVCB+WkwX1DMddpA==",
+        "subType": "03"
+      }
+    },
+    "name": "Isthara Parks"
+  },
+  "name": "High Value Customer",
+  "description": "",
+  "conditions": [
+    {
+      "field": "Name",
+      "operator": "CONTAINS",
+      "value": "Alisha"
+    }
+  ],
+  "tags": [
+    "High_APC"
+  ],
+  "createdAt": {
+    "$date": "2025-09-09T10:40:52.589Z"
+  },
+  "updatedAt": {
+    "$date": "2025-09-09T10:40:52.589Z"
+  },
+  "isActive": true,
+  "_class": "com.lm.crm.segmentation.model.Segmentation"
+},
+{
+  "_id": {
+    "$binary": {
+      "base64": "d2/ZgLHgCB8HiIrejpNaow==",
+      "subType": "03"
+    }
+  },
+  "business": {
+    "_id": {
+      "$binary": {
+        "base64": "img60ibL7R4pstoZnVdjvQ==",
+        "subType": "03"
+      }
+    },
+    "name": "Simpo.ai"
+  },
+  "name": "High Value Customer",
+  "description": "",
+  "conditions": [
+    {
+      "field": "Sales Price ",
+      "operator": "GREATER_THAN",
+      "value": "10000"
+    }
+  ],
+  "tags": [],
+  "createdAt": {
+    "$date": "2025-09-10T05:58:23.956Z"
+  },
+  "updatedAt": {
+    "$date": "2025-09-10T05:58:23.956Z"
+  },
+  "isActive": false,
+  "_class": "com.lm.crm.segmentation.model.Segmentation"
+}]
