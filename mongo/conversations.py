@@ -10,16 +10,6 @@ import os
 import logging
 from dotenv import load_dotenv
 
-try:
-    from openinference.semconv.trace import SpanAttributes as OI
-except Exception:
-    class _OI:
-        TOOL_INPUT = "tool.input"
-        TOOL_OUTPUT = "tool.output"
-        ERROR_TYPE = "error.type"
-        ERROR_MESSAGE = "error.message"
-    OI = _OI()
-
 
 # Ensure environment variables are loaded when running locally
 load_dotenv()
