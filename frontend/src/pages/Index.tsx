@@ -714,7 +714,7 @@ const Index = () => {
 
       <div className="flex flex-1 flex-col relative z-10">
         {showPersonalization ? (
-          <div className="flex items-start justify-center p-6 h-full">
+          <div className="flex items-start justify-center p-6 h-full overflow-y-auto">
             <div className="w-full max-w-3xl">
               <Settings />
             </div>
