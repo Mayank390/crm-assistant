@@ -66,6 +66,7 @@ class QueryIntent:
     anomaly_threshold: Optional[float] = None  # Standard deviation threshold
     forecast_field: Optional[str] = None  # Field for forecasting
     forecast_periods: Optional[int] = None  # Number of periods to forecast
+    needs_pattern_analysis: bool = False  # Whether this query requires pattern analysis using both mongo_query and rag_search
 
 @dataclass
 class RelationshipPath:

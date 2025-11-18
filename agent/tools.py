@@ -1849,6 +1849,141 @@ async def mongo_query(query: str, show_all: bool = False) -> str:
             max_items = None if show_all else 50
             formatted_result = format_llm_friendly(filtered, max_items=max_items, primary_entity=primary_entity)
             
+            # Pagination detection: Check if results exceed 50 and get total count
+            total_count = None
+            current_count = len(filtered) if isinstance(filtered, list) else (1 if filtered else 0)
+            intent_dict = result.get("intent", {}) if isinstance(result.get("intent"), dict) else {}
+            skip_value = intent_dict.get("skip", 0)
+            limit_value = intent_dict.get("limit", 50)
+            
+            # Check if this is a grouped query - grouped queries have different pagination logic
+            is_grouped_query = intent_dict.get("group_by") and len(intent_dict.get("group_by", [])) > 0
+            
+            # For grouped queries, check if we have many groups (>= 25 groups suggests pagination might be needed)
+            # For non-grouped queries, check if we got exactly the limit (50) results
+            needs_pagination_check = False
+            if is_grouped_query:
+                # For grouped queries, if we have 25+ groups, check total count
+                needs_pagination_check = isinstance(filtered, list) and len(filtered) >= 25
+            else:
+                # For non-grouped queries, if we got exactly the limit (50) results, there might be more
+                needs_pagination_check = isinstance(filtered, list) and len(filtered) >= 50
+            
+            # If we need to check pagination, get total count
+            if needs_pagination_check and not intent_dict.get("wants_count"):
+                try:
+                    # Build a count query with the same filters
+                    # For grouped queries, we need to count all items (not groups)
+                    # For non-grouped queries, count all matching items
+                    entity_name = intent_dict.get("primary_entity", "items")
+                    query_lower = query.lower()
+                    
+                    # Build count query - preserve filters from original query
+                    # Strategy: Use "how many [entity]" and preserve filter context
+                    if "how many" not in query_lower and "count" not in query_lower:
+                        # Try to preserve the original query structure but convert to count
+                        # Remove grouping/breakdown keywords and convert to count
+                        count_query = query
+                        # Remove grouping-related phrases
+                        count_query = re.sub(r'\b(breakdown|group|grouped|by)\s+[^,]+', '', count_query, flags=re.IGNORECASE)
+                        count_query = re.sub(r'\b(sales\s+cycle|cycle)\b', entity_name.lower(), count_query, flags=re.IGNORECASE)
+                        
+                        # If entity name is in query, replace with "how many [entity]"
+                        if entity_name.lower() in count_query.lower():
+                            pattern = r'\b' + re.escape(entity_name.lower()) + r'\b'
+                            count_query = re.sub(pattern, f"how many {entity_name.lower()}", count_query, count=1, flags=re.IGNORECASE)
+                        else:
+                            # Prepend "how many [entity]"
+                            count_query = f"how many {entity_name.lower()}"
+                            # Try to preserve filters
+                            filter_keywords = ["with", "where", "that", "having", "status", "priority", "assigned", "in"]
+                            for keyword in filter_keywords:
+                                if keyword in query_lower:
+                                    idx = query_lower.find(keyword)
+                                    filter_part = query[idx:]
+                                    # Remove grouping parts from filter
+                                    filter_part = re.sub(r'\b(breakdown|group|grouped|by)\s+[^,]+', '', filter_part, flags=re.IGNORECASE)
+                                    count_query += " " + filter_part
+                                    break
+                    else:
+                        count_query = query
+                    
+                    # Execute count query
+                    count_result = await plan_and_execute_query(count_query)
+                    if count_result.get("success"):
+                        count_data = count_result.get("result")
+                        if isinstance(count_data, list) and len(count_data) > 0:
+                            first_item = count_data[0]
+                            if isinstance(first_item, dict) and "total" in first_item:
+                                total_count = first_item["total"]
+                            elif isinstance(count_data, str):
+                                # Try to parse JSON string
+                                try:
+                                    parsed_count = json.loads(count_data)
+                                    if isinstance(parsed_count, list) and len(parsed_count) > 0:
+                                        if isinstance(parsed_count[0], dict) and "total" in parsed_count[0]:
+                                            total_count = parsed_count[0]["total"]
+                                except:
+                                    pass
+                    else:
+                        # Log the error for debugging
+                        logger.warning(f"Count query failed for pagination: {count_result.get('error', 'Unknown error')}")
+                except Exception as e:
+                    # If count query fails, continue without total count
+                    logger.warning(f"Failed to get total count for pagination: {e}")
+                    pass
+            
+            # Add pagination info to response if applicable
+            # For grouped queries, compare total items (sum of counts) vs current groups
+            # For non-grouped queries, compare total_count vs current_count
+            if total_count is not None:
+                if is_grouped_query:
+                    # For grouped queries, calculate total items from group counts
+                    total_items_in_groups = 0
+                    if isinstance(filtered, list):
+                        for item in filtered:
+                            if isinstance(item, dict):
+                                total_items_in_groups += item.get("count", 0)
+                    
+                    # Only show pagination if total_count > total_items_in_groups
+                    if total_count > total_items_in_groups:
+                        remaining = total_count - total_items_in_groups
+                        # Add pagination info for grouped results
+                        pagination_footer = f"\n---\n"
+                        pagination_footer += f"**Note:** Found **{total_count:,} total** {primary_entity.lower()}, "
+                        pagination_footer += f"showing breakdown of **{total_items_in_groups:,}** items across **{len(filtered)}** groups. "
+                        pagination_footer += f"There are **{remaining:,} more** items not shown in these groups. "
+                        pagination_footer += f"Would you like me to fetch more groups or see all items?\n"
+                        if formatted_result:
+                            formatted_result += pagination_footer
+                else:
+                    # For non-grouped queries, standard pagination
+                    if total_count > current_count:
+                        start_item = skip_value + 1
+                        end_item = skip_value + current_count
+                        remaining = total_count - end_item
+                        
+                        # Add pagination header before results
+                        pagination_header = f"\n## Results Summary\n"
+                        pagination_header += f"Found **{total_count:,} total** {primary_entity.lower()}\n"
+                        pagination_header += f"Showing **{start_item}-{end_item}** of {total_count:,} results\n\n"
+                        
+                        # Insert pagination header at the start of formatted_result if it exists
+                        if formatted_result:
+                            # Check if formatted_result already has a header
+                            if formatted_result.startswith("📊"):
+                                # Insert after the first line
+                                lines = formatted_result.split("\n", 1)
+                                formatted_result = lines[0] + "\n" + pagination_header + (lines[1] if len(lines) > 1 else "")
+                            else:
+                                formatted_result = pagination_header + formatted_result
+                            
+                            # Add pagination footer
+                            formatted_result += f"\n---\n"
+                            formatted_result += f"**Note:** There are **{remaining:,} more** results available. "
+                            formatted_result += f"Would you like me to fetch the next page? "
+                            formatted_result += f"(You can say 'show next page', 'fetch more', or 'page 2')\n"
+            
             # If members primary entity and no rows, proactively hint about filters
             try:
                 if isinstance(result.get("intent"), dict) and result["intent"].get("primary_entity") == "members" and not filtered:

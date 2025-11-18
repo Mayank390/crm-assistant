@@ -692,12 +692,86 @@ class LLMIntentParser:
             json_match = re.search(r'\{.*\}', content, re.DOTALL)
             if json_match:
                 content = json_match.group(0)
-
+            
+            # Try to fix common JSON issues before parsing
+            # Fix unterminated strings by closing them
+            def fix_unterminated_strings(json_str: str) -> str:
+                """Try to fix unterminated strings in JSON"""
+                # Count quotes to detect unterminated strings
+                in_string = False
+                escape_next = False
+                fixed = []
+                i = 0
+                while i < len(json_str):
+                    char = json_str[i]
+                    if escape_next:
+                        fixed.append(char)
+                        escape_next = False
+                    elif char == '\\':
+                        fixed.append(char)
+                        escape_next = True
+                    elif char == '"':
+                        fixed.append(char)
+                        in_string = not in_string
+                    else:
+                        fixed.append(char)
+                    i += 1
+                
+                # If we ended in a string, close it
+                result = ''.join(fixed)
+                if in_string:
+                    result += '"'
+                
+                return result
+            
             # Ensure we have valid JSON
             if not content or content.isspace():
                 return None
 
-            data = json.loads(content)
+            # Try to parse JSON, with fallback to fixing common issues
+            try:
+                data = json.loads(content)
+            except json.JSONDecodeError as je:
+                # Try to fix unterminated strings and other common issues
+                try:
+                    fixed_content = fix_unterminated_strings(content)
+                    # Also try to fix trailing commas
+                    fixed_content = re.sub(r',\s*}', '}', fixed_content)
+                    fixed_content = re.sub(r',\s*]', ']', fixed_content)
+                    data = json.loads(fixed_content)
+                    logger.warning(f"Fixed JSON parsing error for query '{query[:100]}': {je}")
+                except json.JSONDecodeError:
+                    # If fixing didn't work, try to extract a valid subset
+                    logger.error(f"LLM parsing exception (unfixable JSON): {je}")
+                    logger.error(f"Problematic JSON content (first 500 chars): {content[:500]}")
+                    # Try to extract just the essential fields manually
+                    try:
+                        # Fallback: try to extract key fields using regex as last resort
+                        primary_match = re.search(r'"primary_entity"\s*:\s*"([^"]+)"', content)
+                        filters_match = re.search(r'"filters"\s*:\s*(\{[^}]*\})', content, re.DOTALL)
+                        
+                        data = {}
+                        if primary_match:
+                            data["primary_entity"] = primary_match.group(1)
+                        if filters_match:
+                            try:
+                                data["filters"] = json.loads(filters_match.group(1))
+                            except:
+                                data["filters"] = {}
+                        else:
+                            data["filters"] = {}
+                        
+                        # Set defaults for required fields
+                        data.setdefault("aggregations", [])
+                        data.setdefault("group_by", [])
+                        data.setdefault("projections", [])
+                        data.setdefault("wants_details", False)
+                        data.setdefault("wants_count", False)
+                        
+                        logger.warning(f"Extracted partial intent from malformed JSON: {data}")
+                    except Exception as fallback_error:
+                        logger.error(f"Failed to extract partial intent: {fallback_error}")
+                        return None
             
             # DEBUG: Log parsed JSON data
             logger.debug(f"Parsed JSON data for query '{query[:100]}': filters={data.get('filters', {})}")
@@ -1045,6 +1119,32 @@ class LLMIntentParser:
                     data["forecast_field"] = "createdTimeStamp"
                 elif "updated" in oq_text or "modified" in oq_text:
                     data["forecast_field"] = "updatedTimeStamp"
+        
+        # Pattern analysis detection - automatically detect when queries need pattern analysis
+        # Keywords: "most common", "frequent", "patterns", "trends", "influence", "factors", "why", "what causes"
+        # Question types: "What objections are most common?", "What factors influence win rates?", "Why do deals slip?"
+        # Analysis requests: "analyze patterns", "identify trends", "find correlations"
+        pattern_keywords = [
+            r"\bmost\s+common\b", r"\bfrequent\b", r"\bpatterns?\b", r"\binfluence\b", r"\bfactors?\b",
+            r"\bwhy\b", r"\bwhat\s+causes?\b", r"\bwhat\s+factors?\b", r"\bcorrelations?\b",
+            r"\bidentify\s+patterns?\b", r"\banalyze\s+patterns?\b", r"\bfind\s+patterns?\b",
+            r"\bcommon\s+reasons?\b", r"\bmost\s+frequent\b", r"\btypical\b", r"\busually\b",
+            r"\bwhat\s+leads\s+to\b", r"\bwhat\s+drives\b", r"\bwhat\s+affects\b", r"\bwhat\s+impacts\b"
+        ]
+        needs_pattern_analysis = any(re.search(pattern, oq_text, re.IGNORECASE) for pattern in pattern_keywords)
+        
+        # Also detect question patterns that typically need pattern analysis
+        question_patterns = [
+            r"what\s+(objections?|reasons?|factors?|issues?)\s+(are|is)\s+(most\s+)?(common|frequent)",
+            r"what\s+(factors?|reasons?)\s+(influence|affect|impact|drive)",
+            r"why\s+do\s+(deals?|leads?|customers?)\s+",
+            r"what\s+causes?\s+",
+            r"what\s+are\s+the\s+(most\s+)?(common|frequent|typical)\s+"
+        ]
+        if not needs_pattern_analysis:
+            needs_pattern_analysis = any(re.search(pattern, oq_text, re.IGNORECASE) for pattern in question_patterns)
+        
+        data["needs_pattern_analysis"] = needs_pattern_analysis
 
         # Aggregations - include new advanced aggregation types
         allowed_aggs = {
@@ -1194,6 +1294,8 @@ class LLMIntentParser:
         forecast_field = data.get("forecast_field")
         forecast_periods = data.get("forecast_periods")
 
+        needs_pattern_analysis = bool(data.get("needs_pattern_analysis", False))
+        
         return QueryIntent(
             primary_entity=primary,
             target_entities=target_entities,
@@ -1218,6 +1320,7 @@ class LLMIntentParser:
             anomaly_threshold=float(anomaly_threshold) if anomaly_threshold is not None else None,
             forecast_field=forecast_field if forecast_field else None,
             forecast_periods=int(forecast_periods) if forecast_periods is not None else None,
+            needs_pattern_analysis=needs_pattern_analysis,
         )
 
     async def _disambiguate_name_entity(self, proposed: Dict[str, str]) -> Optional[str]:
