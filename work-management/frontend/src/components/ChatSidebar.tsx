@@ -3,7 +3,7 @@ import { Plus, MessageSquare, History, Search, Settings as SettingsIcon } from "
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
-import { cn } from "@/lib/utils";
+import { cn, stripMarkdown } from "@/lib/utils";
 
 interface Conversation {
   id: string;
@@ -76,7 +76,7 @@ export const ChatSidebar = ({
               <div className="flex items-center gap-2">
                 <MessageSquare className="h-4 w-4 flex-shrink-0 opacity-70" />
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate">{conversation.title}</p>
+                  <p className="text-sm font-medium truncate">{stripMarkdown(conversation.title)}</p>
                   <p className="text-xs text-muted-foreground">
                     {conversation.timestamp.toLocaleDateString()}
                   </p>

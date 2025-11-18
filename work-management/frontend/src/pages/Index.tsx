@@ -68,8 +68,6 @@ const Index = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [showPersonalization, setShowPersonalization] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState(false);
-  // ✅ NEW: Track selected project for conversation context
-  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   // Consider empty only when no active conversation is selected
   const isEmpty = messages.length === 0 && !activeConversationId;
   const [feedbackTargetId, setFeedbackTargetId] = useState<string | null>(null);
@@ -665,8 +663,7 @@ const Index = () => {
       message: content,
       conversation_id: convId,
       member_id: mid,
-      business_id: bid,
-      project_id: selectedProjectId || undefined, // ✅ NEW: Include project context
+      business_id: bid
     });
     if (!ok) {
       // Fallback: show error and stop loading
@@ -800,7 +797,7 @@ const Index = () => {
 
       <div className="flex flex-1 flex-col relative z-10">
         {showPersonalization ? (
-          <div className="flex items-start justify-center p-6 h-full">
+          <div className="flex items-start justify-center p-6 h-full overflow-y-auto">
             <div className="w-full max-w-3xl">
               <Settings />
             </div>
