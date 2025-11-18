@@ -1,0 +1,555 @@
+@import 'react-datepicker/dist/react-datepicker.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+ProspectIQ uses peachy/coral color scheme to distinguish from work-management (purple).
+*/
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222 47% 11%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+
+    --primary: 20 80% 55%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 240 5% 96%;
+    --secondary-foreground: 222 47% 11%;
+
+    --muted: 240 5% 96%;
+    --muted-foreground: 240 4% 46%;
+
+    --accent: 20 70% 60%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 240 6% 90%;
+    --input: 240 6% 90%;
+    --ring: 20 70% 70%;
+
+    --radius: 0.75rem;
+
+    --sidebar-background: 240 5% 98%;
+    --sidebar-foreground: 222 47% 11%;
+    --sidebar-primary: 20 70% 70%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 5% 93%;
+    --sidebar-accent-foreground: 222 47% 11%;
+    --sidebar-border: 240 6% 90%;
+    --sidebar-ring: 20 70% 70%;
+
+    --gradient-primary: linear-gradient(135deg, hsl(20 70% 70%) 0%, hsl(20 80% 60%) 100%);
+    --gradient-glow: linear-gradient(135deg, hsl(20 70% 70% / 0.2) 0%, hsl(20 80% 60% / 0.1) 100%);
+    --shadow-glow: 0 0 40px hsl(20 70% 70% / 0.3);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+  }
+}
+
+@layer utilities {
+  .text-gradient {
+    @apply bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent;
+  }
+
+  /* Enhanced prose styling for markdown content */
+  .prose {
+    max-width: none;
+  }
+
+  .prose code {
+    @apply text-sm;
+  }
+
+  .prose pre {
+    @apply my-3 rounded-lg;
+  }
+
+  .prose table {
+    @apply w-full border-collapse;
+  }
+
+  .prose thead {
+    @apply bg-muted/50;
+  }
+
+  .prose th {
+    @apply px-4 py-2 text-left font-semibold border-b border-border;
+  }
+
+  .prose td {
+    @apply px-4 py-2 border-b border-border;
+  }
+
+  .prose blockquote {
+    @apply border-l-4 border-primary/50 bg-primary/5 pl-4 pr-4 py-2 rounded-r-lg;
+  }
+
+  .prose strong {
+    @apply font-bold;
+  }
+
+  .prose em {
+    @apply italic;
+  }
+
+  .prose h2 {
+    @apply border-b border-border/50 pb-2;
+  }
+
+  .prose ul {
+    @apply space-y-1.5;
+  }
+
+  .prose ol {
+    @apply space-y-1.5;
+  }
+
+  /* Enhanced unordered list styling with custom bullets */
+  .markdown-ul {
+    list-style: none;
+    margin-left: 0;
+    padding-left: 0;
+  }
+
+  .markdown-ul > li {
+    position: relative;
+    padding-left: 1.75rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .markdown-ul > li::before {
+    content: '';
+    position: absolute;
+    left: 0.5rem;
+    top: 0.6em;
+    width: 0.375rem;
+    height: 0.375rem;
+    background: hsl(var(--primary));
+    border-radius: 50%;
+  }
+
+  /* Nested unordered lists */
+  .markdown-ul .markdown-ul > li::before {
+    width: 0.3rem;
+    height: 0.3rem;
+    background: hsl(var(--primary) / 0.6);
+  }
+
+  /* Enhanced ordered list styling with custom numbers */
+  .markdown-ol {
+    list-style: none;
+    counter-reset: markdown-counter;
+    margin-left: 0;
+    padding-left: 0;
+  }
+
+  .markdown-ol > li {
+    position: relative;
+    padding-left: 2.25rem;
+    margin-bottom: 0.5rem;
+    counter-increment: markdown-counter;
+  }
+
+  .markdown-ol > li::before {
+    content: counter(markdown-counter);
+    position: absolute;
+    left: 0;
+    top: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    background: hsl(var(--primary) / 0.1);
+    color: hsl(var(--primary));
+    border-radius: 50%;
+    font-weight: 600;
+    font-size: 0.75rem;
+    line-height: 1;
+  }
+
+  /* Nested ordered lists */
+  .markdown-ol .markdown-ol {
+    counter-reset: markdown-counter-nested;
+    margin-top: 0.5rem;
+  }
+
+  .markdown-ol .markdown-ol > li {
+    counter-increment: markdown-counter-nested;
+  }
+
+  .markdown-ol .markdown-ol > li::before {
+    content: counter(markdown-counter) "." counter(markdown-counter-nested);
+    font-size: 0.7rem;
+    background: hsl(var(--primary) / 0.08);
+  }
+  .prose hr {
+    @apply my-6 border-border;
+  }
+
+  .prose a {
+    @apply font-medium;
+  }
+
+  /* Syntax highlighting enhancements */
+  .hljs {
+    @apply rounded-lg p-4 text-sm;
+    background: #0d1117 !important;
+  }
+
+  /* Code block scrollbar styling */
+  pre::-webkit-scrollbar {
+    height: 8px;
+  }
+
+  pre::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 4px;
+  }
+
+  pre::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+  }
+
+  pre::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
+  }
+
+  /* Editor.js specific styles */
+  .editor-container .ce-block__content,
+  .editor-container .ce-toolbar__content {
+    max-width: none;
+  }
+
+  .editor-container .ce-paragraph[data-placeholder]:empty::before {
+    color: hsl(var(--muted-foreground));
+    opacity: 0.6;
+  }
+
+  .editor-container .ce-toolbar__toggler {
+    color: hsl(var(--foreground));
+  }
+
+  .editor-container .ce-toolbar__settings-btn {
+    background: hsl(var(--background));
+    border: 1px solid hsl(var(--border));
+  }
+
+  /* Modern Date Picker Styles */
+  .react-datepicker-wrapper {
+    width: auto;
+  }
+
+  .react-datepicker {
+    font-family: inherit;
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.75rem;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+  }
+
+  .react-datepicker__header {
+    background: white;
+    border-bottom: 1px solid #f3f4f6;
+    padding: 1.25rem 1rem 0.75rem;
+  }
+
+  .react-datepicker__current-month {
+    color: #1f2937;
+    font-weight: 600;
+    font-size: 1.125rem;
+    margin-bottom: 0.75rem;
+    text-align: center;
+  }
+
+  .react-datepicker__navigation {
+    top: 1.25rem;
+    line-height: 1.7rem;
+    border: none;
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: 0.375rem;
+    background: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+  }
+
+  .react-datepicker__navigation:hover {
+    background: #f3f4f6;
+  }
+
+  .react-datepicker__navigation-icon::before {
+    border-color: #6b7280;
+    border-width: 2px 2px 0 0;
+    width: 6px;
+    height: 6px;
+  }
+
+  .react-datepicker__month {
+    margin: 0;
+    padding: 0 1rem 1rem;
+  }
+
+  .react-datepicker__week {
+    display: flex;
+  }
+
+  .react-datepicker__day-names {
+    display: flex;
+    margin-bottom: 0.75rem;
+  }
+
+  .react-datepicker__day-name {
+    color: #6b7280;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    width: 2.25rem;
+    height: 2.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 0.125rem;
+    letter-spacing: 0.05em;
+  }
+
+  .react-datepicker__day {
+    width: 2.25rem;
+    height: 2.25rem;
+    line-height: 2.25rem;
+    margin: 0 0.125rem;
+    border-radius: 0.5rem;
+    color: #374151;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s ease;
+    border: none;
+    background: transparent;
+  }
+
+  .react-datepicker__day:hover {
+    background: #f3f4f6;
+  }
+
+  .react-datepicker__day--selected,
+  .react-datepicker__day--keyboard-selected {
+    background: hsl(20 80% 55%) !important; /* Peachy primary */
+    color: white !important;
+    border-radius: 50% !important;
+    font-weight: 600;
+  }
+
+  .react-datepicker__day--today {
+    background: hsl(var(--accent) / 0.2) !important;
+    font-weight: 600;
+  }
+
+  .react-datepicker__day--range-start,
+  .react-datepicker__day--range-end {
+    background: hsl(20 80% 55%) !important; /* Peachy primary */
+    color: white !important;
+    border-radius: 50% !important;
+    font-weight: 600;
+    position: relative;
+    z-index: 1;
+  }
+
+  .react-datepicker__day--in-range {
+    background: hsl(20 70% 95%) !important; /* Light peachy background */
+    color: hsl(20 80% 45%) !important; /* Darker peachy text */
+    font-weight: 500;
+  }
+
+  /* Ensure range styling overrides other styles */
+  .react-datepicker__day--in-range.react-datepicker__day--range-start,
+  .react-datepicker__day--in-range.react-datepicker__day--range-end {
+    background: hsl(20 80% 55%) !important; /* Peachy primary */
+    color: white !important;
+    border-radius: 50% !important;
+  }
+
+  .react-datepicker__day--outside-month {
+    color: hsl(var(--muted-foreground) / 0.5);
+  }
+
+  .react-datepicker__day--disabled {
+    color: hsl(var(--muted-foreground) / 0.3);
+    cursor: not-allowed;
+  }
+
+  .react-datepicker__day--disabled:hover {
+    background: transparent;
+  }
+
+  .react-datepicker__triangle {
+    display: none;
+  }
+
+  .react-datepicker-popper {
+    z-index: 9999;
+  }
+
+  .react-datepicker-popper[data-placement^="bottom"] {
+    margin-top: 0.5rem;
+  }
+
+  /* Custom popper styling */
+  .date-picker-popper {
+    background: white !important;
+    border: 1px solid #e5e7eb !important;
+    border-radius: 0.75rem !important;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1) !important;
+    overflow: hidden;
+  }
+
+  /* Multiple months layout */
+  .react-datepicker__month-container {
+    float: left;
+  }
+
+  .react-datepicker__month-container + .react-datepicker__month-container {
+    margin-left: 1.5rem;
+  }
+
+  .react-datepicker__month {
+    margin: 0;
+    padding: 0 1rem 1.25rem;
+  }
+
+  .animate-typing {
+    animation: typing 0.05s steps(1) forwards;
+  }
+
+  .animate-pulse-glow {
+    animation: pulse-glow 2s ease-in-out infinite;
+  }
+
+  /* Glow wave text effect for streaming action text */
+  .glow-wave-text {
+    background-image: linear-gradient(
+      90deg,
+      hsl(var(--primary) / 0.35) 0%,
+      hsl(var(--primary) / 0.9) 25%,
+      hsl(var(--accent) / 0.9) 50%,
+      hsl(var(--primary) / 0.9) 75%,
+      hsl(var(--primary) / 0.35) 100%
+    );
+    background-size: 200% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: glow-wave 1.8s linear infinite;
+    text-shadow: 0 0 12px hsl(var(--primary) / 0.25);
+  }
+
+  @keyframes glow-wave {
+    0% {
+      background-position: 0% 50%;
+      filter: drop-shadow(0 0 0 hsl(var(--primary) / 0.0));
+    }
+    50% {
+      background-position: 100% 50%;
+      filter: drop-shadow(0 0 10px hsl(var(--primary) / 0.35));
+    }
+    100% {
+      background-position: 200% 50%;
+      filter: drop-shadow(0 0 0 hsl(var(--primary) / 0.0));
+    }
+  }
+
+  @keyframes typing {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes pulse-glow {
+    0%, 100% {
+      box-shadow: 0 0 20px hsl(var(--primary) / 0.3);
+    }
+    50% {
+      box-shadow: 0 0 40px hsl(var(--primary) / 0.5);
+    }
+  }
+
+  @keyframes glow-pulse {
+    0%, 100% {
+      opacity: 0.2;
+    }
+    50% {
+      opacity: 0.4;
+    }
+  }
+
+  @keyframes float {
+    0% {
+      transform: translate(0, 0);
+    }
+    25% {
+      transform: translate(80px, -80px);
+    }
+    50% {
+      transform: translate(-60px, -40px);
+    }
+    75% {
+      transform: translate(-80px, 60px);
+    }
+    100% {
+      transform: translate(0, 0);
+    }
+  }
+
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: hsl(var(--background));
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: hsl(var(--muted));
+    border-radius: 3px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground));
+  }
+}
+[data-radix-scroll-area-viewport] > div {
+  display: block !important;
+  /* keep the min-width behaviour if you still want it */
+  min-width: 100% !important;
+  box-sizing: border-box; /* optional */
+}

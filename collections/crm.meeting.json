@@ -1,0 +1,651 @@
+[{
+  "_id": {
+    "$binary": {
+      "base64": "UmlurqzJCB8+EIvQVftaow==",
+      "subType": "03"
+    }
+  },
+  "businessId": {
+    "$binary": {
+      "base64": "AW83DttE+R7pVJ/RTSE6lA==",
+      "subType": "03"
+    }
+  },
+  "leadId": {
+    "$binary": {
+      "base64": "Y2QQRqjJCB+cUcNM5kVaow==",
+      "subType": "03"
+    }
+  },
+  "createdById": {
+    "$binary": {
+      "base64": "RmNErF+p+R6wVP6hBKm6og==",
+      "subType": "03"
+    }
+  },
+  "remainder": 20,
+  "participantsRemainder": 0,
+  "leadName": "Nikhil Kasula",
+  "title": "Demo to PassbookApp",
+  "meetingLocated": "",
+  "meetingLink": "https://calendar.app.google/tpoi6EkQvrVDnw9j9",
+  "description": "1)Digital Passbook\n2)Transactions report\n3)Notificaiton and Reminder Service",
+  "createdByName": "Gauri Gupte",
+  "assignedName": "Gauri Gupte",
+  "assignedTo": "1ef9a95f-ac44-6346-a2ba-a904a1fe54b0",
+  "meetingStatus": "COMPLETED",
+  "meetingType": "VIRTUAL",
+  "participantsList": [
+    {
+      "leadId": {
+        "$binary": {
+          "base64": "Z2CxLKV+/R6QJF+LzoH9oQ==",
+          "subType": "03"
+        }
+      },
+      "leadName": "Rithik",
+      "leadMail": "rithik@passbookapp.in",
+      "companyName": "N/A"
+    }
+  ],
+  "emailData": [],
+  "startDateTime": {
+    "$date": "2025-09-09T11:00:00.000Z"
+  },
+  "endDateTime": {
+    "$date": "2025-09-09T11:30:00.000Z"
+  },
+  "createdTimeStamp": {
+    "$date": "2025-09-08T10:01:30.546Z"
+  },
+  "updatedTimeStamp": {
+    "$date": "2025-09-08T10:01:30.546Z"
+  },
+  "_class": "com.lm.crm.leads.meeting.Meeting"
+},
+{
+  "_id": {
+    "$binary": {
+      "base64": "R2W65P9wCB+y44Yb9XFaow==",
+      "subType": "03"
+    }
+  },
+  "businessId": {
+    "$binary": {
+      "base64": "fGZ0wORwCB9chuBXmT8BjA==",
+      "subType": "03"
+    }
+  },
+  "leadId": {
+    "$binary": {
+      "base64": "Z20sKPhwCB8Z75hDAT1aow==",
+      "subType": "03"
+    }
+  },
+  "createdById": {
+    "$binary": {
+      "base64": "N2t1vuRwCB9/6j+tpx85uQ==",
+      "subType": "03"
+    }
+  },
+  "remainder": 0,
+  "participantsRemainder": 0,
+  "leadName": "hero1",
+  "title": "meeting",
+  "meetingLocated": "",
+  "meetingLink": "",
+  "description": "",
+  "createdByName": "Pramod",
+  "assignedName": "Pramod",
+  "assignedTo": "1f0870e4-be75-6b37-b939-1fa7ad3fea7f",
+  "meetingStatus": "COMPLETED",
+  "meetingType": "PHYSICAL",
+  "participantsList": [
+    {
+      "leadId": {
+        "$binary": {
+          "base64": "N2t1vuRwCB9/6j+tpx85uQ==",
+          "subType": "03"
+        }
+      },
+      "leadName": "Pramod",
+      "leadMail": "pramodreddy079@gmail.com",
+      "companyName": "N/A"
+    }
+  ],
+  "emailData": [],
+  "startDateTime": {
+    "$date": "2025-09-03T09:00:00.000Z"
+  },
+  "endDateTime": {
+    "$date": "2025-09-03T11:00:00.000Z"
+  },
+  "createdTimeStamp": {
+    "$date": "2025-09-01T08:45:20.911Z"
+  },
+  "updatedTimeStamp": {
+    "$date": "2025-09-01T08:45:20.911Z"
+  },
+  "_class": "com.lm.crm.leads.meeting.Meeting"
+},
+{
+  "_id": {
+    "$binary": {
+      "base64": "6WxNIONMCB+Mkf10R0lXlw==",
+      "subType": "03"
+    }
+  },
+  "businessId": {
+    "$binary": {
+      "base64": "img60ibL7R4pstoZnVdjvQ==",
+      "subType": "03"
+    }
+  },
+  "leadId": {
+    "$binary": {
+      "base64": "YGZ6rulJCB9CpjRegBtXlw==",
+      "subType": "03"
+    }
+  },
+  "createdById": {
+    "$binary": {
+      "base64": "UmafdC6Y/x70KFEN+6HQmQ==",
+      "subType": "03"
+    }
+  },
+  "remainder": 0,
+  "participantsRemainder": 0,
+  "leadName": "Ananduuu",
+  "title": "erwdfd fdsfd",
+  "meetingLocated": "",
+  "meetingLink": "efdfdfdsfadfda",
+  "description": "fds",
+  "createdByName": "anand chikkam",
+  "assignedName": "anand chikkam",
+  "assignedTo": "1eff982e-749f-6652-99d0-a1fb0d5128f4",
+  "meetingStatus": "NEW",
+  "meetingType": "VIRTUAL",
+  "participantsList": [
+    {
+      "leadId": {
+        "$binary": {
+          "base64": "sGZwEel++h6TgpDrri9Jnw==",
+          "subType": "03"
+        }
+      },
+      "leadName": "Rithik",
+      "leadMail": "rithik@tejsoft.com",
+      "companyName": "N/A"
+    }
+  ],
+  "emailData": [],
+  "startDateTime": {
+    "$date": "2025-08-22T00:00:00.000Z"
+  },
+  "endDateTime": {
+    "$date": "2025-08-22T23:30:00.000Z"
+  },
+  "createdTimeStamp": {
+    "$date": "2025-08-29T11:49:18.579Z"
+  },
+  "updatedTimeStamp": {
+    "$date": "2025-08-29T11:49:18.579Z"
+  },
+  "_class": "com.lm.crm.leads.meeting.Meeting"
+},
+{
+  "_id": {
+    "$binary": {
+      "base64": "XWMQuNJMCB8xxE3ZEplXlw==",
+      "subType": "03"
+    }
+  },
+  "businessId": {
+    "$binary": {
+      "base64": "zmuFYdPABB/FgyDnlRmtkQ==",
+      "subType": "03"
+    }
+  },
+  "leadId": {
+    "$binary": {
+      "base64": "YGZ6rulJCB9CpjRegBtXlw==",
+      "subType": "03"
+    }
+  },
+  "createdById": {
+    "$binary": {
+      "base64": "UmafdC6Y/x70KFEN+6HQmQ==",
+      "subType": "03"
+    }
+  },
+  "remainder": 0,
+  "participantsRemainder": 0,
+  "leadName": "Ananduuu",
+  "title": "afdsf",
+  "meetingLocated": "",
+  "meetingLink": "fdsfdsfdfdsf",
+  "description": "",
+  "createdByName": "anand chikkam",
+  "assignedName": "anand chikkam",
+  "assignedTo": "1eff982e-749f-6652-99d0-a1fb0d5128f4",
+  "meetingStatus": "COMPLETED",
+  "meetingType": "VIRTUAL",
+  "participantsList": [
+    {
+      "leadId": {
+        "$binary": {
+          "base64": "UmafdC6Y/x70KFEN+6HQmQ==",
+          "subType": "03"
+        }
+      },
+      "leadName": "anand chikkam",
+      "leadMail": "anand@tejsoft.com",
+      "companyName": "N/A"
+    }
+  ],
+  "emailData": [],
+  "startDateTime": {
+    "$date": "2025-08-29T00:00:00.000Z"
+  },
+  "endDateTime": {
+    "$date": "2025-08-29T00:00:00.000Z"
+  },
+  "createdTimeStamp": {
+    "$date": "2025-08-29T11:41:58.152Z"
+  },
+  "updatedTimeStamp": {
+    "$date": "2025-08-29T11:41:58.152Z"
+  },
+  "_class": "com.lm.crm.leads.meeting.Meeting"
+},
+{
+  "_id": {
+    "$binary": {
+      "base64": "8Wjmf6hMCB/dk7FkQmFXlw==",
+      "subType": "03"
+    }
+  },
+  "businessId": {
+    "$binary": {
+      "base64": "wm6oZ4D0Bx/qlIOyMtUBjA==",
+      "subType": "03"
+    }
+  },
+  "leadId": {
+    "$binary": {
+      "base64": "YGZ6rulJCB9CpjRegBtXlw==",
+      "subType": "03"
+    }
+  },
+  "createdById": {
+    "$binary": {
+      "base64": "UmafdC6Y/x70KFEN+6HQmQ==",
+      "subType": "03"
+    }
+  },
+  "remainder": 0,
+  "participantsRemainder": 0,
+  "leadName": "Ananduuu",
+  "title": "dsds",
+  "meetingLocated": "",
+  "meetingLink": "",
+  "description": "",
+  "createdByName": "anand chikkam",
+  "assignedName": "anand chikkam",
+  "assignedTo": "1eff982e-749f-6652-99d0-a1fb0d5128f4",
+  "meetingStatus": "COMPLETED",
+  "meetingType": "PHYSICAL",
+  "participantsList": [
+    {
+      "leadId": {
+        "$binary": {
+          "base64": "UmafdC6Y/x70KFEN+6HQmQ==",
+          "subType": "03"
+        }
+      },
+      "leadName": "anand chikkam",
+      "leadMail": "anand@tejsoft.com",
+      "companyName": "N/A"
+    }
+  ],
+  "emailData": [],
+  "startDateTime": {
+    "$date": "2025-08-29T00:00:00.000Z"
+  },
+  "endDateTime": {
+    "$date": "2025-08-29T00:00:00.000Z"
+  },
+  "createdTimeStamp": {
+    "$date": "2025-08-29T11:23:04.834Z"
+  },
+  "updatedTimeStamp": {
+    "$date": "2025-08-29T11:23:04.834Z"
+  },
+  "_class": "com.lm.crm.leads.meeting.Meeting"
+},
+{
+  "_id": {
+    "$binary": {
+      "base64": "/GgfO+4ZCB/3K/Xdxacykg==",
+      "subType": "03"
+    }
+  },
+  "businessId": {
+    "$binary": {
+      "base64": "wm6oZ4D0Bx/qlIOyMtUBjA==",
+      "subType": "03"
+    }
+  },
+  "leadId": {
+    "$binary": {
+      "base64": "emQG6t4ZCB8RGhqayQEykg==",
+      "subType": "03"
+    }
+  },
+  "createdById": {
+    "$binary": {
+      "base64": "UmafdC6Y/x70KFEN+6HQmQ==",
+      "subType": "03"
+    }
+  },
+  "remainder": 0,
+  "participantsRemainder": 0,
+  "leadName": "Anand",
+  "title": "MEETING 2.O",
+  "meetingLocated": "Gachibowli,Hyderabad,Telangana",
+  "meetingLink": "",
+  "description": "",
+  "createdByName": "anand chikkam",
+  "assignedName": "anand chikkam",
+  "assignedTo": "1eff982e-749f-6652-99d0-a1fb0d5128f4",
+  "meetingStatus": "COMPLETED",
+  "meetingType": "PHYSICAL",
+  "participantsList": [
+    {
+      "leadId": {
+        "$binary": {
+          "base64": "UmafdC6Y/x70KFEN+6HQmQ==",
+          "subType": "03"
+        }
+      },
+      "leadName": "anand chikkam",
+      "leadMail": "anand@tejsoft.com",
+      "companyName": "N/A"
+    }
+  ],
+  "emailData": [],
+  "startDateTime": {
+    "$date": "2025-08-25T00:00:00.000Z"
+  },
+  "endDateTime": {
+    "$date": "2025-08-25T00:00:00.000Z"
+  },
+  "createdTimeStamp": {
+    "$date": "2025-08-25T10:33:07.339Z"
+  },
+  "updatedTimeStamp": {
+    "$date": "2025-08-25T10:33:07.339Z"
+  },
+  "_class": "com.lm.crm.leads.meeting.Meeting"
+},
+{
+  "_id": {
+    "$binary": {
+      "base64": "uGPIKOEACB8bOs19Ldsykg==",
+      "subType": "03"
+    }
+  },
+  "businessId": {
+    "$binary": {
+      "base64": "wm6oZ4D0Bx/qlIOyMtUBjA==",
+      "subType": "03"
+    }
+  },
+  "leadId": {
+    "$binary": {
+      "base64": "Z2jqcXT/Bx/9UXxFfrMykg==",
+      "subType": "03"
+    }
+  },
+  "createdById": {
+    "$binary": {
+      "base64": "UmafdC6Y/x70KFEN+6HQmQ==",
+      "subType": "03"
+    }
+  },
+  "remainder": 10,
+  "participantsRemainder": 0,
+  "leadName": "Ananduu",
+  "title": "Testing ADD",
+  "meetingLocated": "",
+  "meetingLink": "google.com",
+  "description": "asa",
+  "createdByName": "anand chikkam",
+  "assignedName": "anand chikkam",
+  "assignedTo": "1eff982e-749f-6652-99d0-a1fb0d5128f4",
+  "meetingStatus": "COMPLETED",
+  "meetingType": "VIRTUAL",
+  "participantsList": [
+    {
+      "leadId": {
+        "$binary": {
+          "base64": "UmafdC6Y/x70KFEN+6HQmQ==",
+          "subType": "03"
+        }
+      },
+      "leadName": "anand chikkam",
+      "leadMail": "anand@tejsoft.com",
+      "companyName": "N/A"
+    }
+  ],
+  "emailData": [],
+  "startDateTime": {
+    "$date": "2025-08-23T00:00:00.000Z"
+  },
+  "endDateTime": {
+    "$date": "2025-08-23T23:30:00.000Z"
+  },
+  "createdTimeStamp": {
+    "$date": "2025-08-23T10:43:57.758Z"
+  },
+  "updatedTimeStamp": {
+    "$date": "2025-08-23T10:43:57.758Z"
+  },
+  "_class": "com.lm.crm.leads.meeting.Meeting"
+},
+{
+  "_id": {
+    "$binary": {
+      "base64": "7mJau2rCBx8YKY6JETm9rQ==",
+      "subType": "03"
+    }
+  },
+  "businessId": {
+    "$binary": {
+      "base64": "CWuSh6i/Bx/IRR2Jiw8BjA==",
+      "subType": "03"
+    }
+  },
+  "leadId": {
+    "$binary": {
+      "base64": "o2bRl7LBBx8LTXEXVNG9rQ==",
+      "subType": "03"
+    }
+  },
+  "createdById": {
+    "$binary": {
+      "base64": "mmhASBA5Bx8uhNiYCH80tQ==",
+      "subType": "03"
+    }
+  },
+  "remainder": 10,
+  "participantsRemainder": 10,
+  "leadName": "sema",
+  "title": "this meeting regarding the sema business",
+  "meetingLocated": "",
+  "meetingLink": "www.abc.com",
+  "description": "this meeting created",
+  "createdByName": "Rahul Tiwari",
+  "assignedName": "Rahul Tiwari",
+  "assignedTo": "1f073910-4840-689a-b534-7f0898d8842e",
+  "meetingStatus": "COMPLETED",
+  "meetingType": "VIRTUAL",
+  "participantsList": [
+    {
+      "leadId": {
+        "$binary": {
+          "base64": "mmhASBA5Bx8uhNiYCH80tQ==",
+          "subType": "03"
+        }
+      },
+      "leadName": "Rahul Tiwari",
+      "leadMail": "rahul@tejsoft.com",
+      "companyName": "N/A"
+    }
+  ],
+  "emailData": [],
+  "startDateTime": {
+    "$date": "2025-08-18T00:00:00.000Z"
+  },
+  "endDateTime": {
+    "$date": "2025-08-18T00:00:00.000Z"
+  },
+  "createdTimeStamp": {
+    "$date": "2025-08-18T11:29:57.989Z"
+  },
+  "updatedTimeStamp": {
+    "$date": "2025-08-18T11:29:57.989Z"
+  },
+  "_class": "com.lm.crm.leads.meeting.Meeting"
+},
+{
+  "_id": {
+    "$binary": {
+      "base64": "dGN5BQGDBx/wOQMDj0vViQ==",
+      "subType": "03"
+    }
+  },
+  "businessId": {
+    "$binary": {
+      "base64": "7WINrwNoBx+wlbwx3CthkQ==",
+      "subType": "03"
+    }
+  },
+  "leadId": {
+    "$binary": {
+      "base64": "6mt9Xv2CBx+IaqHhe8vViQ==",
+      "subType": "03"
+    }
+  },
+  "createdById": {
+    "$binary": {
+      "base64": "mmhASBA5Bx8uhNiYCH80tQ==",
+      "subType": "03"
+    }
+  },
+  "remainder": 10,
+  "participantsRemainder": 0,
+  "leadName": "Rahul Tiwari",
+  "title": "for the lead",
+  "meetingLocated": "",
+  "meetingLink": "dcfrvgtrgtgtgtg",
+  "description": "hbjbjb hbjjn jnnjnknknk",
+  "createdByName": "Rahul Tiwari",
+  "assignedName": "Rahul Tiwari",
+  "assignedTo": "1f073910-4840-689a-b534-7f0898d8842e",
+  "meetingStatus": "COMPLETED",
+  "meetingType": "VIRTUAL",
+  "participantsList": [],
+  "emailData": [
+    "rhl@gmail.com"
+  ],
+  "startDateTime": {
+    "$date": "2025-08-13T00:00:00.000Z"
+  },
+  "endDateTime": {
+    "$date": "2025-08-13T00:00:00.000Z"
+  },
+  "createdTimeStamp": {
+    "$date": "2025-08-13T10:27:07.642Z"
+  },
+  "updatedTimeStamp": {
+    "$date": "2025-08-13T10:27:07.642Z"
+  },
+  "_class": "com.lm.crm.leads.meeting.Meeting"
+},
+{
+  "_id": {
+    "$binary": {
+      "base64": "0W8ZOy5qBx8BYddfHztRog==",
+      "subType": "03"
+    }
+  },
+  "businessId": {
+    "$binary": {
+      "base64": "3mYN2LSV9R7dRHbkqBP2nQ==",
+      "subType": "03"
+    }
+  },
+  "leadId": {
+    "$binary": {
+      "base64": "pm9FYiBqBx8z0ql6X49Rog==",
+      "subType": "03"
+    }
+  },
+  "createdById": {
+    "$binary": {
+      "base64": "ZmP00CbL7R7jYR/J2tudrQ==",
+      "subType": "03"
+    }
+  },
+  "remainder": 10,
+  "participantsRemainder": 0,
+  "leadName": "Gaurav sharma",
+  "title": "Discovery Call",
+  "meetingLocated": "",
+  "meetingLink": "https://tejsoft.com/",
+  "description": "",
+  "createdByName": "Simpo",
+  "assignedName": "Raghav",
+  "assignedTo": "1f032f6a-8833-6450-95de-87f19bc9d9f0",
+  "meetingStatus": "COMPLETED",
+  "meetingType": "VIRTUAL",
+  "participantsList": [
+    {
+      "leadId": {
+        "$binary": {
+          "base64": "UGQziGovAx/w2cmb8YfelQ==",
+          "subType": "03"
+        }
+      },
+      "leadName": "Raghav",
+      "leadMail": "raghav@tejsoft.com",
+      "companyName": "N/A"
+    },
+    {
+      "leadId": {
+        "$binary": {
+          "base64": "LmFAfqNTAx8Rg8QPHnfelQ==",
+          "subType": "03"
+        }
+      },
+      "leadName": "Ganesha",
+      "leadMail": "ganeasha@tejsoft.com",
+      "companyName": "N/A"
+    }
+  ],
+  "emailData": [],
+  "startDateTime": {
+    "$date": "2025-08-11T00:00:00.000Z"
+  },
+  "endDateTime": {
+    "$date": "2025-08-11T00:00:00.000Z"
+  },
+  "createdTimeStamp": {
+    "$date": "2025-08-11T11:04:02.533Z"
+  },
+  "updatedTimeStamp": {
+    "$date": "2025-08-11T11:04:02.533Z"
+  },
+  "_class": "com.lm.crm.leads.meeting.Meeting"
+}]

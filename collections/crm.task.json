@@ -1,0 +1,541 @@
+[{
+  "_id": {
+    "$binary": {
+      "base64": "uWTKqqQUDB+s/RbYIe/ukg==",
+      "subType": "03"
+    }
+  },
+  "name": "hfhfh",
+  "priority": "HIGH",
+  "dueDate": {
+    "$date": "2025-11-14T00:00:00.000Z"
+  },
+  "taskStatus": "NEW",
+  "reminderDays": 0,
+  "notify": "EMAIL",
+  "description": "hy",
+  "parentId": {
+    "$binary": {
+      "base64": "626v6qIUDB9YEOuTpPXukg==",
+      "subType": "03"
+    }
+  },
+  "parentName": "ff",
+  "createdById": {
+    "$binary": {
+      "base64": "iGbTCYoUDB/Z03X8dKmmvA==",
+      "subType": "03"
+    }
+  },
+  "createdByName": "anand",
+  "createdTimeStamp": {
+    "$date": "2025-11-14T11:08:47.305Z"
+  },
+  "updatedTimeStamp": {
+    "$date": "2025-11-14T11:08:47.305Z"
+  },
+  "assignedTo": {
+    "$binary": {
+      "base64": "iGbTCYoUDB/Z03X8dKmmvA==",
+      "subType": "03"
+    }
+  },
+  "assignToMailId": "",
+  "assignedName": "anand",
+  "businessId": {
+    "$binary": {
+      "base64": "822YDYoUDB/DXKSIwz0clQ==",
+      "subType": "03"
+    }
+  },
+  "_class": "com.lm.crm.leads.tasks.Task"
+},
+{
+  "_id": {
+    "$binary": {
+      "base64": "E2lx9yHHCx/Y64vpDO/qiA==",
+      "subType": "03"
+    }
+  },
+  "name": "meeting",
+  "priority": "HIGH",
+  "dueDate": {
+    "$date": "2025-11-09T00:00:00.000Z"
+  },
+  "taskStatus": "NEW",
+  "reminderDays": 0,
+  "notify": "EMAIL",
+  "description": "meeting",
+  "parentId": {
+    "$binary": {
+      "base64": "JmzqC9u5Cx90/hQOpQ3qiA==",
+      "subType": "03"
+    }
+  },
+  "parentName": "Akhil",
+  "createdById": {
+    "$binary": {
+      "base64": "/GBDVN7OBx9stSD9Axk5uQ==",
+      "subType": "03"
+    }
+  },
+  "createdByName": "Harshita",
+  "createdTimeStamp": {
+    "$date": "2025-11-08T07:11:18.867Z"
+  },
+  "updatedTimeStamp": {
+    "$date": "2025-11-08T07:11:18.867Z"
+  },
+  "assignedTo": {
+    "$binary": {
+      "base64": "/GBDVN7OBx9stSD9Axk5uQ==",
+      "subType": "03"
+    }
+  },
+  "assignToMailId": "",
+  "assignedName": "Harshita",
+  "businessId": {
+    "$binary": {
+      "base64": "img60ibL7R4pstoZnVdjvQ==",
+      "subType": "03"
+    }
+  },
+  "_class": "com.lm.crm.leads.tasks.Task"
+},
+{
+  "_id": {
+    "$binary": {
+      "base64": "BWGPKcevCR/xGidCK7laow==",
+      "subType": "03"
+    }
+  },
+  "name": "Won",
+  "priority": "HIGH",
+  "dueDate": {
+    "$date": "2026-09-15T00:00:00.000Z"
+  },
+  "taskStatus": "NEW",
+  "reminderDays": 0,
+  "notify": "EMAIL",
+  "description": "Deal closed .",
+  "parentId": {
+    "$binary": {
+      "base64": "4GT2uqdWCB9pb54WDS9Xlw==",
+      "subType": "03"
+    }
+  },
+  "parentName": "Sudeep R",
+  "createdById": {
+    "$binary": {
+      "base64": "ZGUzDqlTAx8R6NKwxjfelQ==",
+      "subType": "03"
+    }
+  },
+  "createdByName": "Jyotsna",
+  "createdTimeStamp": {
+    "$date": "2025-09-26T17:15:49.354Z"
+  },
+  "updatedTimeStamp": {
+    "$date": "2025-09-26T17:15:49.354Z"
+  },
+  "assignedTo": {
+    "$binary": {
+      "base64": "ZGUzDqlTAx8R6NKwxjfelQ==",
+      "subType": "03"
+    }
+  },
+  "assignToMailId": "",
+  "assignedName": "Jyotsna",
+  "businessId": {
+    "$binary": {
+      "base64": "3mYN2LSV9R7dRHbkqBP2nQ==",
+      "subType": "03"
+    }
+  },
+  "_class": "com.lm.crm.leads.tasks.Task"
+},
+{
+  "_id": {
+    "$binary": {
+      "base64": "5WyL9OqqCR+n+SJt0Rtaow==",
+      "subType": "03"
+    }
+  },
+  "name": "Bank details to change",
+  "priority": "HIGH",
+  "dueDate": {
+    "$date": "2025-09-30T00:00:00.000Z"
+  },
+  "taskStatus": "NEW",
+  "reminderDate": {
+    "$date": "2025-09-30T04:30:00.000Z"
+  },
+  "reminderDays": 0,
+  "notify": "EMAIL",
+  "description": "Change bank details from 1st october",
+  "parentId": {
+    "$binary": {
+      "base64": "vGrffk39Bx99Dh4Dh6kykg==",
+      "subType": "03"
+    }
+  },
+  "parentName": "Jigar Lilavati Jewellers",
+  "createdById": {
+    "$binary": {
+      "base64": "RmNErF+p+R6wVP6hBKm6og==",
+      "subType": "03"
+    }
+  },
+  "createdByName": "Gauri Gupte",
+  "createdTimeStamp": {
+    "$date": "2025-09-26T07:59:10.425Z"
+  },
+  "updatedTimeStamp": {
+    "$date": "2025-09-26T07:59:10.425Z"
+  },
+  "assignedTo": {
+    "$binary": {
+      "base64": "RmNErF+p+R6wVP6hBKm6og==",
+      "subType": "03"
+    }
+  },
+  "assignToMailId": "gauri@passbookapp.in",
+  "assignedName": "Gauri Gupte",
+  "businessId": {
+    "$binary": {
+      "base64": "AW83DttE+R7pVJ/RTSE6lA==",
+      "subType": "03"
+    }
+  },
+  "_class": "com.lm.crm.leads.tasks.Task"
+},
+{
+  "_id": {
+    "$binary": {
+      "base64": "8G5iX/WSCR/g4YAxb4taow==",
+      "subType": "03"
+    }
+  },
+  "name": "Plan Onboarding",
+  "priority": "HIGH",
+  "dueDate": {
+    "$date": "2025-09-25T00:00:00.000Z"
+  },
+  "taskStatus": "NEW",
+  "reminderDate": {
+    "$date": "2025-09-25T04:30:00.000Z"
+  },
+  "reminderDays": 0,
+  "notify": "EMAIL",
+  "description": "Need to create a tempalte with avaliable Plans (GPP,Bul;k,Fixed) and Send tempalte of terms and conditions",
+  "parentId": {
+    "$binary": {
+      "base64": "r2mac/GSCR/OJmE79TVaow==",
+      "subType": "03"
+    }
+  },
+  "parentName": "Radha Ghantasala",
+  "createdById": {
+    "$binary": {
+      "base64": "Z2CxLKV+/R6QJF+LzoH9oQ==",
+      "subType": "03"
+    }
+  },
+  "createdByName": "Rithik",
+  "createdTimeStamp": {
+    "$date": "2025-09-24T10:15:03.319Z"
+  },
+  "updatedTimeStamp": {
+    "$date": "2025-09-24T10:15:03.319Z"
+  },
+  "assignedTo": {
+    "$binary": {
+      "base64": "Z2CxLKV+/R6QJF+LzoH9oQ==",
+      "subType": "03"
+    }
+  },
+  "assignToMailId": "gauri@passbookapp.in",
+  "assignedName": "Rithik",
+  "businessId": {
+    "$binary": {
+      "base64": "AW83DttE+R7pVJ/RTSE6lA==",
+      "subType": "03"
+    }
+  },
+  "_class": "com.lm.crm.leads.tasks.Task"
+},
+{
+  "_id": {
+    "$binary": {
+      "base64": "NGeCX2x5CR+lnYCHke1aow==",
+      "subType": "03"
+    }
+  },
+  "name": "Reports should also be plan wise",
+  "priority": "HIGH",
+  "dueDate": {
+    "$date": "2025-09-23T00:00:00.000Z"
+  },
+  "taskStatus": "NEW",
+  "reminderDate": {
+    "$date": "2025-09-23T04:30:00.000Z"
+  },
+  "reminderDays": 0,
+  "notify": "EMAIL",
+  "description": "Now reports shuld also be in plan wise format",
+  "parentId": {
+    "$binary": {
+      "base64": "hm+LrevoBh9YGiKMdaEzvA==",
+      "subType": "03"
+    }
+  },
+  "parentName": "Vijay Joshi Lagu Bandhu",
+  "createdById": {
+    "$binary": {
+      "base64": "RmNErF+p+R6wVP6hBKm6og==",
+      "subType": "03"
+    }
+  },
+  "createdByName": "Gauri Gupte",
+  "createdTimeStamp": {
+    "$date": "2025-09-22T09:30:27.074Z"
+  },
+  "updatedTimeStamp": {
+    "$date": "2025-09-22T09:30:27.074Z"
+  },
+  "assignedTo": {
+    "$binary": {
+      "base64": "RmNErF+p+R6wVP6hBKm6og==",
+      "subType": "03"
+    }
+  },
+  "assignToMailId": "santhosh@tejsoft.com",
+  "assignedName": "Gauri Gupte",
+  "businessId": {
+    "$binary": {
+      "base64": "AW83DttE+R7pVJ/RTSE6lA==",
+      "subType": "03"
+    }
+  },
+  "_class": "com.lm.crm.leads.tasks.Task"
+},
+{
+  "_id": {
+    "$binary": {
+      "base64": "m2D04cdiCR9TkZnPShFaow==",
+      "subType": "03"
+    }
+  },
+  "name": "Customer ID",
+  "priority": "HIGH",
+  "dueDate": {
+    "$date": "2025-09-22T00:00:00.000Z"
+  },
+  "taskStatus": "NEW",
+  "reminderDate": {
+    "$date": "2025-09-21T18:30:00.000Z"
+  },
+  "reminderDays": 0,
+  "notify": "EMAIL",
+  "description": "In transactions tab, instead of transaction id, they want Adv customer ID to be shown",
+  "parentId": {
+    "$binary": {
+      "base64": "oGTlbgxiCR84uzc7QENaow==",
+      "subType": "03"
+    }
+  },
+  "parentName": "Ms. Khusbhoo - Vardan Gems & Jewels Private limited",
+  "createdById": {
+    "$binary": {
+      "base64": "RmNErF+p+R6wVP6hBKm6og==",
+      "subType": "03"
+    }
+  },
+  "createdByName": "Gauri Gupte",
+  "createdTimeStamp": {
+    "$date": "2025-09-20T14:17:08.719Z"
+  },
+  "updatedTimeStamp": {
+    "$date": "2025-09-20T14:17:08.719Z"
+  },
+  "assignedTo": {
+    "$binary": {
+      "base64": "RmNErF+p+R6wVP6hBKm6og==",
+      "subType": "03"
+    }
+  },
+  "assignToMailId": "santhosh@tejsoft.com",
+  "assignedName": "Gauri Gupte",
+  "businessId": {
+    "$binary": {
+      "base64": "AW83DttE+R7pVJ/RTSE6lA==",
+      "subType": "03"
+    }
+  },
+  "_class": "com.lm.crm.leads.tasks.Task"
+},
+{
+  "_id": {
+    "$binary": {
+      "base64": "VWBh5RBiCR+/CNi6Kqlaow==",
+      "subType": "03"
+    }
+  },
+  "name": "To change customer id",
+  "priority": "HIGH",
+  "dueDate": {
+    "$date": "2025-09-22T00:00:00.000Z"
+  },
+  "taskStatus": "NOT_STARTED",
+  "reminderDate": {
+    "$date": "2025-09-21T18:30:00.000Z"
+  },
+  "reminderDays": 0,
+  "notify": "EMAIL",
+  "description": "plz change this marked ID with AK196MB from AK197MB",
+  "parentId": {
+    "$binary": {
+      "base64": "oGTlbgxiCR84uzc7QENaow==",
+      "subType": "03"
+    }
+  },
+  "parentName": "Ms. Khusbhoo - Vardan Gems & Jewels Private limited",
+  "createdById": {
+    "$binary": {
+      "base64": "RmNErF+p+R6wVP6hBKm6og==",
+      "subType": "03"
+    }
+  },
+  "createdByName": "Gauri Gupte",
+  "createdTimeStamp": {
+    "$date": "2025-09-20T12:55:16.709Z"
+  },
+  "updatedTimeStamp": {
+    "$date": "2025-09-20T12:55:16.709Z"
+  },
+  "assignedTo": {
+    "$binary": {
+      "base64": "RmNErF+p+R6wVP6hBKm6og==",
+      "subType": "03"
+    }
+  },
+  "assignToMailId": "santhosh@tejsoft.com",
+  "assignedName": "Gauri Gupte",
+  "businessId": {
+    "$binary": {
+      "base64": "AW83DttE+R7pVJ/RTSE6lA==",
+      "subType": "03"
+    }
+  },
+  "_class": "com.lm.crm.leads.tasks.Task"
+},
+{
+  "_id": {
+    "$binary": {
+      "base64": "Um5zO7JWCR8r6zZorCtaow==",
+      "subType": "03"
+    }
+  },
+  "name": "Not Invested report",
+  "priority": "HIGH",
+  "dueDate": {
+    "$date": "2025-09-19T00:00:00.000Z"
+  },
+  "taskStatus": "COMPLETED",
+  "reminderDate": {
+    "$date": "2025-09-19T15:30:00.000Z"
+  },
+  "reminderDays": 0,
+  "notify": "EMAIL",
+  "description": "Not Invested report required, given them in excel format",
+  "parentId": {
+    "$binary": {
+      "base64": "JGZ8nMzA/B77AI6O3n+lng==",
+      "subType": "03"
+    }
+  },
+  "parentName": "Mr. Kamlesh New National Jewellers",
+  "createdById": {
+    "$binary": {
+      "base64": "RmNErF+p+R6wVP6hBKm6og==",
+      "subType": "03"
+    }
+  },
+  "createdByName": "Gauri Gupte",
+  "createdTimeStamp": {
+    "$date": "2025-09-19T15:13:04.173Z"
+  },
+  "updatedTimeStamp": {
+    "$date": "2025-09-19T15:13:04.173Z"
+  },
+  "assignedTo": {
+    "$binary": {
+      "base64": "RmNErF+p+R6wVP6hBKm6og==",
+      "subType": "03"
+    }
+  },
+  "assignToMailId": "gauri@passbookapp.in",
+  "assignedName": "Gauri Gupte",
+  "businessId": {
+    "$binary": {
+      "base64": "AW83DttE+R7pVJ/RTSE6lA==",
+      "subType": "03"
+    }
+  },
+  "_class": "com.lm.crm.leads.tasks.Task"
+},
+{
+  "_id": {
+    "$binary": {
+      "base64": "ImAWPq5WCR88bJVHiOdaow==",
+      "subType": "03"
+    }
+  },
+  "name": "Add GPP for all the branches",
+  "priority": "HIGH",
+  "dueDate": {
+    "$date": "2025-09-20T00:00:00.000Z"
+  },
+  "taskStatus": "NOT_STARTED",
+  "reminderDate": {
+    "$date": "2025-09-20T04:30:00.000Z"
+  },
+  "reminderDays": 0,
+  "notify": "EMAIL",
+  "description": "Add GPP and their T&C given",
+  "parentId": {
+    "$binary": {
+      "base64": "hm+LrevoBh9YGiKMdaEzvA==",
+      "subType": "03"
+    }
+  },
+  "parentName": "Vijay Joshi Lagu Bandhu",
+  "createdById": {
+    "$binary": {
+      "base64": "RmNErF+p+R6wVP6hBKm6og==",
+      "subType": "03"
+    }
+  },
+  "createdByName": "Gauri Gupte",
+  "createdTimeStamp": {
+    "$date": "2025-09-19T15:11:17.075Z"
+  },
+  "updatedTimeStamp": {
+    "$date": "2025-09-19T15:11:17.075Z"
+  },
+  "assignedTo": {
+    "$binary": {
+      "base64": "RmNErF+p+R6wVP6hBKm6og==",
+      "subType": "03"
+    }
+  },
+  "assignToMailId": "gauri@passbookapp.in",
+  "assignedName": "Gauri Gupte",
+  "businessId": {
+    "$binary": {
+      "base64": "AW83DttE+R7pVJ/RTSE6lA==",
+      "subType": "03"
+    }
+  },
+  "_class": "com.lm.crm.leads.tasks.Task"
+}]

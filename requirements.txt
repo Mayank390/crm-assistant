@@ -1,0 +1,44 @@
+# Web framework
+fastapi==0.110.0
+uvicorn[standard]==0.29.0
+websockets
+
+# LangChain and LLM dependencies
+langchain-core
+langchain-groq
+langchain-community
+langgraph
+
+# MongoDB dependencies
+motor  # Async MongoDB driver
+pymongo  # MongoDB Python driver
+
+# Redis for conversation memory cache
+redis[hiredis]
+cachetools
+
+# Qdrant vector database
+qdrant-client>=1.9.1
+
+# Embeddings and transformers
+sentence-transformers
+huggingface-hub>=0.36.0
+transformers==4.57.1
+sentencepiece
+safetensors==0.4.5
+numpy==1.26.4
+
+# HTTP client
+httpx
+
+# Environment and configuration
+python-dotenv
+pydantic
+typing-extensions
+
+# Utilities
+python-dateutil
+
+# Note: embedding.service_client appears to be a custom module
+# Make sure it's available in your Python path or install it separately
+

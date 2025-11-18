@@ -1,0 +1,558 @@
+[{
+  "_id": {
+    "$binary": {
+      "base64": "O2UWrKQUDB9WyI9dr8Xukg==",
+      "subType": "03"
+    }
+  },
+  "leadId": {
+    "$binary": {
+      "base64": "626v6qIUDB9YEOuTpPXukg==",
+      "subType": "03"
+    }
+  },
+  "parentId": {
+    "$binary": {
+      "base64": "uWTKqqQUDB+s/RbYIe/ukg==",
+      "subType": "03"
+    }
+  },
+  "type": "TASKS",
+  "data": {
+    "_id": {
+      "$binary": {
+        "base64": "uWTKqqQUDB+s/RbYIe/ukg==",
+        "subType": "03"
+      }
+    },
+    "name": "hfhfh",
+    "description": "hy",
+    "priority": "HIGH",
+    "taskStatus": "NEW",
+    "dueDate": {
+      "$date": "2025-11-13T18:30:00.000Z"
+    },
+    "createdById": {
+      "$binary": {
+        "base64": "iGbTCYoUDB/Z03X8dKmmvA==",
+        "subType": "03"
+      }
+    },
+    "createdByName": "anand",
+    "createdTimeStamp": {
+      "$date": "2025-11-14T11:08:47.305Z"
+    },
+    "_class": "com.lm.crm.leads.tasks.ActivityTask"
+  },
+  "createdTimeStamp": {
+    "$date": "2025-11-14T11:08:47.305Z"
+  },
+  "activityStatus": "OPEN",
+  "_class": "com.lm.crm.leads.activity.Activity"
+},
+{
+  "_id": {
+    "$binary": {
+      "base64": "hW339yHHCx+GwvUe6Y/qiA==",
+      "subType": "03"
+    }
+  },
+  "leadId": {
+    "$binary": {
+      "base64": "JmzqC9u5Cx90/hQOpQ3qiA==",
+      "subType": "03"
+    }
+  },
+  "parentId": {
+    "$binary": {
+      "base64": "E2lx9yHHCx/Y64vpDO/qiA==",
+      "subType": "03"
+    }
+  },
+  "type": "TASKS",
+  "data": {
+    "_id": {
+      "$binary": {
+        "base64": "E2lx9yHHCx/Y64vpDO/qiA==",
+        "subType": "03"
+      }
+    },
+    "name": "meeting",
+    "description": "meeting",
+    "priority": "HIGH",
+    "taskStatus": "NEW",
+    "dueDate": {
+      "$date": "2025-11-08T18:30:00.000Z"
+    },
+    "createdById": {
+      "$binary": {
+        "base64": "/GBDVN7OBx9stSD9Axk5uQ==",
+        "subType": "03"
+      }
+    },
+    "createdByName": "Harshita",
+    "createdTimeStamp": {
+      "$date": "2025-11-08T07:11:18.867Z"
+    },
+    "_class": "com.lm.crm.leads.tasks.ActivityTask"
+  },
+  "createdTimeStamp": {
+    "$date": "2025-11-08T07:11:18.867Z"
+  },
+  "activityStatus": "OPEN",
+  "_class": "com.lm.crm.leads.activity.Activity"
+},
+{
+  "_id": {
+    "$binary": {
+      "base64": "52YmKsevCR9OlT+PLtNaow==",
+      "subType": "03"
+    }
+  },
+  "leadId": {
+    "$binary": {
+      "base64": "4GT2uqdWCB9pb54WDS9Xlw==",
+      "subType": "03"
+    }
+  },
+  "parentId": {
+    "$binary": {
+      "base64": "BWGPKcevCR/xGidCK7laow==",
+      "subType": "03"
+    }
+  },
+  "type": "TASKS",
+  "data": {
+    "_id": {
+      "$binary": {
+        "base64": "BWGPKcevCR/xGidCK7laow==",
+        "subType": "03"
+      }
+    },
+    "name": "Won",
+    "description": "Deal closed .",
+    "priority": "HIGH",
+    "taskStatus": "NEW",
+    "dueDate": {
+      "$date": "2026-09-14T18:30:00.000Z"
+    },
+    "createdById": {
+      "$binary": {
+        "base64": "ZGUzDqlTAx8R6NKwxjfelQ==",
+        "subType": "03"
+      }
+    },
+    "createdByName": "Jyotsna",
+    "createdTimeStamp": {
+      "$date": "2025-09-26T17:15:49.354Z"
+    },
+    "_class": "com.lm.crm.leads.tasks.ActivityTask"
+  },
+  "createdTimeStamp": {
+    "$date": "2025-09-26T17:15:49.354Z"
+  },
+  "activityStatus": "OPEN",
+  "_class": "com.lm.crm.leads.activity.Activity"
+},
+{
+  "_id": {
+    "$binary": {
+      "base64": "12kl9eqqCR8qbQoIAwNaow==",
+      "subType": "03"
+    }
+  },
+  "leadId": {
+    "$binary": {
+      "base64": "vGrffk39Bx99Dh4Dh6kykg==",
+      "subType": "03"
+    }
+  },
+  "parentId": {
+    "$binary": {
+      "base64": "5WyL9OqqCR+n+SJt0Rtaow==",
+      "subType": "03"
+    }
+  },
+  "type": "TASKS",
+  "data": {
+    "_id": {
+      "$binary": {
+        "base64": "5WyL9OqqCR+n+SJt0Rtaow==",
+        "subType": "03"
+      }
+    },
+    "name": "Bank details to change",
+    "description": "Change bank details from 1st october",
+    "priority": "HIGH",
+    "taskStatus": "NEW",
+    "dueDate": {
+      "$date": "2025-09-29T18:30:00.000Z"
+    },
+    "createdById": {
+      "$binary": {
+        "base64": "RmNErF+p+R6wVP6hBKm6og==",
+        "subType": "03"
+      }
+    },
+    "createdByName": "Gauri Gupte",
+    "createdTimeStamp": {
+      "$date": "2025-09-26T07:59:10.425Z"
+    },
+    "reminderDate": {
+      "$date": "2025-09-30T04:30:00.000Z"
+    },
+    "_class": "com.lm.crm.leads.tasks.ActivityTask"
+  },
+  "createdTimeStamp": {
+    "$date": "2025-09-26T07:59:10.425Z"
+  },
+  "activityStatus": "OPEN",
+  "reminderDate": {
+    "$date": "2025-09-30T04:30:00.000Z"
+  },
+  "_class": "com.lm.crm.leads.activity.Activity"
+},
+{
+  "_id": {
+    "$binary": {
+      "base64": "1m5R0PeSCR/iuhQNwnFaow==",
+      "subType": "03"
+    }
+  },
+  "leadId": {
+    "$binary": {
+      "base64": "r2mac/GSCR/OJmE79TVaow==",
+      "subType": "03"
+    }
+  },
+  "parentId": {
+    "$binary": {
+      "base64": "o2Ngz/eSCR/g0xAfssdaow==",
+      "subType": "03"
+    }
+  },
+  "type": "CALLS",
+  "data": {
+    "callId": {
+      "$binary": {
+        "base64": "o2Ngz/eSCR/g0xAfssdaow==",
+        "subType": "03"
+      }
+    },
+    "title": "Return call from Radha ji",
+    "startDateTime": {
+      "$date": "2025-09-23T00:00:00.000Z"
+    },
+    "remainder": 0,
+    "call_variant": "LOG",
+    "callStatus": "ANSWERED",
+    "callType": "IN_BOUND",
+    "callPurpose": "ADMINISTRATIVE",
+    "createdById": {
+      "$binary": {
+        "base64": "Z2CxLKV+/R6QJF+LzoH9oQ==",
+        "subType": "03"
+      }
+    },
+    "createdByName": "Rithik",
+    "createdTimeStamp": {
+      "$date": "2025-09-24T10:15:12.360Z"
+    },
+    "_class": "com.lm.crm.leads.calls.ActivityCallLog"
+  },
+  "createdTimeStamp": {
+    "$date": "2025-09-24T10:15:12.360Z"
+  },
+  "activityStatus": "OPEN",
+  "_class": "com.lm.crm.leads.activity.Activity"
+},
+{
+  "_id": {
+    "$binary": {
+      "base64": "YmPpX/WSCR8uvdWXCpVaow==",
+      "subType": "03"
+    }
+  },
+  "leadId": {
+    "$binary": {
+      "base64": "r2mac/GSCR/OJmE79TVaow==",
+      "subType": "03"
+    }
+  },
+  "parentId": {
+    "$binary": {
+      "base64": "8G5iX/WSCR/g4YAxb4taow==",
+      "subType": "03"
+    }
+  },
+  "type": "TASKS",
+  "data": {
+    "_id": {
+      "$binary": {
+        "base64": "8G5iX/WSCR/g4YAxb4taow==",
+        "subType": "03"
+      }
+    },
+    "name": "Plan Onboarding",
+    "description": "Need to create a tempalte with avaliable Plans (GPP,Bul;k,Fixed) and Send tempalte of terms and conditions",
+    "priority": "HIGH",
+    "taskStatus": "NEW",
+    "dueDate": {
+      "$date": "2025-09-24T18:30:00.000Z"
+    },
+    "createdById": {
+      "$binary": {
+        "base64": "Z2CxLKV+/R6QJF+LzoH9oQ==",
+        "subType": "03"
+      }
+    },
+    "createdByName": "Rithik",
+    "createdTimeStamp": {
+      "$date": "2025-09-24T10:15:03.319Z"
+    },
+    "reminderDate": {
+      "$date": "2025-09-25T04:30:00.000Z"
+    },
+    "_class": "com.lm.crm.leads.tasks.ActivityTask"
+  },
+  "createdTimeStamp": {
+    "$date": "2025-09-24T10:15:03.319Z"
+  },
+  "activityStatus": "OPEN",
+  "reminderDate": {
+    "$date": "2025-09-25T04:30:00.000Z"
+  },
+  "_class": "com.lm.crm.leads.activity.Activity"
+},
+{
+  "_id": {
+    "$binary": {
+      "base64": "a2ObYGx5CR8s6BKlFw1aow==",
+      "subType": "03"
+    }
+  },
+  "leadId": {
+    "$binary": {
+      "base64": "hm+LrevoBh9YGiKMdaEzvA==",
+      "subType": "03"
+    }
+  },
+  "parentId": {
+    "$binary": {
+      "base64": "NGeCX2x5CR+lnYCHke1aow==",
+      "subType": "03"
+    }
+  },
+  "type": "TASKS",
+  "data": {
+    "_id": {
+      "$binary": {
+        "base64": "NGeCX2x5CR+lnYCHke1aow==",
+        "subType": "03"
+      }
+    },
+    "name": "Reports should also be plan wise",
+    "description": "Now reports shuld also be in plan wise format",
+    "priority": "HIGH",
+    "taskStatus": "NEW",
+    "dueDate": {
+      "$date": "2025-09-22T18:30:00.000Z"
+    },
+    "createdById": {
+      "$binary": {
+        "base64": "RmNErF+p+R6wVP6hBKm6og==",
+        "subType": "03"
+      }
+    },
+    "createdByName": "Gauri Gupte",
+    "createdTimeStamp": {
+      "$date": "2025-09-22T09:30:27.074Z"
+    },
+    "reminderDate": {
+      "$date": "2025-09-23T04:30:00.000Z"
+    },
+    "_class": "com.lm.crm.leads.tasks.ActivityTask"
+  },
+  "createdTimeStamp": {
+    "$date": "2025-09-22T09:30:27.074Z"
+  },
+  "activityStatus": "OPEN",
+  "reminderDate": {
+    "$date": "2025-09-23T04:30:00.000Z"
+  },
+  "_class": "com.lm.crm.leads.activity.Activity"
+},
+{
+  "_id": {
+    "$binary": {
+      "base64": "3mCa4sdiCR9YOuvXzKdaow==",
+      "subType": "03"
+    }
+  },
+  "leadId": {
+    "$binary": {
+      "base64": "oGTlbgxiCR84uzc7QENaow==",
+      "subType": "03"
+    }
+  },
+  "parentId": {
+    "$binary": {
+      "base64": "m2D04cdiCR9TkZnPShFaow==",
+      "subType": "03"
+    }
+  },
+  "type": "TASKS",
+  "data": {
+    "_id": {
+      "$binary": {
+        "base64": "m2D04cdiCR9TkZnPShFaow==",
+        "subType": "03"
+      }
+    },
+    "name": "Customer ID",
+    "description": "In transactions tab, instead of transaction id, they want Adv customer ID to be shown",
+    "priority": "HIGH",
+    "taskStatus": "NEW",
+    "dueDate": {
+      "$date": "2025-09-21T18:30:00.000Z"
+    },
+    "createdById": {
+      "$binary": {
+        "base64": "RmNErF+p+R6wVP6hBKm6og==",
+        "subType": "03"
+      }
+    },
+    "createdByName": "Gauri Gupte",
+    "createdTimeStamp": {
+      "$date": "2025-09-20T14:17:08.719Z"
+    },
+    "reminderDate": {
+      "$date": "2025-09-21T18:30:00.000Z"
+    },
+    "_class": "com.lm.crm.leads.tasks.ActivityTask"
+  },
+  "createdTimeStamp": {
+    "$date": "2025-09-20T14:17:08.719Z"
+  },
+  "activityStatus": "OPEN",
+  "reminderDate": {
+    "$date": "2025-09-21T18:30:00.000Z"
+  },
+  "_class": "com.lm.crm.leads.activity.Activity"
+},
+{
+  "_id": {
+    "$binary": {
+      "base64": "12vp5RBiCR9uUUIdlCVaow==",
+      "subType": "03"
+    }
+  },
+  "leadId": {
+    "$binary": {
+      "base64": "oGTlbgxiCR84uzc7QENaow==",
+      "subType": "03"
+    }
+  },
+  "parentId": {
+    "$binary": {
+      "base64": "VWBh5RBiCR+/CNi6Kqlaow==",
+      "subType": "03"
+    }
+  },
+  "type": "TASKS",
+  "data": {
+    "_id": {
+      "$binary": {
+        "base64": "VWBh5RBiCR+/CNi6Kqlaow==",
+        "subType": "03"
+      }
+    },
+    "name": "To change customer id",
+    "description": "plz change this marked ID with AK196MB from AK197MB",
+    "priority": "HIGH",
+    "taskStatus": "NOT_STARTED",
+    "dueDate": {
+      "$date": "2025-09-21T18:30:00.000Z"
+    },
+    "createdById": {
+      "$binary": {
+        "base64": "RmNErF+p+R6wVP6hBKm6og==",
+        "subType": "03"
+      }
+    },
+    "createdByName": "Gauri Gupte",
+    "createdTimeStamp": {
+      "$date": "2025-09-20T12:55:16.709Z"
+    },
+    "reminderDate": {
+      "$date": "2025-09-21T18:30:00.000Z"
+    },
+    "_class": "com.lm.crm.leads.tasks.ActivityTask"
+  },
+  "createdTimeStamp": {
+    "$date": "2025-09-20T12:55:16.709Z"
+  },
+  "activityStatus": "OPEN",
+  "reminderDate": {
+    "$date": "2025-09-21T18:30:00.000Z"
+  },
+  "_class": "com.lm.crm.leads.activity.Activity"
+},
+{
+  "_id": {
+    "$binary": {
+      "base64": "lGBoPLJWCR/72Yf1VqVaow==",
+      "subType": "03"
+    }
+  },
+  "leadId": {
+    "$binary": {
+      "base64": "JGZ8nMzA/B77AI6O3n+lng==",
+      "subType": "03"
+    }
+  },
+  "parentId": {
+    "$binary": {
+      "base64": "Um5zO7JWCR8r6zZorCtaow==",
+      "subType": "03"
+    }
+  },
+  "type": "TASKS",
+  "data": {
+    "_id": {
+      "$binary": {
+        "base64": "Um5zO7JWCR8r6zZorCtaow==",
+        "subType": "03"
+      }
+    },
+    "name": "Not Invested report",
+    "description": "Not Invested report required, given them in excel format",
+    "priority": "HIGH",
+    "taskStatus": "COMPLETED",
+    "dueDate": {
+      "$date": "2025-09-18T18:30:00.000Z"
+    },
+    "createdById": {
+      "$binary": {
+        "base64": "RmNErF+p+R6wVP6hBKm6og==",
+        "subType": "03"
+      }
+    },
+    "createdByName": "Gauri Gupte",
+    "createdTimeStamp": {
+      "$date": "2025-09-19T15:13:04.173Z"
+    },
+    "reminderDate": {
+      "$date": "2025-09-19T15:30:00.000Z"
+    },
+    "_class": "com.lm.crm.leads.tasks.ActivityTask"
+  },
+  "createdTimeStamp": {
+    "$date": "2025-09-19T15:13:04.173Z"
+  },
+  "activityStatus": "CLOSE",
+  "reminderDate": {
+    "$date": "2025-09-19T15:30:00.000Z"
+  },
+  "_class": "com.lm.crm.leads.activity.Activity"
+}]

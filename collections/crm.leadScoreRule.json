@@ -1,0 +1,330 @@
+[{
+  "_id": {
+    "$binary": {
+      "base64": "Z2N2PlgjDB+SqnFuwZsnpQ==",
+      "subType": "03"
+    }
+  },
+  "business": {
+    "_id": {
+      "$binary": {
+        "base64": "wWI7LFgjDB/vxc/M2YEQog==",
+        "subType": "03"
+      }
+    },
+    "name": "Test Prod"
+  },
+  "name": "Mobile and Email Invalid",
+  "description": "Lead's mobile number and email address are invalid.",
+  "score": 20,
+  "change": "NEGATIVE",
+  "aiAdjusted": false,
+  "createdAt": {
+    "$date": "2025-11-15T15:12:35.052Z"
+  },
+  "updatedAt": {
+    "$date": "2025-11-15T15:12:35.052Z"
+  },
+  "isActive": true,
+  "field": "contactVerified",
+  "operator": "EQUALS",
+  "value": false,
+  "_class": "com.lm.crm.leadscore.model.LeadScoreRule"
+},
+{
+  "_id": {
+    "$binary": {
+      "base64": "FGBqPlgjDB98G3NMUn8npQ==",
+      "subType": "03"
+    }
+  },
+  "business": {
+    "_id": {
+      "$binary": {
+        "base64": "wWI7LFgjDB/vxc/M2YEQog==",
+        "subType": "03"
+      }
+    },
+    "name": "Test Prod"
+  },
+  "name": "Meeting Scheduled",
+  "description": "A meeting has been scheduled with the lead.",
+  "score": 15,
+  "change": "POSITIVE",
+  "aiAdjusted": false,
+  "createdAt": {
+    "$date": "2025-11-15T15:12:35.047Z"
+  },
+  "updatedAt": {
+    "$date": "2025-11-15T15:12:35.047Z"
+  },
+  "isActive": true,
+  "field": "meetingScheduled",
+  "operator": "EQUALS",
+  "value": true,
+  "_class": "com.lm.crm.leadscore.model.LeadScoreRule"
+},
+{
+  "_id": {
+    "$binary": {
+      "base64": "0mNgPlgjDB8EKIYok50npQ==",
+      "subType": "03"
+    }
+  },
+  "business": {
+    "_id": {
+      "$binary": {
+        "base64": "wWI7LFgjDB/vxc/M2YEQog==",
+        "subType": "03"
+      }
+    },
+    "name": "Test Prod"
+  },
+  "name": "Calls Picked",
+  "description": "Lead has picked up calls.",
+  "score": 15,
+  "change": "POSITIVE",
+  "aiAdjusted": false,
+  "createdAt": {
+    "$date": "2025-11-15T15:12:35.043Z"
+  },
+  "updatedAt": {
+    "$date": "2025-11-15T15:12:35.043Z"
+  },
+  "isActive": true,
+  "field": "callsPicked",
+  "operator": "GREATER_THAN",
+  "value": 1,
+  "_class": "com.lm.crm.leadscore.model.LeadScoreRule"
+},
+{
+  "_id": {
+    "$binary": {
+      "base64": "YWJPPlgjDB+FGDv3q3MnpQ==",
+      "subType": "03"
+    }
+  },
+  "business": {
+    "_id": {
+      "$binary": {
+        "base64": "wWI7LFgjDB/vxc/M2YEQog==",
+        "subType": "03"
+      }
+    },
+    "name": "Test Prod"
+  },
+  "name": "Mobile and Email Verified",
+  "description": "Lead's mobile number and email address have been verified.",
+  "score": 20,
+  "change": "POSITIVE",
+  "aiAdjusted": false,
+  "createdAt": {
+    "$date": "2025-11-15T15:12:35.036Z"
+  },
+  "updatedAt": {
+    "$date": "2025-11-15T15:12:35.036Z"
+  },
+  "isActive": true,
+  "field": "contactVerified",
+  "operator": "EQUALS",
+  "value": true,
+  "_class": "com.lm.crm.leadscore.model.LeadScoreRule"
+},
+{
+  "_id": {
+    "$binary": {
+      "base64": "i2L/mBsjDB9Wa+nAoAEnpQ==",
+      "subType": "03"
+    }
+  },
+  "business": {
+    "_id": {
+      "$binary": {
+        "base64": "b2XRiRsjDB9ovOsf0C0Qog==",
+        "subType": "03"
+      }
+    },
+    "name": "testing"
+  },
+  "name": "Mobile and Email Invalid",
+  "description": "Lead's mobile number and email address are invalid.",
+  "score": 20,
+  "change": "NEGATIVE",
+  "aiAdjusted": false,
+  "createdAt": {
+    "$date": "2025-11-15T14:45:27.089Z"
+  },
+  "updatedAt": {
+    "$date": "2025-11-15T14:45:27.089Z"
+  },
+  "isActive": true,
+  "field": "contactVerified",
+  "operator": "EQUALS",
+  "value": false,
+  "_class": "com.lm.crm.leadscore.model.LeadScoreRule"
+},
+{
+  "_id": {
+    "$binary": {
+      "base64": "OG/ymBsjDB9Aw9rDkB0npQ==",
+      "subType": "03"
+    }
+  },
+  "business": {
+    "_id": {
+      "$binary": {
+        "base64": "b2XRiRsjDB9ovOsf0C0Qog==",
+        "subType": "03"
+      }
+    },
+    "name": "testing"
+  },
+  "name": "Meeting Scheduled",
+  "description": "A meeting has been scheduled with the lead.",
+  "score": 15,
+  "change": "POSITIVE",
+  "aiAdjusted": false,
+  "createdAt": {
+    "$date": "2025-11-15T14:45:27.084Z"
+  },
+  "updatedAt": {
+    "$date": "2025-11-15T14:45:27.084Z"
+  },
+  "isActive": true,
+  "field": "meetingScheduled",
+  "operator": "EQUALS",
+  "value": true,
+  "_class": "com.lm.crm.leadscore.model.LeadScoreRule"
+},
+{
+  "_id": {
+    "$binary": {
+      "base64": "BmrrmBsjDB+rZwHT3pknpQ==",
+      "subType": "03"
+    }
+  },
+  "business": {
+    "_id": {
+      "$binary": {
+        "base64": "b2XRiRsjDB9ovOsf0C0Qog==",
+        "subType": "03"
+      }
+    },
+    "name": "testing"
+  },
+  "name": "Calls Picked",
+  "description": "Lead has picked up calls.",
+  "score": 15,
+  "change": "POSITIVE",
+  "aiAdjusted": false,
+  "createdAt": {
+    "$date": "2025-11-15T14:45:27.081Z"
+  },
+  "updatedAt": {
+    "$date": "2025-11-15T14:45:27.081Z"
+  },
+  "isActive": true,
+  "field": "callsPicked",
+  "operator": "GREATER_THAN",
+  "value": 1,
+  "_class": "com.lm.crm.leadscore.model.LeadScoreRule"
+},
+{
+  "_id": {
+    "$binary": {
+      "base64": "lWjamBsjDB+l6zFN4d0npQ==",
+      "subType": "03"
+    }
+  },
+  "business": {
+    "_id": {
+      "$binary": {
+        "base64": "b2XRiRsjDB9ovOsf0C0Qog==",
+        "subType": "03"
+      }
+    },
+    "name": "testing"
+  },
+  "name": "Mobile and Email Verified",
+  "description": "Lead's mobile number and email address have been verified.",
+  "score": 20,
+  "change": "POSITIVE",
+  "aiAdjusted": false,
+  "createdAt": {
+    "$date": "2025-11-15T14:45:27.074Z"
+  },
+  "updatedAt": {
+    "$date": "2025-11-15T14:45:27.074Z"
+  },
+  "isActive": true,
+  "field": "contactVerified",
+  "operator": "EQUALS",
+  "value": true,
+  "_class": "com.lm.crm.leadscore.model.LeadScoreRule"
+},
+{
+  "_id": {
+    "$binary": {
+      "base64": "tWOBBZQiDB+PjwBqOgMnpQ==",
+      "subType": "03"
+    }
+  },
+  "business": {
+    "_id": {
+      "$binary": {
+        "base64": "q2rZ+5MiDB8sIfcPnVEQog==",
+        "subType": "03"
+      }
+    },
+    "name": "Prasad har"
+  },
+  "name": "Mobile and Email Invalid",
+  "description": "Lead's mobile number and email address are invalid.",
+  "score": 20,
+  "change": "NEGATIVE",
+  "aiAdjusted": false,
+  "createdAt": {
+    "$date": "2025-11-15T13:44:47.744Z"
+  },
+  "updatedAt": {
+    "$date": "2025-11-15T13:44:47.744Z"
+  },
+  "isActive": true,
+  "field": "contactVerified",
+  "operator": "EQUALS",
+  "value": false,
+  "_class": "com.lm.crm.leadscore.model.LeadScoreRule"
+},
+{
+  "_id": {
+    "$binary": {
+      "base64": "YmB1BZQiDB+5p8oPiJ8npQ==",
+      "subType": "03"
+    }
+  },
+  "business": {
+    "_id": {
+      "$binary": {
+        "base64": "q2rZ+5MiDB8sIfcPnVEQog==",
+        "subType": "03"
+      }
+    },
+    "name": "Prasad har"
+  },
+  "name": "Meeting Scheduled",
+  "description": "A meeting has been scheduled with the lead.",
+  "score": 15,
+  "change": "POSITIVE",
+  "aiAdjusted": false,
+  "createdAt": {
+    "$date": "2025-11-15T13:44:47.739Z"
+  },
+  "updatedAt": {
+    "$date": "2025-11-15T13:44:47.739Z"
+  },
+  "isActive": true,
+  "field": "meetingScheduled",
+  "operator": "EQUALS",
+  "value": true,
+  "_class": "com.lm.crm.leadscore.model.LeadScoreRule"
+}]

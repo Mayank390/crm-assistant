@@ -1,0 +1,1280 @@
+[{
+  "_id": {
+    "$binary": {
+      "base64": "IWmgMOMxDB9ew6JFnLknpQ==",
+      "subType": "03"
+    }
+  },
+  "businessId": {
+    "$binary": {
+      "base64": "J2LAh2FhAx/iCfHwWuM5kw==",
+      "subType": "03"
+    }
+  },
+  "referenceNo": "L121",
+  "notes": "New Paisa108 User",
+  "leadStatus": "New",
+  "personalInfo": {
+    "name": "Kamalanathan P",
+    "email": "npskamal4797@gmail.com",
+    "mobile": "9940230795"
+  },
+  "address": {},
+  "type": "LEAD",
+  "leadActiveType": "ACTIVE",
+  "customerType": "INDIVIDUAL",
+  "status": "APPLICATION_STARTED",
+  "moreInfo": {
+    "Mobile Number": "9940230795",
+    "Email": "npskamal4797@gmail.com",
+    "Message": "NEW",
+    "Lead Status": "NEW",
+    "Last Name": "Kamalanathan P",
+    "Name": "Kamalanathan P"
+  },
+  "fieldData": [
+    {
+      "fieldValue": "9940230795",
+      "fieldId": "485c6717-e255-4cb7-934e-4bbb9c237a2a",
+      "fieldName": "Mobile Number",
+      "fieldGroupId": "1f036161-9250-6de9-907f-f3bb3e48f0c7",
+      "fieldGroupName": "Lead Information",
+      "fieldStepName": "",
+      "type": "CONTACT_MOBILE"
+    },
+    {
+      "fieldValue": "npskamal4797@gmail.com",
+      "fieldId": "d0ab3d0b-8215-4a71-bdf9-bebf14704af1",
+      "fieldName": "Email",
+      "fieldGroupId": "1f036161-9250-6de9-907f-f3bb3e48f0c7",
+      "fieldGroupName": "Lead Information",
+      "fieldStepName": "",
+      "type": "CONTACT_EMAIL"
+    },
+    {
+      "fieldValue": "NEW",
+      "fieldId": "1f03ae2c-7efa-6a8a-b63c-ffd140e9d0bb",
+      "fieldName": "Message",
+      "fieldGroupId": "1f036161-9250-6dea-907f-652a19e1fd40",
+      "fieldGroupName": "Address Information",
+      "fieldStepName": "",
+      "type": "ENQUIRY_STATUS"
+    },
+    {
+      "fieldValue": "NEW",
+      "fieldId": "a5dd820b-1466-4e4a-abed-d84ee01b5cee",
+      "fieldName": "Lead Status",
+      "fieldGroupId": "1f036161-9250-6de9-907f-f3bb3e48f0c7",
+      "fieldGroupName": "Lead Information",
+      "fieldStepName": "",
+      "type": "ENQUIRY_STATUS"
+    },
+    {
+      "fieldValue": "Kamalanathan P",
+      "fieldId": "1f03ae29-a6e3-60e5-b63c-ffd140e9d0bb",
+      "fieldName": "Last Name",
+      "fieldGroupId": "1f036161-9250-6de9-907f-f3bb3e48f0c7",
+      "fieldGroupName": "Lead Information",
+      "fieldStepName": "",
+      "type": "STUDENT_NAME"
+    },
+    {
+      "fieldValue": "Kamalanathan P",
+      "fieldId": "bad5a39c-2026-4b02-92b1-12e11d9aae6b",
+      "fieldName": "Name",
+      "fieldGroupId": "1f036161-9250-6de9-907f-f3bb3e48f0c7",
+      "fieldGroupName": "Lead Information",
+      "fieldStepName": "",
+      "type": "STUDENT_NAME"
+    }
+  ],
+  "emailCount": 0,
+  "callCount": 0,
+  "score": 30,
+  "emailSentStatus": true,
+  "callExecutedStatus": false,
+  "isMasked": false,
+  "timeLastStatusUpdated": true,
+  "isSpamOrBot": false,
+  "isRemainderMailSent": false,
+  "createdTimeStamp": {
+    "$date": "2025-11-17T00:28:00.000Z"
+  },
+  "updatedTimeStamp": {
+    "$date": "2025-11-17T00:28:00.000Z"
+  },
+  "_class": "com.lm.crm.leads.LeadCollection"
+},
+{
+  "_id": {
+    "$binary": {
+      "base64": "52oszTEVDB9CgozGcpUnpQ==",
+      "subType": "03"
+    }
+  },
+  "businessId": {
+    "$binary": {
+      "base64": "J2LAh2FhAx/iCfHwWuM5kw==",
+      "subType": "03"
+    }
+  },
+  "referenceNo": "L120",
+  "notes": "New Paisa108 User",
+  "leadStatus": "New",
+  "personalInfo": {
+    "name": "MONAPRIYA GHOSH",
+    "email": "monapriya.ghoshdgp@gmail.com",
+    "mobile": "7407872424"
+  },
+  "address": {},
+  "type": "LEAD",
+  "leadActiveType": "ACTIVE",
+  "customerType": "INDIVIDUAL",
+  "status": "APPLICATION_STARTED",
+  "moreInfo": {
+    "Mobile Number": "7407872424",
+    "Email": "monapriya.ghoshdgp@gmail.com",
+    "Message": "NEW",
+    "Lead Status": "NEW",
+    "Last Name": "MONAPRIYA GHOSH",
+    "Name": "MONAPRIYA GHOSH"
+  },
+  "fieldData": [
+    {
+      "fieldValue": "7407872424",
+      "fieldId": "485c6717-e255-4cb7-934e-4bbb9c237a2a",
+      "fieldName": "Mobile Number",
+      "fieldGroupId": "1f036161-9250-6de9-907f-f3bb3e48f0c7",
+      "fieldGroupName": "Lead Information",
+      "fieldStepName": "",
+      "type": "CONTACT_MOBILE"
+    },
+    {
+      "fieldValue": "monapriya.ghoshdgp@gmail.com",
+      "fieldId": "d0ab3d0b-8215-4a71-bdf9-bebf14704af1",
+      "fieldName": "Email",
+      "fieldGroupId": "1f036161-9250-6de9-907f-f3bb3e48f0c7",
+      "fieldGroupName": "Lead Information",
+      "fieldStepName": "",
+      "type": "CONTACT_EMAIL"
+    },
+    {
+      "fieldValue": "NEW",
+      "fieldId": "1f03ae2c-7efa-6a8a-b63c-ffd140e9d0bb",
+      "fieldName": "Message",
+      "fieldGroupId": "1f036161-9250-6dea-907f-652a19e1fd40",
+      "fieldGroupName": "Address Information",
+      "fieldStepName": "",
+      "type": "ENQUIRY_STATUS"
+    },
+    {
+      "fieldValue": "NEW",
+      "fieldId": "a5dd820b-1466-4e4a-abed-d84ee01b5cee",
+      "fieldName": "Lead Status",
+      "fieldGroupId": "1f036161-9250-6de9-907f-f3bb3e48f0c7",
+      "fieldGroupName": "Lead Information",
+      "fieldStepName": "",
+      "type": "ENQUIRY_STATUS"
+    },
+    {
+      "fieldValue": "MONAPRIYA GHOSH",
+      "fieldId": "1f03ae29-a6e3-60e5-b63c-ffd140e9d0bb",
+      "fieldName": "Last Name",
+      "fieldGroupId": "1f036161-9250-6de9-907f-f3bb3e48f0c7",
+      "fieldGroupName": "Lead Information",
+      "fieldStepName": "",
+      "type": "STUDENT_NAME"
+    },
+    {
+      "fieldValue": "MONAPRIYA GHOSH",
+      "fieldId": "bad5a39c-2026-4b02-92b1-12e11d9aae6b",
+      "fieldName": "Name",
+      "fieldGroupId": "1f036161-9250-6de9-907f-f3bb3e48f0c7",
+      "fieldGroupName": "Lead Information",
+      "fieldStepName": "",
+      "type": "STUDENT_NAME"
+    }
+  ],
+  "emailCount": 0,
+  "callCount": 0,
+  "score": 30,
+  "emailSentStatus": true,
+  "callExecutedStatus": false,
+  "isMasked": false,
+  "timeLastStatusUpdated": true,
+  "isSpamOrBot": false,
+  "isRemainderMailSent": false,
+  "createdTimeStamp": {
+    "$date": "2025-11-14T17:41:00.000Z"
+  },
+  "updatedTimeStamp": {
+    "$date": "2025-11-14T17:41:00.000Z"
+  },
+  "_class": "com.lm.crm.leads.LeadCollection"
+},
+{
+  "_id": {
+    "$binary": {
+      "base64": "wmSByqMUDB+qEN7rQifukg==",
+      "subType": "03"
+    }
+  },
+  "businessId": {
+    "$binary": {
+      "base64": "822YDYoUDB/DXKSIwz0clQ==",
+      "subType": "03"
+    }
+  },
+  "createdById": {
+    "$binary": {
+      "base64": "iGbTCYoUDB/Z03X8dKmmvA==",
+      "subType": "03"
+    }
+  },
+  "staffId": {
+    "$binary": {
+      "base64": "iGbTCYoUDB/Z03X8dKmmvA==",
+      "subType": "03"
+    }
+  },
+  "referenceNo": "L002",
+  "createdByName": "anand",
+  "staffName": "anand",
+  "notes": "",
+  "leadStatus": "New",
+  "pipeline": {
+    "_id": {
+      "$binary": {
+        "base64": "cGryGYoUDB8PeHuCkYnukg==",
+        "subType": "03"
+      }
+    },
+    "name": "Default Pipeline"
+  },
+  "personalInfo": {
+    "name": "ssa",
+    "img": "",
+    "email": "anand@tejsoft.com",
+    "mobile": "7207487702",
+    "designation": "",
+    "gender": "MALE"
+  },
+  "company": {
+    "name": "",
+    "website": "",
+    "companyEmail": "",
+    "companyMobile": "",
+    "industryName": ""
+  },
+  "address": {
+    "country": {
+      "name": "",
+      "code": ""
+    },
+    "state": "",
+    "city": "",
+    "street": "",
+    "zipCode": ""
+  },
+  "shippingAddress": {
+    "country": {
+      "name": "",
+      "code": ""
+    },
+    "state": "",
+    "city": "",
+    "street": "",
+    "zipCode": ""
+  },
+  "gstDetails": {
+    "GSTNo": "",
+    "companyName": ""
+  },
+  "type": "CUSTOMER",
+  "leadActiveType": "ACTIVE",
+  "customerType": "INDIVIDUAL",
+  "moreInfo": {
+    "Mobile Number": "7207487702",
+    "Email": "anand@tejsoft.com",
+    "Lead Status": "NEW",
+    "Name": "ssa"
+  },
+  "fieldData": [
+    {
+      "fieldValue": "7207487702",
+      "fieldId": "5187c271-bbc2-41bf-af87-d7ce3c0208b7",
+      "fieldName": "Mobile Number",
+      "fieldGroupId": "1f0c148a-1577-62f0-92ee-9b3df4877200",
+      "fieldGroupName": "Lead Information",
+      "fieldStepName": "",
+      "type": "CONTACT_MOBILE"
+    },
+    {
+      "fieldValue": "anand@tejsoft.com",
+      "fieldId": "7d4574a9-d382-4688-bbc1-0e67663e156f",
+      "fieldName": "Email",
+      "fieldGroupId": "1f0c148a-1577-62f0-92ee-9b3df4877200",
+      "fieldGroupName": "Lead Information",
+      "fieldStepName": "",
+      "type": "CONTACT_EMAIL"
+    },
+    {
+      "fieldValue": "NEW",
+      "fieldId": "726ce546-dce8-414e-ad38-d8efbb2a668e",
+      "fieldName": "Lead Status",
+      "fieldGroupId": "1f0c148a-1577-62f0-92ee-9b3df4877200",
+      "fieldGroupName": "Lead Information",
+      "fieldStepName": "",
+      "type": "ENQUIRY_STATUS"
+    },
+    {
+      "fieldValue": "ssa",
+      "fieldId": "7181bafc-f165-406f-9e55-017b2b610e51",
+      "fieldName": "Name",
+      "fieldGroupId": "1f0c148a-1577-62f0-92ee-9b3df4877200",
+      "fieldGroupName": "Lead Information",
+      "fieldStepName": "",
+      "type": "STUDENT_NAME"
+    }
+  ],
+  "emailCount": 0,
+  "callCount": 0,
+  "score": 30,
+  "emailSentStatus": true,
+  "callExecutedStatus": false,
+  "isMasked": false,
+  "timeLastStatusUpdated": true,
+  "isSpamOrBot": false,
+  "isRemainderMailSent": false,
+  "createdTimeStamp": {
+    "$date": "2025-11-14T16:38:00.000Z"
+  },
+  "updatedTimeStamp": {
+    "$date": "2025-11-14T11:08:09.198Z"
+  },
+  "_class": "com.lm.crm.leads.LeadCollection"
+},
+{
+  "_id": {
+    "$binary": {
+      "base64": "626v6qIUDB9YEOuTpPXukg==",
+      "subType": "03"
+    }
+  },
+  "businessId": {
+    "$binary": {
+      "base64": "822YDYoUDB/DXKSIwz0clQ==",
+      "subType": "03"
+    }
+  },
+  "createdById": {
+    "$binary": {
+      "base64": "iGbTCYoUDB/Z03X8dKmmvA==",
+      "subType": "03"
+    }
+  },
+  "staffId": {
+    "$binary": {
+      "base64": "iGbTCYoUDB/Z03X8dKmmvA==",
+      "subType": "03"
+    }
+  },
+  "referenceNo": "L001",
+  "createdByName": "anand",
+  "staffName": "anand",
+  "notes": "",
+  "leadStatus": "NEW",
+  "pipeline": {
+    "name": ""
+  },
+  "pipelineStage": {},
+  "personalInfo": {
+    "name": "ff",
+    "img": "",
+    "email": "anand@tejsoft.com",
+    "mobile": "7207487702",
+    "designation": "",
+    "gender": "MALE"
+  },
+  "company": {
+    "name": "",
+    "website": "",
+    "companyEmail": "",
+    "companyMobile": "",
+    "industryName": ""
+  },
+  "address": {
+    "country": {
+      "name": "",
+      "code": ""
+    },
+    "state": "",
+    "city": "",
+    "street": "",
+    "zipCode": ""
+  },
+  "shippingAddress": {
+    "country": {
+      "name": "",
+      "code": ""
+    },
+    "state": "",
+    "city": "",
+    "street": "",
+    "zipCode": ""
+  },
+  "gstDetails": {
+    "GSTNo": "",
+    "companyName": ""
+  },
+  "type": "LEAD",
+  "leadActiveType": "ACTIVE",
+  "customerType": "INDIVIDUAL",
+  "status": "NEW",
+  "moreInfo": {
+    "Mobile Number": "7207487702",
+    "Email": "anand@tejsoft.com",
+    "Lead Status": "NEW",
+    "Name": "ff"
+  },
+  "fieldData": [
+    {
+      "fieldId": "7181bafc-f165-406f-9e55-017b2b610e51",
+      "fieldName": "Name",
+      "fieldValue": "ff",
+      "fieldGroupId": "1f0c148a-1577-62f0-92ee-9b3df4877200",
+      "fieldGroupName": "Lead Information",
+      "type": "STUDENT_NAME"
+    },
+    {
+      "fieldId": "5187c271-bbc2-41bf-af87-d7ce3c0208b7",
+      "fieldName": "Mobile Number",
+      "fieldValue": "7207487702",
+      "fieldGroupId": "1f0c148a-1577-62f0-92ee-9b3df4877200",
+      "fieldGroupName": "Lead Information",
+      "type": "CONTACT_MOBILE"
+    },
+    {
+      "fieldId": "7d4574a9-d382-4688-bbc1-0e67663e156f",
+      "fieldName": "Email",
+      "fieldValue": "anand@tejsoft.com",
+      "fieldGroupId": "1f0c148a-1577-62f0-92ee-9b3df4877200",
+      "fieldGroupName": "Lead Information",
+      "type": "CONTACT_EMAIL"
+    },
+    {
+      "fieldId": "06643ad7-cbe2-4fd5-9ced-02cf75ea76ad",
+      "fieldName": "Lead Source",
+      "fieldGroupId": "1f0c148a-1577-62f0-92ee-9b3df4877200",
+      "fieldGroupName": "Lead Information",
+      "type": "ENQUIRY_SOURCE"
+    },
+    {
+      "fieldId": "726ce546-dce8-414e-ad38-d8efbb2a668e",
+      "fieldName": "Lead Status",
+      "fieldGroupId": "1f0c148a-1577-62f0-92ee-9b3df4877200",
+      "fieldGroupName": "Lead Information",
+      "type": "ENQUIRY_STATUS"
+    },
+    {
+      "fieldId": "ee8c95aa-ad05-46d0-8e90-7baffe5482a3",
+      "fieldName": "Street",
+      "fieldGroupId": "1f0c148a-1577-62f1-92ee-b5d54ca3c7b7",
+      "fieldGroupName": "Address Information",
+      "type": "STREET"
+    },
+    {
+      "fieldId": "f9339da8-70d9-45b9-b5c6-12327bb0e71f",
+      "fieldName": "State",
+      "fieldGroupId": "1f0c148a-1577-62f1-92ee-b5d54ca3c7b7",
+      "fieldGroupName": "Address Information",
+      "type": "STATE"
+    },
+    {
+      "fieldId": "27937569-fcdc-424f-b9e0-ac7b25ceff30",
+      "fieldName": "City",
+      "fieldGroupId": "1f0c148a-1577-62f1-92ee-b5d54ca3c7b7",
+      "fieldGroupName": "Address Information",
+      "type": "CITY"
+    },
+    {
+      "fieldId": "a306db54-df6d-43a3-a006-b1f333c6c194",
+      "fieldName": "Postal Code",
+      "fieldGroupId": "1f0c148a-1577-62f1-92ee-b5d54ca3c7b7",
+      "fieldGroupName": "Address Information",
+      "type": "PIN_CODE"
+    },
+    {
+      "fieldId": "9405f440-a42f-4540-973f-0aa3fe851453",
+      "fieldName": "Country",
+      "fieldGroupId": "1f0c148a-1577-62f1-92ee-b5d54ca3c7b7",
+      "fieldGroupName": "Address Information",
+      "type": "COUNTRY"
+    }
+  ],
+  "emailCount": 0,
+  "callCount": 0,
+  "score": 30,
+  "emailSentStatus": true,
+  "callExecutedStatus": false,
+  "isMasked": false,
+  "timeLastStatusUpdated": true,
+  "isSpamOrBot": false,
+  "isRemainderMailSent": false,
+  "createdTimeStamp": {
+    "$date": "2025-11-14T16:38:00.000Z"
+  },
+  "updatedTimeStamp": {
+    "$date": "2025-11-14T11:07:36.986Z"
+  },
+  "_class": "com.lm.crm.leads.LeadCollection"
+},
+{
+  "_id": {
+    "$binary": {
+      "base64": "omA72ncUDB8fdENneoHukg==",
+      "subType": "03"
+    }
+  },
+  "businessId": {
+    "$binary": {
+      "base64": "9md61ODHCB/z0Xp1CBVdpA==",
+      "subType": "03"
+    }
+  },
+  "createdById": {
+    "$binary": {
+      "base64": "KWrGEt3NBx/3Qz9LTjU5uQ==",
+      "subType": "03"
+    }
+  },
+  "staffId": {
+    "$binary": {
+      "base64": "KWrGEt3NBx/3Qz9LTjU5uQ==",
+      "subType": "03"
+    }
+  },
+  "referenceNo": "L001",
+  "createdByName": "Manikanta K",
+  "staffName": "Manikanta K",
+  "notes": "",
+  "leadStatus": "Contacted",
+  "pipeline": {
+    "name": ""
+  },
+  "pipelineStage": {},
+  "personalInfo": {
+    "name": "Manikanta K",
+    "img": "",
+    "email": "shiva@tejsoft.com",
+    "mobile": "8500040937",
+    "designation": "",
+    "gender": "MALE"
+  },
+  "company": {
+    "name": "",
+    "website": "",
+    "companyEmail": "",
+    "companyMobile": "",
+    "industryName": ""
+  },
+  "address": {
+    "country": {
+      "name": "",
+      "code": ""
+    },
+    "state": "",
+    "city": "",
+    "street": "",
+    "zipCode": ""
+  },
+  "shippingAddress": {
+    "country": {
+      "name": "",
+      "code": ""
+    },
+    "state": "",
+    "city": "",
+    "street": "",
+    "zipCode": ""
+  },
+  "gstDetails": {
+    "GSTNo": "",
+    "companyName": ""
+  },
+  "type": "LEAD",
+  "leadActiveType": "ACTIVE",
+  "customerType": "INDIVIDUAL",
+  "status": "NEW",
+  "moreInfo": {
+    "Mobile Number": "8500040937",
+    "Email": "shiva@tejsoft.com",
+    "Lead Status": "Contacted",
+    "Name": "Manikanta"
+  },
+  "fieldData": [
+    {
+      "fieldId": "9a3e8f7f-eb52-4d3a-8c85-0b9efc49f722",
+      "fieldName": "Name",
+      "fieldValue": "Manikanta K",
+      "fieldGroupId": "1f08c7e0-dc98-67c1-a35a-af826befeefc",
+      "fieldGroupName": "Lead Information",
+      "type": "STUDENT_NAME"
+    },
+    {
+      "fieldId": "896e1852-1a0a-45f4-aaed-651c05a9b7b4",
+      "fieldName": "Mobile Number",
+      "fieldValue": "8500040937",
+      "fieldGroupId": "1f08c7e0-dc98-67c1-a35a-af826befeefc",
+      "fieldGroupName": "Lead Information",
+      "type": "CONTACT_MOBILE"
+    },
+    {
+      "fieldId": "23bb9f07-dfde-4c93-a63b-351baf317c36",
+      "fieldName": "Email",
+      "fieldValue": "shiva@tejsoft.com",
+      "fieldGroupId": "1f08c7e0-dc98-67c1-a35a-af826befeefc",
+      "fieldGroupName": "Lead Information",
+      "type": "CONTACT_EMAIL"
+    },
+    {
+      "fieldId": "a5315994-a7e6-4860-b959-57ef11074a68",
+      "fieldName": "Lead Source",
+      "fieldValue": "REFERRAL",
+      "fieldGroupId": "1f08c7e0-dc98-67c1-a35a-af826befeefc",
+      "fieldGroupName": "Lead Information",
+      "type": "ENQUIRY_SOURCE"
+    },
+    {
+      "fieldId": "85019497-b907-4e3e-862f-f2265c668954",
+      "fieldName": "Lead Status",
+      "fieldValue": "Contacted",
+      "fieldGroupId": "1f08c7e0-dc98-67c1-a35a-af826befeefc",
+      "fieldGroupName": "Lead Information",
+      "type": "ENQUIRY_STATUS"
+    },
+    {
+      "fieldId": "9a4bd903-8bb4-48f8-ada6-908491019a83",
+      "fieldName": "Street",
+      "fieldValue": "DLF Road, Gachibowli",
+      "fieldGroupId": "1f08c7e0-dc98-67c2-a35a-ed6f9c8bfdc6",
+      "fieldGroupName": "Address Information",
+      "type": "STREET"
+    },
+    {
+      "fieldId": "078bb96b-504b-4969-b0ae-933b36295627",
+      "fieldName": "State",
+      "fieldValue": "Telangana",
+      "fieldGroupId": "1f08c7e0-dc98-67c2-a35a-ed6f9c8bfdc6",
+      "fieldGroupName": "Address Information",
+      "type": "STATE"
+    },
+    {
+      "fieldId": "250a06e9-dbc3-4975-90cc-0b3541467901",
+      "fieldName": "City",
+      "fieldValue": "Hyderabad",
+      "fieldGroupId": "1f08c7e0-dc98-67c2-a35a-ed6f9c8bfdc6",
+      "fieldGroupName": "Address Information",
+      "type": "CITY"
+    },
+    {
+      "fieldId": "f1ac0f01-d802-4183-b6f1-379a15f72b4b",
+      "fieldName": "Postal Code",
+      "fieldValue": "500032",
+      "fieldGroupId": "1f08c7e0-dc98-67c2-a35a-ed6f9c8bfdc6",
+      "fieldGroupName": "Address Information",
+      "type": "PIN_CODE"
+    },
+    {
+      "fieldId": "062a66f2-e517-4d9d-9d2a-cbfe1cade0ce",
+      "fieldName": "Country",
+      "fieldValue": "India",
+      "fieldGroupId": "1f08c7e0-dc98-67c2-a35a-ed6f9c8bfdc6",
+      "fieldGroupName": "Address Information",
+      "type": "COUNTRY"
+    }
+  ],
+  "emailCount": 0,
+  "callCount": 0,
+  "score": 30,
+  "emailSentStatus": true,
+  "callExecutedStatus": false,
+  "isMasked": false,
+  "timeLastStatusUpdated": true,
+  "isSpamOrBot": false,
+  "isRemainderMailSent": false,
+  "createdTimeStamp": {
+    "$date": "2025-11-14T16:18:00.000Z"
+  },
+  "updatedTimeStamp": {
+    "$date": "2025-11-14T10:50:29.699Z"
+  },
+  "_class": "com.lm.crm.leads.LeadCollection"
+},
+{
+  "_id": {
+    "$binary": {
+      "base64": "ImMJ5oATDB9FbeBHjGHqiA==",
+      "subType": "03"
+    }
+  },
+  "businessId": {
+    "$binary": {
+      "base64": "J2LAh2FhAx/iCfHwWuM5kw==",
+      "subType": "03"
+    }
+  },
+  "referenceNo": "L119",
+  "notes": "New Paisa108 User",
+  "personalInfo": {
+    "name": "Ansuya",
+    "email": "anusyaabhi@gmail.com",
+    "mobile": "9476708620"
+  },
+  "address": {},
+  "type": "LEAD",
+  "leadActiveType": "ACTIVE",
+  "customerType": "INDIVIDUAL",
+  "source": "WEBSITE",
+  "status": "APPLICATION_STARTED",
+  "leadStatus": "New",
+  "moreInfo": {
+    "Mobile Number": "9476708620",
+    "Email": "anusyaabhi@gmail.com",
+    "Message": "NEW",
+    "Lead Status": "NEW",
+    "Last Name": "Ansuya",
+    "Name": "Ansuya"
+  },
+  "fieldData": [
+    {
+      "fieldValue": "9476708620",
+      "fieldId": "485c6717-e255-4cb7-934e-4bbb9c237a2a",
+      "fieldName": "Mobile Number",
+      "fieldGroupId": "1f036161-9250-6de9-907f-f3bb3e48f0c7",
+      "fieldGroupName": "Lead Information",
+      "fieldStepName": "",
+      "type": "CONTACT_MOBILE"
+    },
+    {
+      "fieldValue": "anusyaabhi@gmail.com",
+      "fieldId": "d0ab3d0b-8215-4a71-bdf9-bebf14704af1",
+      "fieldName": "Email",
+      "fieldGroupId": "1f036161-9250-6de9-907f-f3bb3e48f0c7",
+      "fieldGroupName": "Lead Information",
+      "fieldStepName": "",
+      "type": "CONTACT_EMAIL"
+    },
+    {
+      "fieldValue": "NEW",
+      "fieldId": "1f03ae2c-7efa-6a8a-b63c-ffd140e9d0bb",
+      "fieldName": "Message",
+      "fieldGroupId": "1f036161-9250-6dea-907f-652a19e1fd40",
+      "fieldGroupName": "Address Information",
+      "fieldStepName": "",
+      "type": "ENQUIRY_STATUS"
+    },
+    {
+      "fieldValue": "NEW",
+      "fieldId": "a5dd820b-1466-4e4a-abed-d84ee01b5cee",
+      "fieldName": "Lead Status",
+      "fieldGroupId": "1f036161-9250-6de9-907f-f3bb3e48f0c7",
+      "fieldGroupName": "Lead Information",
+      "fieldStepName": "",
+      "type": "ENQUIRY_STATUS"
+    },
+    {
+      "fieldValue": "Ansuya",
+      "fieldId": "1f03ae29-a6e3-60e5-b63c-ffd140e9d0bb",
+      "fieldName": "Last Name",
+      "fieldGroupId": "1f036161-9250-6de9-907f-f3bb3e48f0c7",
+      "fieldGroupName": "Lead Information",
+      "fieldStepName": "",
+      "type": "STUDENT_NAME"
+    },
+    {
+      "fieldValue": "Ansuya",
+      "fieldId": "bad5a39c-2026-4b02-92b1-12e11d9aae6b",
+      "fieldName": "Name",
+      "fieldGroupId": "1f036161-9250-6de9-907f-f3bb3e48f0c7",
+      "fieldGroupName": "Lead Information",
+      "fieldStepName": "",
+      "type": "STUDENT_NAME"
+    }
+  ],
+  "emailSentStatus": true,
+  "callExecutedStatus": false,
+  "emailCount": 0,
+  "callCount": 0,
+  "isMasked": false,
+  "timeLastStatusUpdated": true,
+  "isRemainderMailSent": false,
+  "createdTimeStamp": {
+    "$date": "2025-11-14T14:28:00.000Z"
+  },
+  "updatedTimeStamp": {
+    "$date": "2025-11-14T14:28:00.000Z"
+  },
+  "score": 30,
+  "isSpamOrBot": false,
+  "_class": "com.lm.crm.leads.LeadCollection"
+},
+{
+  "_id": {
+    "$binary": {
+      "base64": "KG4opZHuCx8LsBzDaaXqiA==",
+      "subType": "03"
+    }
+  },
+  "businessId": {
+    "$binary": {
+      "base64": "J2LAh2FhAx/iCfHwWuM5kw==",
+      "subType": "03"
+    }
+  },
+  "referenceNo": "L118",
+  "notes": "New Paisa108 User",
+  "personalInfo": {
+    "name": "Rahul Pandey",
+    "email": "infobarista74@gmail.com",
+    "mobile": "8448504151"
+  },
+  "address": {},
+  "type": "LEAD",
+  "leadActiveType": "ACTIVE",
+  "customerType": "INDIVIDUAL",
+  "source": "WEBSITE",
+  "status": "APPLICATION_STARTED",
+  "leadStatus": "New",
+  "moreInfo": {
+    "Mobile Number": "8448504151",
+    "Email": "infobarista74@gmail.com",
+    "Message": "NEW",
+    "Lead Status": "NEW",
+    "Last Name": "Rahul Pandey",
+    "Name": "Rahul Pandey"
+  },
+  "fieldData": [
+    {
+      "fieldValue": "8448504151",
+      "fieldId": "485c6717-e255-4cb7-934e-4bbb9c237a2a",
+      "fieldName": "Mobile Number",
+      "fieldGroupId": "1f036161-9250-6de9-907f-f3bb3e48f0c7",
+      "fieldGroupName": "Lead Information",
+      "fieldStepName": "",
+      "type": "CONTACT_MOBILE"
+    },
+    {
+      "fieldValue": "infobarista74@gmail.com",
+      "fieldId": "d0ab3d0b-8215-4a71-bdf9-bebf14704af1",
+      "fieldName": "Email",
+      "fieldGroupId": "1f036161-9250-6de9-907f-f3bb3e48f0c7",
+      "fieldGroupName": "Lead Information",
+      "fieldStepName": "",
+      "type": "CONTACT_EMAIL"
+    },
+    {
+      "fieldValue": "NEW",
+      "fieldId": "1f03ae2c-7efa-6a8a-b63c-ffd140e9d0bb",
+      "fieldName": "Message",
+      "fieldGroupId": "1f036161-9250-6dea-907f-652a19e1fd40",
+      "fieldGroupName": "Address Information",
+      "fieldStepName": "",
+      "type": "ENQUIRY_STATUS"
+    },
+    {
+      "fieldValue": "NEW",
+      "fieldId": "a5dd820b-1466-4e4a-abed-d84ee01b5cee",
+      "fieldName": "Lead Status",
+      "fieldGroupId": "1f036161-9250-6de9-907f-f3bb3e48f0c7",
+      "fieldGroupName": "Lead Information",
+      "fieldStepName": "",
+      "type": "ENQUIRY_STATUS"
+    },
+    {
+      "fieldValue": "Rahul Pandey",
+      "fieldId": "1f03ae29-a6e3-60e5-b63c-ffd140e9d0bb",
+      "fieldName": "Last Name",
+      "fieldGroupId": "1f036161-9250-6de9-907f-f3bb3e48f0c7",
+      "fieldGroupName": "Lead Information",
+      "fieldStepName": "",
+      "type": "STUDENT_NAME"
+    },
+    {
+      "fieldValue": "Rahul Pandey",
+      "fieldId": "bad5a39c-2026-4b02-92b1-12e11d9aae6b",
+      "fieldName": "Name",
+      "fieldGroupId": "1f036161-9250-6de9-907f-f3bb3e48f0c7",
+      "fieldGroupName": "Lead Information",
+      "fieldStepName": "",
+      "type": "STUDENT_NAME"
+    }
+  ],
+  "emailSentStatus": true,
+  "callExecutedStatus": false,
+  "emailCount": 0,
+  "callCount": 0,
+  "isMasked": false,
+  "timeLastStatusUpdated": true,
+  "isRemainderMailSent": false,
+  "createdTimeStamp": {
+    "$date": "2025-11-11T15:58:00.000Z"
+  },
+  "updatedTimeStamp": {
+    "$date": "2025-11-11T15:58:00.000Z"
+  },
+  "score": 30,
+  "isSpamOrBot": false,
+  "_class": "com.lm.crm.leads.LeadCollection"
+},
+{
+  "_id": {
+    "$binary": {
+      "base64": "oGqruHLtCx8TxxEsImHqiA==",
+      "subType": "03"
+    }
+  },
+  "businessId": {
+    "$binary": {
+      "base64": "TWLmR8TUCx/fMmonhrMNpQ==",
+      "subType": "03"
+    }
+  },
+  "createdById": {
+    "$binary": {
+      "base64": "qW5HDkzjCx+rcEm+wzMNiQ==",
+      "subType": "03"
+    }
+  },
+  "referenceNo": "L005",
+  "createdByName": "Demo",
+  "personalInfo": {
+    "name": "Srinu",
+    "email": "srinu56@gmail.com",
+    "mobile": "8765231094"
+  },
+  "address": {
+    "country": {
+      "name": "India ",
+      "code": ""
+    },
+    "state": " Telangana",
+    "city": "hyderabad",
+    "addressLine1": "jaya bheri enclave",
+    "zipCode": ""
+  },
+  "shippingAddress": {
+    "country": {
+      "name": "",
+      "code": ""
+    },
+    "state": "",
+    "city": "",
+    "addressLine1": "",
+    "zipCode": ""
+  },
+  "gstDetails": {
+    "GSTNo": "32OPCAEE1AZ",
+    "companyName": "Patrons Private limited"
+  },
+  "type": "VENDOR",
+  "leadActiveType": "ACTIVE",
+  "customerType": "INDIVIDUAL",
+  "source": "COLD_CALL",
+  "status": "NEW",
+  "moreInfo": {
+    "Opening Balance": 0,
+    "Name": "Srinu",
+    "Mobile Number": "8765231094",
+    "Email": "srinu56@gmail.com",
+    "Lead Status": "NEW"
+  },
+  "fieldData": [
+    {
+      "fieldValue": "Srinu",
+      "fieldId": "00e2cdde-06a4-4db9-9f4c-91bf2d8f4642",
+      "fieldName": "Name",
+      "fieldGroupId": "1f0bd4c4-554f-633d-88ea-a545a8cf14a3",
+      "fieldGroupName": "Lead Information",
+      "fieldStepName": "",
+      "type": "STUDENT_NAME"
+    },
+    {
+      "fieldValue": "8765231094",
+      "fieldId": "19c188eb-e5c8-49ef-8193-997a089e0e8a",
+      "fieldName": "Mobile Number",
+      "fieldGroupId": "1f0bd4c4-554f-633d-88ea-a545a8cf14a3",
+      "fieldGroupName": "Lead Information",
+      "fieldStepName": "",
+      "type": "CONTACT_MOBILE"
+    },
+    {
+      "fieldValue": "srinu56@gmail.com",
+      "fieldId": "1ac41519-4a9f-402f-b8d6-0c51cabc3595",
+      "fieldName": "Email",
+      "fieldGroupId": "1f0bd4c4-554f-633d-88ea-a545a8cf14a3",
+      "fieldGroupName": "Lead Information",
+      "fieldStepName": "",
+      "type": "CONTACT_EMAIL"
+    },
+    {
+      "fieldValue": "NEW",
+      "fieldId": "27cc4946-6be4-4e31-b4d5-5882fc32960e",
+      "fieldName": "Lead Status",
+      "fieldGroupId": "1f0bd4c4-554f-633d-88ea-a545a8cf14a3",
+      "fieldGroupName": "Lead Information",
+      "fieldStepName": "",
+      "type": "ENQUIRY_STATUS"
+    }
+  ],
+  "emailSentStatus": false,
+  "callExecutedStatus": false,
+  "emailCount": 0,
+  "callCount": 0,
+  "isMasked": false,
+  "timeLastStatusUpdated": true,
+  "isRemainderMailSent": false,
+  "createdTimeStamp": {
+    "$date": "2025-11-11T13:49:00.000Z"
+  },
+  "updatedTimeStamp": {
+    "$date": "2025-11-11T08:18:19.654Z"
+  },
+  "score": 30,
+  "isSpamOrBot": false,
+  "_class": "com.lm.crm.leads.LeadCollection"
+},
+{
+  "_id": {
+    "$binary": {
+      "base64": "Ymxoe2XsCx9ImcropqHqiA==",
+      "subType": "03"
+    }
+  },
+  "businessId": {
+    "$binary": {
+      "base64": "TWLmR8TUCx/fMmonhrMNpQ==",
+      "subType": "03"
+    }
+  },
+  "createdById": {
+    "$binary": {
+      "base64": "qW5HDkzjCx+rcEm+wzMNiQ==",
+      "subType": "03"
+    }
+  },
+  "referenceNo": "L004",
+  "createdByName": "Demo",
+  "personalInfo": {
+    "name": "Kavya",
+    "email": "kavya@13gmail.com",
+    "mobile": "8765432109"
+  },
+  "address": {
+    "country": {
+      "name": "",
+      "code": ""
+    },
+    "state": "",
+    "city": "",
+    "addressLine1": "",
+    "zipCode": ""
+  },
+  "shippingAddress": {
+    "country": {
+      "name": "",
+      "code": ""
+    },
+    "state": "",
+    "city": "",
+    "addressLine1": "",
+    "zipCode": ""
+  },
+  "gstDetails": {
+    "GSTNo": "36AA0CPE1ZS",
+    "companyName": "Tejsoft"
+  },
+  "type": "VENDOR",
+  "leadActiveType": "ACTIVE",
+  "customerType": "INDIVIDUAL",
+  "source": "COLD_CALL",
+  "status": "NEW",
+  "moreInfo": {
+    "Opening Balance": 0,
+    "Name": "Kavya",
+    "Mobile Number": "8765432109",
+    "Email": "kavya@13gmail.com",
+    "Lead Status": "NEW"
+  },
+  "fieldData": [
+    {
+      "fieldValue": "Kavya",
+      "fieldId": "00e2cdde-06a4-4db9-9f4c-91bf2d8f4642",
+      "fieldName": "Name",
+      "fieldGroupId": "1f0bd4c4-554f-633d-88ea-a545a8cf14a3",
+      "fieldGroupName": "Lead Information",
+      "fieldStepName": "",
+      "type": "STUDENT_NAME"
+    },
+    {
+      "fieldValue": "8765432109",
+      "fieldId": "19c188eb-e5c8-49ef-8193-997a089e0e8a",
+      "fieldName": "Mobile Number",
+      "fieldGroupId": "1f0bd4c4-554f-633d-88ea-a545a8cf14a3",
+      "fieldGroupName": "Lead Information",
+      "fieldStepName": "",
+      "type": "CONTACT_MOBILE"
+    },
+    {
+      "fieldValue": "kavya@13gmail.com",
+      "fieldId": "1ac41519-4a9f-402f-b8d6-0c51cabc3595",
+      "fieldName": "Email",
+      "fieldGroupId": "1f0bd4c4-554f-633d-88ea-a545a8cf14a3",
+      "fieldGroupName": "Lead Information",
+      "fieldStepName": "",
+      "type": "CONTACT_EMAIL"
+    },
+    {
+      "fieldValue": "NEW",
+      "fieldId": "27cc4946-6be4-4e31-b4d5-5882fc32960e",
+      "fieldName": "Lead Status",
+      "fieldGroupId": "1f0bd4c4-554f-633d-88ea-a545a8cf14a3",
+      "fieldGroupName": "Lead Information",
+      "fieldStepName": "",
+      "type": "ENQUIRY_STATUS"
+    }
+  ],
+  "emailSentStatus": false,
+  "callExecutedStatus": false,
+  "emailCount": 0,
+  "callCount": 0,
+  "isMasked": false,
+  "timeLastStatusUpdated": true,
+  "isRemainderMailSent": false,
+  "createdTimeStamp": {
+    "$date": "2025-11-11T11:49:00.000Z"
+  },
+  "updatedTimeStamp": {
+    "$date": "2025-11-11T06:18:20.796Z"
+  },
+  "score": 30,
+  "isSpamOrBot": false,
+  "_class": "com.lm.crm.leads.LeadCollection"
+},
+{
+  "_id": {
+    "$binary": {
+      "base64": "XWLnEFbsCx+QXzpiijnqiA==",
+      "subType": "03"
+    }
+  },
+  "businessId": {
+    "$binary": {
+      "base64": "TWLmR8TUCx/fMmonhrMNpQ==",
+      "subType": "03"
+    }
+  },
+  "createdById": {
+    "$binary": {
+      "base64": "qW5HDkzjCx+rcEm+wzMNiQ==",
+      "subType": "03"
+    }
+  },
+  "referenceNo": "L003",
+  "createdByName": "Demo",
+  "personalInfo": {
+    "name": "MAXIML ",
+    "email": "maximl@78gmail.com",
+    "mobile": "9907676521"
+  },
+  "address": {
+    "country": {
+      "name": "",
+      "code": ""
+    },
+    "state": "",
+    "city": "",
+    "addressLine1": "",
+    "zipCode": ""
+  },
+  "shippingAddress": {
+    "country": {
+      "name": "",
+      "code": ""
+    },
+    "state": "",
+    "city": "",
+    "addressLine1": "",
+    "zipCode": ""
+  },
+  "gstDetails": {
+    "GSTNo": "27AAKCM7270P1ZN",
+    "companyName": "MAXIML LABS PRIVATE LIMITED"
+  },
+  "type": "CUSTOMER",
+  "leadActiveType": "ACTIVE",
+  "customerType": "INDIVIDUAL",
+  "source": "COLD_CALL",
+  "leadStatus": "New",
+  "moreInfo": {
+    "Opening Balance": 0,
+    "Name": "MAXIML ",
+    "Mobile Number": "9907676521",
+    "Email": "maximl@78gmail.com",
+    "Lead Status": "NEW"
+  },
+  "fieldData": [
+    {
+      "fieldValue": "MAXIML ",
+      "fieldId": "00e2cdde-06a4-4db9-9f4c-91bf2d8f4642",
+      "fieldName": "Name",
+      "fieldGroupId": "1f0bd4c4-554f-633d-88ea-a545a8cf14a3",
+      "fieldGroupName": "Lead Information",
+      "fieldStepName": "",
+      "type": "STUDENT_NAME"
+    },
+    {
+      "fieldValue": "9907676521",
+      "fieldId": "19c188eb-e5c8-49ef-8193-997a089e0e8a",
+      "fieldName": "Mobile Number",
+      "fieldGroupId": "1f0bd4c4-554f-633d-88ea-a545a8cf14a3",
+      "fieldGroupName": "Lead Information",
+      "fieldStepName": "",
+      "type": "CONTACT_MOBILE"
+    },
+    {
+      "fieldValue": "maximl@78gmail.com",
+      "fieldId": "1ac41519-4a9f-402f-b8d6-0c51cabc3595",
+      "fieldName": "Email",
+      "fieldGroupId": "1f0bd4c4-554f-633d-88ea-a545a8cf14a3",
+      "fieldGroupName": "Lead Information",
+      "fieldStepName": "",
+      "type": "CONTACT_EMAIL"
+    },
+    {
+      "fieldValue": "NEW",
+      "fieldId": "27cc4946-6be4-4e31-b4d5-5882fc32960e",
+      "fieldName": "Lead Status",
+      "fieldGroupId": "1f0bd4c4-554f-633d-88ea-a545a8cf14a3",
+      "fieldGroupName": "Lead Information",
+      "fieldStepName": "",
+      "type": "ENQUIRY_STATUS"
+    }
+  ],
+  "emailSentStatus": true,
+  "callExecutedStatus": false,
+  "emailCount": 0,
+  "callCount": 0,
+  "isMasked": false,
+  "timeLastStatusUpdated": true,
+  "isRemainderMailSent": false,
+  "createdTimeStamp": {
+    "$date": "2025-11-11T11:42:00.000Z"
+  },
+  "updatedTimeStamp": {
+    "$date": "2025-11-11T06:11:07.065Z"
+  },
+  "score": 30,
+  "isSpamOrBot": false,
+  "_class": "com.lm.crm.leads.LeadCollection"
+}]

@@ -1,0 +1,396 @@
+[{
+  "_id": {
+    "$binary": {
+      "base64": "XEumaeBscP2FvrmjH/xsmA==",
+      "subType": "03"
+    }
+  },
+  "business": {
+    "_id": {
+      "$binary": {
+        "base64": "6WirRMliCx/VeNIhq4sgng==",
+        "subType": "03"
+      }
+    }
+  },
+  "project": {
+    "_id": {
+      "$binary": {
+        "base64": "/kzNsGBalAKixl0/HfdhqA==",
+        "subType": "03"
+      }
+    }
+  },
+  "title": "cycle11",
+  "description": "",
+  "startDate": {
+    "$date": "2025-10-31T18:30:00.000Z"
+  },
+  "endDate": {
+    "$date": "2025-11-07T18:30:00.000Z"
+  },
+  "status": "ACTIVE",
+  "isDefault": false,
+  "isFavourite": false,
+  "createdTimeStamp": {
+    "$date": "2025-11-07T17:20:57.337Z"
+  },
+  "updatedTimeStamp": {
+    "$date": "2025-11-07T17:20:57.337Z"
+  },
+  "_class": "com.lm.project.project_management.pms.model.Cycle"
+},
+{
+  "_id": {
+    "$binary": {
+      "base64": "gEp9O21F9dw0bAjUN2prqw==",
+      "subType": "03"
+    }
+  },
+  "business": {
+    "_id": {
+      "$binary": {
+        "base64": "DmfvCWR//x622/h2lit8jA==",
+        "subType": "03"
+      }
+    }
+  },
+  "project": {
+    "_id": {
+      "$binary": {
+        "base64": "7EqhnMKMWiD29Nr7nEx0nQ==",
+        "subType": "03"
+      }
+    }
+  },
+  "title": "akshitha",
+  "description": "akshitha testibng;lfambpois",
+  "status": "UPCOMING",
+  "isDefault": false,
+  "isFavourite": false,
+  "createdTimeStamp": {
+    "$date": "2025-11-07T09:50:23.009Z"
+  },
+  "updatedTimeStamp": {
+    "$date": "2025-11-07T09:50:23.009Z"
+  },
+  "_class": "com.lm.project.project_management.pms.model.Cycle"
+},
+{
+  "_id": {
+    "$binary": {
+      "base64": "jE6G0gDxAN0hWGRD7kkRrg==",
+      "subType": "03"
+    }
+  },
+  "business": {
+    "_id": {
+      "$binary": {
+        "base64": "DmfvCWR//x622/h2lit8jA==",
+        "subType": "03"
+      }
+    }
+  },
+  "project": {
+    "_id": {
+      "$binary": {
+        "base64": "7EqhnMKMWiD29Nr7nEx0nQ==",
+        "subType": "03"
+      }
+    }
+  },
+  "title": "jhgvuh",
+  "description": "uygy",
+  "status": "UPCOMING",
+  "isDefault": false,
+  "isFavourite": false,
+  "createdTimeStamp": {
+    "$date": "2025-11-07T09:49:40.996Z"
+  },
+  "updatedTimeStamp": {
+    "$date": "2025-11-07T09:49:40.996Z"
+  },
+  "_class": "com.lm.project.project_management.pms.model.Cycle"
+},
+{
+  "_id": {
+    "$binary": {
+      "base64": "skQXuNiTt4/vmWVEW28vvA==",
+      "subType": "03"
+    }
+  },
+  "business": {
+    "_id": {
+      "$binary": {
+        "base64": "zmuFYdPABB/FgyDnlRmtkQ==",
+        "subType": "03"
+      }
+    }
+  },
+  "project": {
+    "_id": {
+      "$binary": {
+        "base64": "Ck810moTwmpR+WNukKuLlQ==",
+        "subType": "03"
+      }
+    }
+  },
+  "title": "q",
+  "description": "q",
+  "status": "UPCOMING",
+  "isDefault": false,
+  "isFavourite": false,
+  "createdTimeStamp": {
+    "$date": "2025-10-28T09:35:56.675Z"
+  },
+  "updatedTimeStamp": {
+    "$date": "2025-10-28T09:35:56.675Z"
+  },
+  "_class": "com.lm.project.project_management.pms.model.Cycle"
+},
+{
+  "_id": {
+    "$binary": {
+      "base64": "vEOtUzKZ7TiJVCYNUByPuA==",
+      "subType": "03"
+    }
+  },
+  "business": {
+    "_id": {
+      "$binary": {
+        "base64": "hGPYgkBwBh81c31fbpn8oQ==",
+        "subType": "03"
+      }
+    }
+  },
+  "project": {
+    "_id": {
+      "$binary": {
+        "base64": "zEFUtR/LzOq0hbGxpESHiQ==",
+        "subType": "03"
+      }
+    }
+  },
+  "title": "crm Enhancements Sprint",
+  "description": "## Sprint Goals\n- Strengthen core crm functionality to improve user experience and data accuracy.\n- Implement new features that boost customer engagement and sales efficiency.\n\n## Objectives\n- Refine contact management and interaction tracking.\n- Introduce automated lead scoring and routing.\n- Enhance reporting dashboards with real‑time analytics.\n- Optimize performance and fix high‑priority bugs.\n\n## Key Deliverables\n- **Contact Management Upgrade**: bulk edit, merge duplicates, custom fields.\n- **Lead Scoring Engine**: rule‑based scoring model with automated assignment.\n- **Interaction Timeline**: unified view of calls, emails, and notes.\n- **Analytics Dashboard**: KPI widgets for pipeline health, conversion rates, and activity metrics.\n- **Performance Improvements**: query optimization, caching, and load testing results.\n- **Bug Fix Release**: resolution of top 10 reported crm issues.",
+  "startDate": {
+    "$date": "2025-10-29T00:00:00.000Z"
+  },
+  "endDate": {
+    "$date": "2025-10-29T00:00:00.000Z"
+  },
+  "status": "COMPLETED",
+  "isDefault": false,
+  "isFavourite": false,
+  "createdTimeStamp": {
+    "$date": "2025-10-25T20:11:10.786Z"
+  },
+  "updatedTimeStamp": {
+    "$date": "2025-10-25T20:11:10.786Z"
+  },
+  "_class": "com.lm.project.project_management.pms.model.Cycle"
+},
+{
+  "_id": {
+    "$binary": {
+      "base64": "30+MIhGlp8L4gzssUlEMlQ==",
+      "subType": "03"
+    }
+  },
+  "business": {
+    "_id": {
+      "$binary": {
+        "base64": "hGPYgkBwBh81c31fbpn8oQ==",
+        "subType": "03"
+      }
+    }
+  },
+  "project": {
+    "_id": {
+      "$binary": {
+        "base64": "zEFUtR/LzOq0hbGxpESHiQ==",
+        "subType": "03"
+      }
+    }
+  },
+  "title": "dvoaskmv",
+  "description": "as;lkfv ;",
+  "startDate": {
+    "$date": "2025-10-26T18:30:00.000Z"
+  },
+  "endDate": {
+    "$date": "2025-10-28T18:30:00.000Z"
+  },
+  "status": "COMPLETED",
+  "isDefault": false,
+  "isFavourite": false,
+  "createdTimeStamp": {
+    "$date": "2025-10-25T19:55:35.757Z"
+  },
+  "updatedTimeStamp": {
+    "$date": "2025-10-25T19:55:35.757Z"
+  },
+  "_class": "com.lm.project.project_management.pms.model.Cycle"
+},
+{
+  "_id": {
+    "$binary": {
+      "base64": "2k+4iVMtPhlLKbOrK4dwiQ==",
+      "subType": "03"
+    }
+  },
+  "business": {
+    "_id": {
+      "$binary": {
+        "base64": "hGPYgkBwBh81c31fbpn8oQ==",
+        "subType": "03"
+      }
+    }
+  },
+  "project": {
+    "_id": {
+      "$binary": {
+        "base64": "zEFUtR/LzOq0hbGxpESHiQ==",
+        "subType": "03"
+      }
+    }
+  },
+  "title": "jsvan;j",
+  "description": "adivhfkj",
+  "startDate": {
+    "$date": "2025-10-21T18:30:00.000Z"
+  },
+  "endDate": {
+    "$date": "2025-10-29T18:30:00.000Z"
+  },
+  "status": "COMPLETED",
+  "isDefault": false,
+  "isFavourite": false,
+  "createdTimeStamp": {
+    "$date": "2025-10-25T08:19:11.317Z"
+  },
+  "updatedTimeStamp": {
+    "$date": "2025-10-25T08:19:11.317Z"
+  },
+  "_class": "com.lm.project.project_management.pms.model.Cycle"
+},
+{
+  "_id": {
+    "$binary": {
+      "base64": "H0D+qpQiyqtuy8raUghGmw==",
+      "subType": "03"
+    }
+  },
+  "business": {
+    "_id": {
+      "$binary": {
+        "base64": "TGT5LEMICR+HAEK3ULdfpA==",
+        "subType": "03"
+      }
+    }
+  },
+  "project": {
+    "_id": {
+      "$binary": {
+        "base64": "nk5d+WnOF9ri3ZnmDSFXgA==",
+        "subType": "03"
+      }
+    }
+  },
+  "title": "dnhghnjdfhnj",
+  "description": "huttvyb",
+  "startDate": {
+    "$date": "2025-10-22T18:30:00.000Z"
+  },
+  "endDate": {
+    "$date": "2025-10-24T18:30:00.000Z"
+  },
+  "status": "COMPLETED",
+  "isDefault": false,
+  "isFavourite": false,
+  "createdTimeStamp": {
+    "$date": "2025-10-24T05:36:32.062Z"
+  },
+  "updatedTimeStamp": {
+    "$date": "2025-10-24T05:36:32.062Z"
+  },
+  "_class": "com.lm.project.project_management.pms.model.Cycle"
+},
+{
+  "_id": {
+    "$binary": {
+      "base64": "kktR1cuGS8Q/OdG8jX3usg==",
+      "subType": "03"
+    }
+  },
+  "business": {
+    "_id": {
+      "$binary": {
+        "base64": "TGT5LEMICR+HAEK3ULdfpA==",
+        "subType": "03"
+      }
+    }
+  },
+  "project": {
+    "_id": {
+      "$binary": {
+        "base64": "nk5d+WnOF9ri3ZnmDSFXgA==",
+        "subType": "03"
+      }
+    }
+  },
+  "title": "hdcgmdfbjh",
+  "description": "dvfjhj",
+  "startDate": {
+    "$date": "2025-10-23T18:30:00.000Z"
+  },
+  "endDate": {
+    "$date": "2025-10-23T18:30:00.000Z"
+  },
+  "status": "COMPLETED",
+  "isDefault": false,
+  "isFavourite": false,
+  "createdTimeStamp": {
+    "$date": "2025-10-24T05:35:55.493Z"
+  },
+  "updatedTimeStamp": {
+    "$date": "2025-10-24T05:35:55.493Z"
+  },
+  "_class": "com.lm.project.project_management.pms.model.Cycle"
+},
+{
+  "_id": {
+    "$binary": {
+      "base64": "ukochtpbnPSInFz+AM8VmA==",
+      "subType": "03"
+    }
+  },
+  "business": {
+    "_id": {
+      "$binary": {
+        "base64": "TGT5LEMICR+HAEK3ULdfpA==",
+        "subType": "03"
+      }
+    }
+  },
+  "project": {
+    "_id": {
+      "$binary": {
+        "base64": "nk5d+WnOF9ri3ZnmDSFXgA==",
+        "subType": "03"
+      }
+    }
+  },
+  "title": "dfvvhx ",
+  "description": "h bgvgfbnkjg ",
+  "status": "UPCOMING",
+  "isDefault": false,
+  "isFavourite": false,
+  "createdTimeStamp": {
+    "$date": "2025-10-24T05:35:31.452Z"
+  },
+  "updatedTimeStamp": {
+    "$date": "2025-10-24T05:35:31.452Z"
+  },
+  "_class": "com.lm.project.project_management.pms.model.Cycle"
+}]
