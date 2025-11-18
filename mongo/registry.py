@@ -119,6 +119,26 @@ REL: Dict[str, Dict[str, dict]] = {
             "many": False
         },
     },
+    "LeadScoreRule": {
+        # LeadScoreRule references Business
+        "business": {
+            "target": "business",
+            "localField": "business._id",
+            "foreignField": "_id",
+            "as": "business",
+            "many": False
+        },
+    },
+    "Segmentation": {
+        # Segmentation references Business
+        "business": {
+            "target": "business",
+            "localField": "business._id",
+            "foreignField": "_id",
+            "as": "business",
+            "many": False
+        },
+    },
 }
 
 # ---- Collections (one source of truth)
@@ -169,6 +189,10 @@ ALLOWED_FIELDS: Dict[str, Set[str]] = {
         "_id", "name", "description", "score", "change", "aiAdjusted", "isActive", "field",
         "operator", "value", "business", "business._id", "business.name", "createdAt", "updatedAt"
     },
+    "Segmentation": {
+        "_id", "name", "description", "conditions", "tags", "isActive", "business", "business._id",
+        "business.name", "createdAt", "updatedAt"
+    },
 }
 
 # ---- Field Aliases (map common names to actual field names)
@@ -190,6 +214,12 @@ ALIASES: Dict[str, Dict[str, str]] = {
     },
     "CallLog": {
         "status": "callStatus",
+    },
+    "Segmentation": {
+        "status": "isActive",
+    },
+    "LeadScoreRule": {
+        "status": "isActive",
     },
 }
 

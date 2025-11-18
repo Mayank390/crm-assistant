@@ -28,8 +28,7 @@ class LLMIntentParser:
     The LLM proposes:
     - primary_entity
     - target_entities (relations to join)
-    - filters (normalized keys: status, priority, project_status, cycle_status, page_visibility,
-      project_name, cycle_name, assignee_name, module_name)
+    - filters (normalized keys: status, priority, leadStatus, taskStatus, meetingStatus, noteStatus)
     - aggregations: ["count"|"group"|"summary"]
     - group_by tokens: ["leadStatus","taskStatus","meetingStatus","assignedName","priority","lead"]
     - projections (subset of allow-listed fields for the primary entity)
@@ -88,6 +87,16 @@ class LLMIntentParser:
             "mailinfo": "MailInfo",
             "email": "MailInfo",
             "emails": "MailInfo",
+            "segmentation": "Segmentation",
+            "segmentations": "Segmentation",
+            "segment": "Segmentation",
+            "segments": "Segmentation",
+            "leadscorerule": "LeadScoreRule",
+            "scorerule": "LeadScoreRule",
+            "scoring": "LeadScoreRule",
+            "score rule": "LeadScoreRule",
+            "lead score": "LeadScoreRule",
+            "leadscore": "LeadScoreRule",
         }
 
     def _is_placeholder(self, v) -> bool:
@@ -103,25 +112,6 @@ class LLMIntentParser:
             s in {"none?", "todo?", "n/a", "<none>", "<unknown>"}
         )
 
-
-    def _normalize_state_value(self, value: str) -> Optional[str]:
-        """Normalize state values to match database enum"""
-        state_map = {
-            "open": "Open",
-            "completed": "Completed",
-            "backlog": "Backlog",
-            "re-raised": "Re-Raised",
-            "re raised": "Re-Raised",
-            "reraised": "Re-Raised",
-            "reopened": "Re-Raised",
-            "re-opened": "Re-Raised",
-            "re opened": "Re-Raised",
-            "in-progress": "In-Progress",
-            "in progress": "In-Progress",
-            "wip": "In-Progress",
-            "verified": "Verified"
-        }
-        return state_map.get(value.lower())
 
     def _normalize_priority_value(self, value: str) -> Optional[str]:
         """Normalize priority values to match database enum (TASK_PRIORITY: NEW, HIGH, MEDIUM, LOW)"""
@@ -264,32 +254,6 @@ class LLMIntentParser:
         }
         return type_map.get(value.lower())
 
-    def _normalize_status_value(self, filter_key: str, value: str) -> Optional[str]:
-        """Normalize status values based on filter type (legacy function for work-management)"""
-        if filter_key == "project_status":
-            status_map = {
-                "not_started": "NOT_STARTED",
-                "not started": "NOT_STARTED",
-                "started": "STARTED",
-                "completed": "COMPLETED",
-                "overdue": "OVERDUE"
-            }
-        elif filter_key == "cycle_status":
-            status_map = {
-                "active": "ACTIVE",
-                "upcoming": "UPCOMING",
-                "completed": "COMPLETED"
-            }
-        elif filter_key == "page_visibility":
-            status_map = {
-                "public": "PUBLIC",
-                "private": "PRIVATE",
-                "archived": "ARCHIVED"
-            }
-        else:
-            return None
-
-        return status_map.get(value.lower())
 
     def _normalize_boolean_value(self, value: str) -> Optional[bool]:
         """Normalize string booleans to actual booleans"""
@@ -754,7 +718,7 @@ class LLMIntentParser:
     async def _sanitize_intent(self, data: Dict[str, Any], original_query: str = "") -> QueryIntent:
         # Primary entity - trust the LLM's choice unless it's completely invalid
         requested_primary = (data.get("primary_entity") or "").strip()
-        primary = requested_primary if requested_primary in self.entities else "workItem"
+        primary = requested_primary if requested_primary in self.entities else "Lead"
 
         # Allowed relations for primary
         allowed_rels = set(self.entity_relations.get(primary, []))
@@ -770,43 +734,21 @@ class LLMIntentParser:
         logger.debug(f"Raw filters before sanitization for query '{original_query[:100] if original_query else 'unknown'}': {raw_filters}")
         
         filters: Dict[str, Any] = {}
-
-        # Map legacy 'status' to 'state' for workItem if present
-        if primary == "workItem" and "status" in raw_filters and "state" not in raw_filters:
-            raw_filters["state"] = raw_filters.pop("status")
-
-        # For epic collection, accept 'state_name' as the canonical filter key
-        # and also map legacy 'status' to 'state_name' when provided by LLMs/users
-        if primary == "epic" or primary == "features" or primary == "userStory":
-            if "status" in raw_filters and "state_name" not in raw_filters:
-                raw_filters["state_name"] = raw_filters.pop("status")
-            # Some LLMs may emit 'state' for epics; prefer 'state_name'
-            if "state" in raw_filters and "state_name" not in raw_filters:
-                raw_filters["state_name"] = raw_filters.pop("state")
-
-        # Allow plain 'status' for project/cycle as their canonical status
-        if primary in ("project", "cycle") and "status" in raw_filters:
-            if primary == "project" and "project_status" not in raw_filters:
-                raw_filters["project_status"] = raw_filters["status"]
-            if primary == "cycle" and "cycle_status" not in raw_filters:
-                raw_filters["cycle_status"] = raw_filters["status"]
-
-        if primary in ("workItem","epic","features","userStory") and "label" in raw_filters:
-            raw_filters["label_name"] = raw_filters["label"]
         # Normalize date filter key synonyms BEFORE validation so they are preserved
         # Examples the LLM might emit: createdAt_from, created_from, date_to, updated_since, etc.
         def _normalize_date_filter_keys(primary_entity: str, rf: Dict[str, Any]) -> Dict[str, Any]:
             normalized: Dict[str, Any] = {}
             # Determine canonical created/updated fields per entity
-            if primary_entity == "page" or primary_entity == "features" or primary_entity == "userStory":
-                created_field = "createdAt"
-                updated_field = "updatedAt"
-            elif primary_entity == "members":
+            if primary_entity == "members":
                 # members commonly use joiningDate
                 created_field = "joiningDate"
                 updated_field = None
+            elif primary_entity in ("LeadScoreRule", "Segmentation"):
+                # LeadScoreRule and Segmentation use createdAt/updatedAt
+                created_field = "createdAt"
+                updated_field = "updatedAt"
             else:
-                # workItem/project/cycle/module use createdTimeStamp/updatedTimeStamp
+                # CRM entities use createdTimeStamp/updatedTimeStamp
                 created_field = "createdTimeStamp"
                 updated_field = "updatedTimeStamp"
 
@@ -850,30 +792,22 @@ class LLMIntentParser:
         # Base normalized keys across collections
         known_filter_keys = {
             # normalized enums/booleans
-            "state", "priority", "project_status", "cycle_status", "page_visibility",
-            "status", "access", "isActive", "isArchived", "isDefault", "isFavourite",
+            "priority", "status", "access", "isActive", "isArchived", "isDefault", "isFavourite",
             "visibility", "locked",
             # name/title/id style queries
-            "label_name", "title", "name", "displayBugNo", "projectDisplayId", "email",
+            "label_name", "title", "name", "email",
             # entity name filters (secondary lookups)
-            "project_name", "cycle_name", "assignee_name", "module_name", "member_role",
+            "assignee_name", "member_role",
             # actor/name filters
             "createdBy_name", "lead_name", "leadMail", "business_name",
-            # timeline specific actor/task tokens
-            "actor_name", "work_item_title",
             "defaultAssignee_name", "defaultAsignee_name", "staff_name",
             # members specific
             "role", "type", "joiningDate", "joiningDate_from", "joiningDate_to",
             # Array size filters (CRITICAL - must be in known_filter_keys)
             "assignee_count", "label_count", "customProperties_count",
-            "functionalRequirements_count", "nonFunctionalRequirements_count",
-            "dependencies_count", "risks_count", "workItems_count", "userStories_count",
-            "goals_count", "painPoints_count", "successCriteria_count",
-            "linkedCycle_count", "linkedModule_count", "linkedPages_count",
             # Advanced MongoDB operator filters (CRITICAL - must be in known_filter_keys)
             "$text",  # Full-text search
             # Note: _elemMatch is handled dynamically via suffix matching
-            #feature_specific
 
         }
         
@@ -903,7 +837,7 @@ class LLMIntentParser:
         for f in date_like_fields:
             known_filter_keys.add(f + "_from")
             known_filter_keys.add(f + "_to")
-            # Also preserve relative window keys so timeline's timestamp_within is not dropped
+            # Also preserve relative window keys for date range filters
             known_filter_keys.add(f + "_within")
             known_filter_keys.add(f + "_duration")
 
@@ -914,11 +848,7 @@ class LLMIntentParser:
                     logger.warning(f"Filter '{k}' dropped during sanitization (not in known_filter_keys) for query: '{original_query[:100] if original_query else 'unknown'}'")
                 continue
             # Normalize values where appropriate
-            if k == "state" and isinstance(v, str):
-                normalized_state = self._normalize_state_value(v.strip())
-                if normalized_state:
-                    filters[k] = normalized_state
-            elif k == "priority" and isinstance(v, str):
+            if k == "priority" and isinstance(v, str):
                 normalized_priority = self._normalize_priority_value(v.strip())
                 if normalized_priority:
                     filters[k] = normalized_priority
@@ -954,17 +884,13 @@ class LLMIntentParser:
                 normalized = self._normalize_mail_type_value(v.strip())
                 if normalized:
                     filters[k] = normalized
-            elif k in ["project_status", "cycle_status", "page_visibility"] and isinstance(v, str):
-                normalized_status = self._normalize_status_value(k, v.strip())
-                if normalized_status:
-                    filters[k] = normalized_status
             elif k in ["isActive", "isArchived", "isDefault", "isFavourite", "locked"]:
                 normalized_bool = self._normalize_boolean_value_from_any(v)
                 if normalized_bool is not None:
                     filters[k] = normalized_bool
-            elif k in ["project_name", "cycle_name", "module_name", "assignee_name", "createdBy_name", "lead_name", "business_name","label_name"] and isinstance(v, str):
+            elif k in ["assignee_name", "createdBy_name", "lead_name", "business_name", "label_name"] and isinstance(v, str):
                 filters[k] = v.strip()
-            elif isinstance(v, str) and k in {"title", "name", "displayBugNo", "projectDisplayId", "email"}:
+            elif isinstance(v, str) and k in {"title", "name", "email"}:
                 filters[k] = v.strip()
             elif k.endswith("_count") and isinstance(v, (str, int)):
                 # Array size filters: keep as-is (values like ">1", ">=2", "0", "3", etc.)
@@ -993,21 +919,15 @@ class LLMIntentParser:
         # 1) Infer grouping from phrasing: "by X", "group by X", "breakdown by X", "per X"
         inferred_group_by: List[str] = []
         def _maybe_add_group(token: str):
-            if token in {"project", "priority", "assignee", "cycle", "module", "state", "status", "business"}:
+            if token in {"priority", "assignee", "status", "business"}:
                 if token not in inferred_group_by:
                     inferred_group_by.append(token)
 
         # Common phrasings
         if re.search(r"\b(group\s+by|breakdown\s+by|distribution\s+by|by|per)\s+priority\b", oq_text):
             _maybe_add_group("priority")
-        if re.search(r"\b(group\s+by|breakdown\s+by|distribution\s+by|by|per)\s+project\b", oq_text):
-            _maybe_add_group("project")
         if re.search(r"\b(group\s+by|breakdown\s+by|distribution\s+by|by|per)\s+assignee\b", oq_text):
             _maybe_add_group("assignee")
-        if re.search(r"\b(group\s+by|breakdown\s+by|distribution\s+by|by|per)\s+cycle\b", oq_text):
-            _maybe_add_group("cycle")
-        if re.search(r"\b(group\s+by|breakdown\s+by|distribution\s+by|by|per)\s+module\b", oq_text):
-            _maybe_add_group("module")
         if re.search(r"\b(group\s+by|breakdown\s+by|distribution\s+by|by|per)\s+status\b", oq_text):
             # For CRM entities, map "status" to entity-specific status field
             if primary == "Lead":
@@ -1038,14 +958,14 @@ class LLMIntentParser:
             if "priority" in merged and "by priority" in oq_text and "priority" in filters:
                 filters.pop("priority", None)
 
-        # 2) Overdue semantics for work items: dueDate < now and not in done-like states
-        if primary == "workItem" and re.search(r"\boverdue\b|\bpast\s+due\b|\blate\b", oq_text):
+        # 2) Overdue semantics for tasks: dueDate < now and not in done-like states
+        if primary == "Task" and re.search(r"\boverdue\b|\bpast\s+due\b|\blate\b", oq_text):
             # Only add if user didn't already specify a dueDate bound
             if "dueDate_to" not in filters:
                 filters["dueDate_to"] = "now"
             # Exclude commonly done/closed states if user didn't explicitly filter state
-            if "state" not in filters and "state_not" not in filters:
-                filters["state_not"] = ["Completed", "Verified"]
+            if "taskStatus" not in filters and "taskStatus_not" not in filters:
+                filters["taskStatus_not"] = ["COMPLETED", "DONE"]
 
         # 3) Advanced feature detection from query text (heuristic fallback)
         
@@ -1063,9 +983,9 @@ class LLMIntentParser:
             # Infer window field from context
             if not data.get("window_field"):
                 if "created" in oq_text or "creation" in oq_text:
-                    data["window_field"] = "createdTimeStamp" if primary != "page" else "createdAt"
+                    data["window_field"] = "createdTimeStamp"
                 elif "updated" in oq_text or "modified" in oq_text:
-                    data["window_field"] = "updatedTimeStamp" if primary != "page" else "updatedAt"
+                    data["window_field"] = "updatedTimeStamp"
         
         # Trend detection
         if re.search(r"\btrends?\b|\bmonthly\s+trends?\b|\bweekly\s+trends?\b|\bquarterly\s+trends?\b|\bperiod\s+over\s+period\b", oq_text):
@@ -1084,9 +1004,9 @@ class LLMIntentParser:
             # Infer trend field
             if not data.get("trend_field"):
                 if "created" in oq_text or "creation" in oq_text:
-                    data["trend_field"] = "createdTimeStamp" if primary != "page" else "createdAt"
+                    data["trend_field"] = "createdTimeStamp"
                 elif "updated" in oq_text or "modified" in oq_text:
-                    data["trend_field"] = "updatedTimeStamp" if primary != "page" else "updatedAt"
+                    data["trend_field"] = "updatedTimeStamp"
         
         # Anomaly detection
         if re.search(r"\banomal(?:y|ies)\b|\bunusual\b|\boutlier\b|\bspike\b|\bdetect.*\banomal\b", oq_text):
@@ -1097,11 +1017,11 @@ class LLMIntentParser:
             # Infer anomaly field
             if not data.get("anomaly_field"):
                 if "created" in oq_text or "creation" in oq_text:
-                    data["anomaly_field"] = "createdTimeStamp" if primary != "page" else "createdAt"
+                    data["anomaly_field"] = "createdTimeStamp"
                 elif "updated" in oq_text or "modified" in oq_text:
-                    data["anomaly_field"] = "updatedTimeStamp" if primary != "page" else "updatedAt"
+                    data["anomaly_field"] = "updatedTimeStamp"
                 elif "completion" in oq_text:
-                    data["anomaly_field"] = "updatedTimeStamp" if primary != "page" else "updatedAt"
+                    data["anomaly_field"] = "updatedTimeStamp"
         
         # Forecasting detection
         if re.search(r"\bforecast\b|\bpredict\b|\bprojection\b|\bprojected\b|\bnext\s+\d+\s+days?\b|\bnext\s+week\b|\bnext\s+month\b", oq_text):
@@ -1122,9 +1042,9 @@ class LLMIntentParser:
             # Infer forecast field
             if not data.get("forecast_field"):
                 if "created" in oq_text or "creation" in oq_text:
-                    data["forecast_field"] = "createdTimeStamp" if primary != "page" else "createdAt"
+                    data["forecast_field"] = "createdTimeStamp"
                 elif "updated" in oq_text or "modified" in oq_text:
-                    data["forecast_field"] = "updatedTimeStamp" if primary != "page" else "updatedAt"
+                    data["forecast_field"] = "updatedTimeStamp"
 
         # Aggregations - include new advanced aggregation types
         allowed_aggs = {
@@ -1136,17 +1056,17 @@ class LLMIntentParser:
         # Group by tokens
         # Extended to support status/visibility/business and date buckets
         allowed_group = {
-            "cycle", "project", "assignee", "state", "priority", "module",
+            "assignee", "state", "priority",
             "status", "visibility", "business",
             "created_day", "created_week", "created_month",
             "updated_day", "updated_week", "updated_month",
         }
         group_by = [g for g in (data.get("group_by") or []) if g in allowed_group]
 
-        # If user grouped by cross-entity tokens, force workItem as base (entity lock)
-        cross_tokens = {"assignee", "project", "cycle", "module", "business"}
-        if any(g in cross_tokens for g in group_by):
-            primary = "workItem"
+        # If user grouped by cross-entity tokens, force Lead as base (entity lock)
+        cross_tokens = {"assignee", "business"}
+        if any(g in cross_tokens for g in group_by) and primary not in self.entities:
+            primary = "Lead"
 
         # Aggregations & group_by coherence
         if group_by and "group" not in aggregations:
@@ -1165,33 +1085,14 @@ class LLMIntentParser:
         if isinstance(so, dict) and so:
             key, val = next(iter(so.items()))
             # Accept synonyms and normalize
-            if primary == "page" or primary == "features" or primary == "userStory":
-                key_map = {
-                    "created": "createdAt",
-                    "createdAt": "createdAt",
-                    "created_time": "createdAt",
-                    "time": "createdAt",
-                    "date": "createdAt",
-                    "timestamp": "updatedAt",
-                }
-            elif primary == "timeline":
-                key_map = {
-                    "created": "timestamp",
-                    "createdAt": "timestamp",
-                    "created_time": "timestamp",
-                    "time": "timestamp",
-                    "date": "timestamp",
-                    "timestamp": "timestamp",
-                }
-            else:
-                key_map = {
-                    "created": "createdTimeStamp",
-                    "createdAt": "createdTimeStamp",
-                    "created_time": "createdTimeStamp",
-                    "time": "createdTimeStamp",
-                    "date": "createdTimeStamp",
-                    "timestamp": "createdTimeStamp",
-                }
+            key_map = {
+                "created": "createdTimeStamp",
+                "createdAt": "createdTimeStamp",
+                "created_time": "createdTimeStamp",
+                "time": "createdTimeStamp",
+                "date": "createdTimeStamp",
+                "timestamp": "createdTimeStamp",
+            }
             norm_key = key_map.get(key, key)
 
             def _norm_dir(v: Any) -> Optional[int]:
@@ -1259,38 +1160,6 @@ class LLMIntentParser:
             if group_by and wants_details_raw is None:
                 wants_details = False
 
-        # Heuristic: timeline TIME_LOGGED queries that mention per-task breakdown should group by work item
-        # This enables questions like "amount of time logged by <user> per task for today"
-        if primary == "timeline":
-            tval = str(filters.get("type", "")).lower()
-            mentions_time = any(k in oq for k in ["time logged", "amount of time", "time spent", "logged time"]) or ("time_logged" in tval)
-            mentions_per_task = any(k in oq for k in ["per task", "by task", "per work item", "by work item", "per ticket", "by ticket", "breakdown"])
-            if mentions_time and (mentions_per_task or ("time_logged" in tval and not group_by)):
-                if "group" not in aggregations:
-                    aggregations = ["group"] + [a for a in aggregations if a != "group"]
-                if not group_by:
-                    group_by = ["work_item_title"]
-                # Grouped summaries don't need wants_details by default
-                wants_details = False
-
-            # Infer missing time window for timeline when the query includes relative periods
-            has_time_window = any(k in filters for k in [
-                "timestamp_from", "timestamp_to", "timestamp_within", "timestamp_duration"
-            ])
-            if not has_time_window:
-                if re.search(r"\btoday\b", oq):
-                    filters["timestamp_within"] = "today"
-                elif re.search(r"\byesterday\b", oq):
-                    filters["timestamp_within"] = "yesterday"
-                elif re.search(r"\bthis\s+week\b", oq):
-                    filters["timestamp_within"] = "this_week"
-                elif re.search(r"\blast\s+week\b", oq):
-                    filters["timestamp_within"] = "last_week"
-                elif re.search(r"\bthis\s+month\b", oq):
-                    filters["timestamp_within"] = "this_month"
-                elif re.search(r"\blast\s+month\b", oq):
-                    filters["timestamp_within"] = "last_month"
-
         # Infer pagination from query text if not explicitly set by LLM
         if not data.get("skip") or data.get("skip") == 0:
             inferred_pagination = self._infer_pagination_from_query(original_query or "")
@@ -1305,15 +1174,7 @@ class LLMIntentParser:
         if not sort_order and not group_by and not wants_count:
             inferred_sort = self._infer_sort_order_from_query(original_query or "")
             if inferred_sort:
-                # If timeline → map createdTimeStamp to timestamp
-                if primary == "timeline" and "createdTimeStamp" in inferred_sort:
-                    dirv = inferred_sort.get("createdTimeStamp", -1)
-                    sort_order = {"timestamp": dirv}
-                elif primary in ("page", "userStory", "features") and "createdTimeStamp" in inferred_sort:
-                    dirv = inferred_sort.get("createdTimeStamp", -1)
-                    sort_order = {"createdAt": dirv}
-                else:
-                    sort_order = inferred_sort
+                sort_order = inferred_sort
 
         # Fetch one heuristic
         fetch_one = bool(data.get("fetch_one", False)) or (limit == 1)
@@ -1362,15 +1223,12 @@ class LLMIntentParser:
     async def _disambiguate_name_entity(self, proposed: Dict[str, str]) -> Optional[str]:
         """Use DB counts across collections to decide which name filter is most plausible.
 
-        Preference order on ties: assignee -> project -> cycle -> module.
+        Preference order on ties: assignee.
         Returns the chosen filter key or None if inconclusive.
         """
         # Build candidate lookups: mapping filter key -> (collection, field)
         candidates = {
             "assignee_name": ("members", "name"),
-            "project_name": ("project", "name"),
-            "cycle_name": ("cycle", "name"),
-            "module_name": ("module", "name"),
         }
         counts: Dict[str, int] = {}
         for key, (collection, field) in candidates.items():
@@ -1395,7 +1253,7 @@ class LLMIntentParser:
             return None
 
         # Sort keys by count desc then by preference order
-        preference = {"assignee_name": 0, "project_name": 1, "cycle_name": 2, "module_name": 3}
+        preference = {"assignee_name": 0}
         chosen = sorted(positive.items(), key=lambda kv: (-kv[1], preference.get(kv[0], 99)))[0][0]
         return chosen
 

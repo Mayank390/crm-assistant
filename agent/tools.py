@@ -37,8 +37,7 @@ except ImportError:
 # ------------------ RAG Retrieval Defaults ------------------
 # Per content_type default limits for retrieval. These are applied when the caller
 # does not explicitly provide a limit (i.e., limit is None).
-# Rationale: pages/work_items generally require broader recall; projects/cycles/modules
-# tend to be fewer and more concise.
+# Rationale: CRM entities have appropriate default limits for retrieval.
 CONTENT_TYPE_DEFAULT_LIMITS: Dict[str, int] = {
     "lead": 12,
     "task": 12,
@@ -47,6 +46,8 @@ CONTENT_TYPE_DEFAULT_LIMITS: Dict[str, int] = {
     "notes": 10,
     "callLog": 10,
     "mailInfo": 10,
+    "segmentation": 10,
+    "leadScoreRule": 10,
 }
 
 # ------------------ Enum Transformation Mappings ------------------
@@ -251,6 +252,38 @@ ENUM_TRANSFORMATIONS: Dict[str, Dict[str, Dict[str, str]]] = {
             "DRAFTS": "Drafts",
         },
     },
+    "Segmentation": {
+        "operator": {
+            "CONTAINS": "Contains",
+            "EQUALS": "Equals",
+            "GREATER_THAN": "Greater Than",
+            "LESS_THAN": "Less Than",
+            "GREATER_THAN_OR_EQUAL": "Greater Than Or Equal",
+            "LESS_THAN_OR_EQUAL": "Less Than Or Equal",
+            "NOT_EQUALS": "Not Equals",
+            "NOT_CONTAINS": "Not Contains",
+            "STARTS_WITH": "Starts With",
+            "ENDS_WITH": "Ends With",
+        },
+    },
+    "LeadScoreRule": {
+        "change": {
+            "POSITIVE": "Positive",
+            "NEGATIVE": "Negative",
+        },
+        "operator": {
+            "EQUALS": "Equals",
+            "GREATER_THAN": "Greater Than",
+            "LESS_THAN": "Less Than",
+            "GREATER_THAN_OR_EQUAL": "Greater Than Or Equal",
+            "LESS_THAN_OR_EQUAL": "Less Than Or Equal",
+            "NOT_EQUALS": "Not Equals",
+            "CONTAINS": "Contains",
+            "NOT_CONTAINS": "Not Contains",
+            "STARTS_WITH": "Starts With",
+            "ENDS_WITH": "Ends With",
+        },
+    },
     # Common enum values that might appear in multiple collections
     "_common": {
         "attachmentType": {
@@ -350,6 +383,7 @@ CONTENT_TYPE_CHUNKS_PER_DOC: Dict[str, int] = {
     "notes": 2,
     "callLog": 2,
     "mailInfo": 2,
+    "segmentation": 2,
 }
 
 CONTENT_TYPE_INCLUDE_ADJACENT: Dict[str, bool] = {
@@ -360,6 +394,7 @@ CONTENT_TYPE_INCLUDE_ADJACENT: Dict[str, bool] = {
     "notes": False,
     "callLog": False,
     "mailInfo": False,
+    "segmentation": False,
 }
 
 CONTENT_TYPE_MIN_SCORE: Dict[str, float] = {
@@ -370,6 +405,7 @@ CONTENT_TYPE_MIN_SCORE: Dict[str, float] = {
     "notes": 0.55,
     "callLog": 0.55,
     "mailInfo": 0.55,
+    "segmentation": 0.55,
 }
 
 
@@ -451,9 +487,8 @@ def filter_meaningful_content(data: Any) -> Any:
         'priority', 'status', 'state', 'displayBugNo', 'projectDisplayId',
         # Business logic fields
         'label', 'type', 'access', 'visibility', 'icon', 'imageUrl',
-        'business', 'staff', 'createdBy', 'assignee', 'project', 'cycle', 'module',
-        'members', 'pages', 'projectStates', 'subStates', 'linkedCycle', 'linkedModule',
-        'cycles','modules',
+        'business', 'staff', 'createdBy', 'assignee',
+        'members',
         # Date fields (but not timestamps)
         'startDate', 'endDate', 'joiningDate', 'createdAt', 'updatedAt',
         # Estimate and work tracking
@@ -466,7 +501,9 @@ def filter_meaningful_content(data: Any) -> Any:
         'meetingType', 'meetingLink', 'meetingLocated', 'callType', 'callPurpose', 'callDuration',
         'mailType', 'toMails', 'toCcMails', 'toBccMails', 'attachments', 'score',
         'personalInfo', 'company', 'address', 'dueDate', 'startDateTime', 'endDateTime',
-        'description', 'body', 'notesAttachments', 'participantsList', 'emailData'
+        'description', 'body', 'notesAttachments', 'participantsList', 'emailData',
+        # Segmentation fields
+        'conditions', 'tags', 'isActive', 'operator'
     }
 
     # Fields to always exclude (metadata)
@@ -800,152 +837,12 @@ def _transform_by_collection(doc: Dict[str, Any], collection: Optional[str]) -> 
         set_name("project", "projectName")
         # user is actor
         set_name("user", "actorName")
-        # include work item title if present
-        if isinstance(doc.get("workItemTitle"), str):
-            out["workItemTitle"] = doc["workItemTitle"]
         # event type and field changed are useful summarizers
         if isinstance(doc.get("type"), str):
             out["timelineType"] = doc["type"]
         if isinstance(doc.get("fieldChanged"), str):
             out["fieldChanged"] = doc["fieldChanged"]
 
-    elif collection_lower == "epic":
-        set_name("project", "projectName")
-        set_name("business", "businessName")
-        set_name("createdBy", "createdByName")
-        set_names_list("assignee", "assignees")
-
-        # Handle customProperties array with complex structures
-        custom_props = doc.get("customProperties")
-        if isinstance(custom_props, list) and custom_props:
-            out["customPropertiesCount"] = len(custom_props)
-            # Surface custom property types and values
-            prop_types = []
-            for prop in custom_props[:5]:  # First 5 properties
-                if isinstance(prop, dict):
-                    prop_type = prop.get("type") or prop.get("propertyType")
-                    prop_value = prop.get("value") or prop.get("propertyValue")
-                    if prop_type and prop_value:
-                        prop_types.append(f"{prop_type}: {truncate_str(str(prop_value), 50)}")
-                    elif prop_type:
-                        prop_types.append(str(prop_type))
-            if prop_types:
-                out["customPropertiesSample"] = prop_types
-
-    elif collection_lower == "features":
-        set_name("project", "projectName")
-        set_name("business", "businessName")
-        set_name("lead", "leadName")
-        set_name("createdBy", "createdByName")
-        set_name("cycle", "cycleName")
-        set_name("modules", "moduleName")
-        set_name("parent", "parentName")
-        set_names_list("assignee", "assignees")
-
-        # Handle nested basicInfo structure
-        basic_info = doc.get("basicInfo")
-        if isinstance(basic_info, dict):
-            if isinstance(basic_info.get("title"), str):
-                out["basicInfoTitle"] = basic_info["title"]
-            if isinstance(basic_info.get("description"), str):
-                out["basicInfoDescription"] = truncate_str(basic_info["description"], 200)
-
-        # Handle nested problemInfo structure
-        problem_info = doc.get("problemInfo")
-        if isinstance(problem_info, dict):
-            if isinstance(problem_info.get("statement"), str):
-                out["problemStatement"] = truncate_str(problem_info["statement"], 200)
-            if isinstance(problem_info.get("objective"), str):
-                out["problemObjective"] = truncate_str(problem_info["objective"], 200)
-
-        # Handle nested requirements structure
-        requirements = doc.get("requirements")
-        if isinstance(requirements, dict):
-            functional_reqs = requirements.get("functionalRequirements")
-            if isinstance(functional_reqs, list):
-                out["functionalRequirementsCount"] = len(functional_reqs)
-                # Surface first few requirements
-                if functional_reqs and len(functional_reqs) > 0:
-                    sample_reqs = [req for req in functional_reqs[:3] if isinstance(req, str)]
-                    if sample_reqs:
-                        out["functionalRequirementsSample"] = sample_reqs
-
-            non_functional_reqs = requirements.get("nonFunctionalRequirements")
-            if isinstance(non_functional_reqs, list):
-                out["nonFunctionalRequirementsCount"] = len(non_functional_reqs)
-                # Surface first few requirements
-                if non_functional_reqs and len(non_functional_reqs) > 0:
-                    sample_reqs = [req for req in non_functional_reqs[:3] if isinstance(req, str)]
-                    if sample_reqs:
-                        out["nonFunctionalRequirementsSample"] = sample_reqs
-
-        # Handle nested riskAndDependencies structure
-        risk_deps = doc.get("riskAndDependencies")
-        if isinstance(risk_deps, dict):
-            dependencies = risk_deps.get("dependencies")
-            if isinstance(dependencies, list):
-                out["dependenciesCount"] = len(dependencies)
-                # Surface dependency titles
-                dep_titles = []
-                for dep in dependencies:
-                    if isinstance(dep, dict) and dep.get("title"):
-                        dep_titles.append(dep["title"])
-                    elif isinstance(dep, str):
-                        dep_titles.append(dep)
-                if dep_titles:
-                    out["dependencyTitles"] = dep_titles[:5]  # First 5 dependencies
-
-            risks = risk_deps.get("risks")
-            if isinstance(risks, list):
-                out["risksCount"] = len(risks)
-                # Surface risk summaries
-                risk_summaries = []
-                for risk in risks[:3]:  # First 3 risks
-                    if isinstance(risk, dict):
-                        summary = ""
-                        if risk.get("problemLevel"):
-                            summary += f"Problem: {risk['problemLevel']}"
-                        if risk.get("impactLevel"):
-                            summary += f", Impact: {risk['impactLevel']}"
-                        if summary:
-                            risk_summaries.append(summary)
-                if risk_summaries:
-                    out["riskSummaries"] = risk_summaries
-
-        # Handle various array fields
-        if isinstance(doc.get("workItems"), list):
-            out["workItemsCount"] = len(doc["workItems"])
-        if isinstance(doc.get("userStories"), list):
-            out["userStoriesCount"] = len(doc["userStories"])
-        if isinstance(doc.get("goals"), list):
-            out["goalsCount"] = len(doc["goals"])
-        if isinstance(doc.get("painPoints"), list):
-            out["painPointsCount"] = len(doc["painPoints"])
-
-        # Handle successCriteria (could be in problemInfo or top-level)
-        success_criteria = doc.get("problemInfo", {}).get("successCriteria") or doc.get("successCriteria")
-        if isinstance(success_criteria, list) and success_criteria:
-            out["successCriteriaCount"] = len(success_criteria)
-            # Surface first few criteria
-            criteria_text = [str(c) for c in success_criteria[:3] if c]
-            if criteria_text:
-                out["successCriteriaSample"] = criteria_text
-
-    elif collection_lower == "userstory":
-        set_name("project", "projectName")
-        set_name("business", "businessName")
-        set_name("createdBy", "createdByName")
-        set_name("epic", "epicName")
-        set_name("feature", "featureName")
-        set_names_list("assignee", "assignees")
-
-        # Handle demographics
-        demographics = doc.get("demographics")
-        if isinstance(demographics, dict):
-            # Surface demographic information
-            for key, value in demographics.items():
-                if isinstance(value, str):
-                    out[f"demographic{key.title()}"] = value
 
         # Handle acceptance criteria
         acceptance_criteria = doc.get("acceptanceCriteria")
@@ -1187,6 +1084,58 @@ def _transform_by_collection(doc: Dict[str, Any], collection: Optional[str]) -> 
         if isinstance(attachments, list) and attachments:
             out["attachmentsCount"] = len(attachments)
 
+    elif collection_lower == "segmentation":
+        # Copy important fields
+        copy_if_present("name")
+        copy_if_present("description")
+        copy_if_present("isActive")
+        
+        # Handle business reference
+        business = doc.get("business")
+        if isinstance(business, dict):
+            business_name = business.get("name")
+            if business_name:
+                out["businessName"] = business_name
+        
+        # Handle conditions array
+        conditions = doc.get("conditions")
+        if isinstance(conditions, list) and conditions:
+            out["conditionsCount"] = len(conditions)
+            # Transform operators in conditions
+            transformed_conditions = []
+            for condition in conditions[:5]:  # First 5 conditions
+                if isinstance(condition, dict):
+                    transformed_condition = condition.copy()
+                    operator = condition.get("operator")
+                    if operator:
+                        transformed_condition["operator"] = transform_field_value("operator", operator, collection)
+                    transformed_conditions.append(transformed_condition)
+            if transformed_conditions:
+                out["conditions"] = transformed_conditions
+        
+        # Handle tags
+        tags = doc.get("tags")
+        if isinstance(tags, list) and tags:
+            out["tags"] = tags[:10]  # First 10 tags
+            out["tagsCount"] = len(tags)
+        
+        copy_if_present("createdAt")
+        copy_if_present("updatedAt")
+
+    elif collection_lower == "leadscorerule":
+        set_name("business", "businessName")
+        copy_if_present("name")
+        copy_if_present("description")
+        copy_if_present("score")
+        copy_if_present("change")
+        copy_if_present("field")
+        copy_if_present("operator")
+        copy_if_present("value")
+        copy_if_present("isActive")
+        copy_if_present("aiAdjusted")
+        copy_if_present("createdAt")
+        copy_if_present("updatedAt")
+
     # Drop empty/None values and metadata keys
     out = {k: v for k, v in out.items() if v not in (None, "", [], {}) and k != "_class"}
     return out
@@ -1248,7 +1197,7 @@ async def mongo_query(query: str, show_all: bool = False) -> str:
 
     Use this ONLY when the user asks for authoritative data that must come from
     MongoDB (counts, lists, filters, group-by, breakdowns, status/assignee/lead details)
-    across collections: `Lead`, `Task`, `Activity`, `Meeting`, `Notes`, `CallLog`, `MailInfo`, `LeadScoreRule`.
+    across collections: `Lead`, `Task`, `Activity`, `Meeting`, `Notes`, `CallLog`, `MailInfo`, `LeadScoreRule`, `Segmentation`.
 
     Do NOT use this for:
     - Free-form content questions (use `rag_search`).
@@ -1260,7 +1209,7 @@ async def mongo_query(query: str, show_all: bool = False) -> str:
       hallucinated fields.
     - Automatically determines when complex joins are beneficial based on query requirements.
     - Intelligently adds strategic relationships only when they improve query performance:
-        - Multi-hop queries: "work items by business" (workItem→project→business)
+        - Multi-hop queries: "leads by business" (Lead→business)
         - Cross-collection analysis: "members working on projects by business"
         - Complex grouping that spans multiple collections
     - Only adds joins that provide clear benefits for the specific query, avoiding unnecessary complexity.
@@ -1421,368 +1370,14 @@ async def mongo_query(query: str, show_all: bool = False) -> str:
                         if value is None:
                             return None
                         return transform_field_value(field_name, value, primary_entity)
-                    if e == "workitem":
-                        bug = entity.get("displayBugNo") or entity.get("title") or "Item"
-                        title = entity.get("title") or entity.get("name") or ""
-                        state = entity.get("stateName") or get_nested(entity, "state.name")
-                        project = entity.get("projectName") or get_nested(entity, "project.name")
-                        assignees = ensure_list_str(entity.get("assignees") or entity.get("assignee"))
-                        priority = entity.get("priority")
-                        label = get_nested(entity,"label.name")
-                        # Build base line
-                        base = f"• {bug}: {truncate_str(title, 80)} — state={state or 'N/A'}, priority={priority or 'N/A'}, assignee={(assignees[0] if assignees else 'N/A')}, project={project or 'N/A'}, label={label or 'N/A'}"
-                        
-                        # Add estimate if present
-                        estimate = entity.get("estimate")
-                        if estimate and isinstance(estimate, dict):
-                            hr = estimate.get("hr", "0")
-                            min_val = estimate.get("min", "0")
-                            base += f", estimate={hr}h {min_val}m"
-                        elif estimate:
-                            base += f", estimate={estimate}"
-                        
-                        # Add work logs if present
-                        work_logs = entity.get("workLogs")
-                        if work_logs and isinstance(work_logs, list) and len(work_logs) > 0:
-                            total_hours = sum(log.get("hours", 0) for log in work_logs if isinstance(log, dict))
-                            total_mins = sum(log.get("minutes", 0) for log in work_logs if isinstance(log, dict))
-                            total_hours += total_mins // 60
-                            total_mins = total_mins % 60
-                            base += f", logged={total_hours}h {total_mins}m ({len(work_logs)} logs)"
-                            
-                            descriptions = [
-                                log.get("description", "").strip()
-                                for log in work_logs
-                                if isinstance(log, dict) and log.get("description")
-                            ]
-                            descriptions_text = "; ".join(descriptions) if descriptions else "No descriptions"
-
-                            base += f", descriptions=[{descriptions_text}]"
-                        return base
-                    if e == "project":
-                        pid = entity.get("projectDisplayId")
-                        name = entity.get("name") or entity.get("title")
-                        status_v = entity.get("status")
-                        lead = entity.get("leadName") or get_nested(entity, "lead.name")
-                        business = entity.get("businessName") or get_nested(entity, "business.name")
-                        return f"• {pid or name}: {name or ''} — status={status_v or 'N/A'}, lead={lead or 'N/A'}, business={business or 'N/A'}"
-                    if e == "cycle":
-                        title = entity.get("title") or entity.get("name")
-                        status_v = entity.get("status")
-                        project = entity.get("projectName") or get_nested(entity, "project.name")
-                        sd = entity.get("startDate")
-                        ed = entity.get("endDate")
-                        dates = f"{sd} → {ed}" if sd or ed else "N/A"
-                        return f"• {truncate_str(title or 'Cycle', 80)} — status={status_v or 'N/A'}, project={project or 'N/A'}, dates={dates}"
-                    if e == "module":
-                        title = entity.get("title") or entity.get("name")
-                        project = entity.get("projectName") or get_nested(entity, "project.name")
-                        assignees = ensure_list_str(entity.get("assignees") or entity.get("assignee"))
-                        business = entity.get("businessName") or get_nested(entity, "business.name")
-                        return f"• {truncate_str(title or 'Module', 80)} — project={project or 'N/A'}, assignees={(len(assignees) if assignees else 0)}, business={business or 'N/A'}"
                     if e == "members":
                         name = entity.get("name")
                         email = entity.get("email")
                         role = entity.get("role")
-                        project = entity.get("projectName") or get_nested(entity, "project.name")
                         type_v = entity.get("type")
-                        return f"• {name or 'Member'} — role={role or 'N/A'}, email={email or 'N/A'}, type={type_v or 'N/A'}, project={project or 'N/A'}"
-                    if e == "page":
-                        title = entity.get("title") or entity.get("name")
-                        project = entity.get("projectName") or get_nested(entity, "project.name")
-                        visibility = entity.get("visibility")
-                        fav = entity.get("isFavourite")
-                        return f"• {truncate_str(title or 'Page', 80)} — visibility={visibility or 'N/A'}, favourite={fav if fav is not None else 'N/A'}, project={project or 'N/A'}"
-                    if e == "projectstate":
-                        name = entity.get("name")
-                        icon = entity.get("icon")
-                        subs = entity.get("subStates")
-                        sub_count = len(subs) if isinstance(subs, list) else 0
-                        return f"• {name or 'State'} — icon={icon or 'N/A'}, substates={sub_count}"
+                        return f"• {name or 'Member'} — role={role or 'N/A'}, email={email or 'N/A'}, type={type_v or 'N/A'}"
                     
-                    if e == "epic":
-                        title = entity.get("title") or entity.get("name")
-                        description = entity.get("description")
-                        state = entity.get("stateName") or get_nested(entity, "state.name")
-                        priority = entity.get("priority")
-                        assignee = entity.get("assigneeName") or get_nested(entity, "assignee.name")
-                        project = entity.get("projectName") or get_nested(entity, "project.name")
-                        bug_number = entity.get("bugNo")
-                        label_name = get_nested(entity, "label.name")
-                        return (
-                            f"• {truncate_str(title or 'Epic', 80)} — "
-                            f"description={truncate_str(description, 120)}, "
-                            f"state={state or 'N/A'}, priority={priority or 'N/A'}, "
-                            f"project={project or 'N/A'}, assignee={assignee or 'N/A'}, "
-                            f"bugNo={bug_number or 'N/A'}, label={label_name or 'N/A'}"
-                        )
-                    
-                    if e == "userStory":
-                        bug = entity.get("displayBugNo") or entity.get("title") or "Item"
-                        goal = entity.get("userGoal")
-                        persona = entity.get("persona")
-                        demographics = entity.get("demographics")
-                        feature = entity.get("feature.name")
-                        Accept_criteria = entity.get("acceptanceCriteria")
-                        epic = entity.get("epic.name")
-                        business = entity.get("business.name")
-                        title = entity.get("title") or entity.get("name") or ""
-                        description = entity.get("description")
-                        state = entity.get("stateName") or get_nested(entity, "state.name")
-                        assignees = ensure_list_str(entity.get("assignees") or entity.get("assignee"))
-                        priority = entity.get("priority")
-                        label = get_nested(entity,"label.name")
-                        # Build base line
-                        base = f"• {bug}: {truncate_str(title, 80)} — state={state or 'N/A'}, priority={priority or 'N/A'}, assignee={([i for i in assignees] if assignees else 'N/A')}, project={project or 'N/A'}, label={label or 'N/A'}, goal={goal or 'N/A'}, feature={feature or 'N/A'}, epic={epic or 'N/A'}, business={business or 'N/A'}, acceptanceCriteria={Accept_criteria or 'N/A'}"
-                        
-                        if description:
-                            base += f", description={truncate_str(description, 120)}"
-                            
-                        # Add persona info if present
-                        if persona and isinstance(persona, dict):
-                            name = persona.get("personaName", "")
-                            role = persona.get("role", "")
-                            techLevel = persona.get("techLevel", "")
-                            base += f", persona=[name: {name}, role: {role}, techLevel: {techLevel}]"
-                            goals = persona.get("goals")
-                            if goals and isinstance(goals, list):
-                                goals_text = "; ".join([str(g) for g in goals if isinstance(g, str) and g.strip()])
-                                base += f", goals=[{goals_text or 'N/A'}]"
-                        elif persona:
-                            base += f", persona={persona or 'N/A'}"
-                            
-                        # Add demographics if present
-                        if demographics:
-                            if isinstance(demographics, dict):
-                                demo_text = ", ".join([f"{k}: {v}" for k, v in demographics.items()])
-                                base += f", demographics=[{demo_text or 'N/A'}]"
-                            else:
-                                base += f", demographics={demographics or 'N/A'}"
-
-                    if e == "features":
-                        bug = entity.get("displayBugNo") or entity.get("title") or "Item"
-                        basicInfo = entity.get("basicInfo")
-                        problemInfo = entity.get("problemInfo")
-                        persona = entity.get("persona")
-                        requirements = entity.get("requirements")
-                        risksAndDependencies = entity.get("risksAndDependencies")
-                        project = entity.get("projectName") or get_nested(entity, "project.name")
-                        scope = entity.get("scope")
-                        workitems = entity.get("workItems")
-                        userStories = entity.get("userStories")
-                        links = entity.get("addLink")
-                        business = entity.get("business.name")
-                        title = entity.get("title") or entity.get("name") or ""
-                        description = entity.get("description")
-                        state = entity.get("stateName") or get_nested(entity, "state.name")
-                        lead = entity.get("leadName") or get_nested(entity, "lead.name")
-                        assignees = ensure_list_str(entity.get("assignees") or entity.get("assignee"))
-                        cycle = entity.get("cycle")
-                        module = entity.get("modules.name")
-                        parent = entity.get("parent.name")
-                        priority = entity.get("priority")
-                        label = get_nested(entity,"label.name")
-                        estimatesystem = entity.get("estimateSystem")
-                        # Build base line
-                        base = f"• {bug}: {truncate_str(title, 80)} — state={state or 'N/A'}, priority={priority or 'N/A'}, assignee={(assignees[0] if assignees else 'N/A')}, project={project or 'N/A'}, label={label or 'N/A'}, lead={lead or 'N/A'}, cycle={cycle or 'N/A'}, module={module or 'N/A'}, parent={parent or 'N/A'}, business={business or 'N/A'}, estimatesystem={estimatesystem or 'N/A'}, scope={scope or 'N/A'}"
-                        
-                        if description:
-                            base += f", description={truncate_str(description, 120)}"
-                        
-                        # Add userStories if present
-                        if userStories:
-                            if isinstance(userStories, list):
-                                stories_text = "; ".join([str(s.get('title') if isinstance(s, dict) else s) for s in userStories if s])
-                                base += f", userStories=[{stories_text or 'N/A'}]"
-                            else:
-                                base += f", userStories={userStories or 'N/A'}"
-
-                        # Add workitems if present
-                        if workitems:
-                            if isinstance(workitems, list):
-                                items_text = "; ".join([str(w.get('title') if isinstance(w, dict) else w) for w in workitems if w])
-                                base += f", workItems=[{items_text or 'N/A'}]"
-                            else:
-                                base += f", workItems={workitems or 'N/A'}"
-
-                        # Add links if present
-                        if links:
-                            if isinstance(links, list):
-                                links_text = "; ".join([str(l.get('url') if isinstance(l, dict) else l) for l in links if l])
-                                base += f", links=[{links_text or 'N/A'}]"
-                            else:
-                                base += f", links={links or 'N/A'}"
-                        
-                        #Add basic info
-                        if basicInfo and isinstance(basicInfo, dict):
-                            title = basicInfo.get("title","")
-                            status = basicInfo.get("status","")
-                            description = basicInfo.get("description","")
-                            base += f", basicInfo=[title: {title or 'N/A'}, status: {status or 'N/A'}, description: {description or 'N/A'}]"
-                        elif basicInfo:
-                            base += f", basicInfo={basicInfo or 'N/A'}"
-                        
-                        #Add problem info
-                        if problemInfo and isinstance(problemInfo, dict):
-                            statement = problemInfo.get("statement","")
-                            objective = problemInfo.get("objective","")
-                            successCriteria = problemInfo.get("successCriteria")
-                            if successCriteria and isinstance(successCriteria, list):
-                                success_text = "; ".join([str(c) for c in successCriteria if isinstance(c, str) and c.strip()])
-                            base += f", problemInfo=[statement: {statement or 'N/A'}, objective: {objective or 'N/A'}, successCriteria: [{success_text or 'N/A'}]]"
-                        elif problemInfo:
-                            base += f", problemInfo={problemInfo or 'N/A'}"
-                        
-                        #Add persona
-                        if persona and isinstance(persona, dict):
-                            name = persona.get("personaName","")
-                            role = persona.get("role","")
-                            techLevel = persona.get("techLevel","")
-                            base += f", persona=[name: {name or 'N/A'}, role: {role or 'N/A'}, techLevel: {techLevel or 'N/A'}]"
-                            goals = persona.get("goals")
-                            if goals and isinstance(goals, list):
-                                goals_text = "; ".join([str(g) for g in goals if isinstance(g, str) and g.strip()])
-                                base += f", goals=[{goals_text or 'N/A'}]"
-                            painPoints = persona.get("painPoints")
-                            if painPoints and isinstance(painPoints, list):
-                                pain_text = "; ".join([str(p) for p in painPoints if isinstance(p, str) and p.strip()])
-                                base += f", painPoints=[{pain_text or 'N/A'}]"
-                        elif persona:
-                            base += f", persona={persona or 'N/A'}"
-                        
-                        # Add requirements
-                        if requirements and isinstance(requirements, dict):
-                            functionalRequirements = requirements.get("functionalRequirements")
-                            if functionalRequirements and isinstance(functionalRequirements, list):
-                                func_text = "; ".join([str(r) for r in functionalRequirements if isinstance(r, str) and r.strip()])
-                                base += f", functionalRequirements=[{func_text or 'N/A'}]"
-                            nonFunctionalRequirements = requirements.get("nonFunctionalRequirements")
-                            if nonFunctionalRequirements and isinstance(nonFunctionalRequirements, list):
-                                nonfunc_text = "; ".join([str(r) for r in nonFunctionalRequirements if isinstance(r, str) and r.strip()])
-                                base += f", nonFunctionalRequirements=[{nonfunc_text or 'N/A'}]"
-                        elif requirements:
-                            base += f", requirements={requirements or 'N/A'}"
-
-                        # Add risks, dependencies, design links and expectations
-                        if risksAndDependencies and isinstance(risksAndDependencies, dict):
-                            # Risks: list of objects
-                            risks = risksAndDependencies.get("risks")
-                            if risks and isinstance(risks, list):
-                                risk_items: List[str] = []
-                                for r in risks:
-                                    if isinstance(r, dict):
-                                        parts: List[str] = []
-                                        prob = r.get("problemLevel")
-                                        if prob:
-                                            parts.append(f"problem={prob}")
-                                        impact = r.get("impactLevel")
-                                        if impact:
-                                            parts.append(f"impact={impact}")
-                                        owner = r.get("riskOwner")
-                                        if owner:
-                                            parts.append(f"owner={owner}")
-                                        desc = r.get("description")
-                                        if desc:
-                                            parts.append(f"description={truncate_str(desc,120)}")
-                                        strat = r.get("strategy")
-                                        if strat:
-                                            parts.append(f"strategy={truncate_str(strat,120)}")
-                                        if parts:
-                                            risk_items.append("{" + ", ".join(parts) + "}")
-                                    elif isinstance(r, str) and r.strip():
-                                        risk_items.append(r.strip())
-                                if risk_items:
-                                    base += f", risks=[{'; '.join(risk_items) or 'N/A'}]"
-
-                            # Dependencies: simple list of strings or objects
-                            dependencies = risksAndDependencies.get("dependencies")
-                            if dependencies and isinstance(dependencies, list):
-                                dep_text = "; ".join([
-                                    str(d.get("title") if isinstance(d, dict) and d.get("title") else d).strip()
-                                    for d in dependencies
-                                    if (isinstance(d, str) and d.strip()) or (isinstance(d, dict) and (d.get("title") or d.get("id")))
-                                ])
-                                if dep_text:
-                                    base += f", dependencies=[{dep_text or 'N/A'}]"
-
-                            # Design links: list of {title, url, source}
-                            designLinks = risksAndDependencies.get("designLinks")
-                            if designLinks and isinstance(designLinks, list):
-                                links: List[str] = []
-                                for dl in designLinks:
-                                    if isinstance(dl, dict):
-                                        t = dl.get("title") or dl.get("name")
-                                        u = dl.get("url") or dl.get("link")
-                                        s = dl.get("source")
-                                        parts = []
-                                        if t:
-                                            parts.append(str(t))
-                                        if u:
-                                            parts.append(f"{u}")
-                                        if s:
-                                            parts.append(f"{s}")
-                                        if parts:
-                                            links.append("(" + " | ".join(parts) + ")")
-                                    elif isinstance(dl, str) and dl.strip():
-                                        links.append(dl.strip())
-                                if links:
-                                    base += f", designLinks=[{'; '.join(links) or 'N/A'}]"
-
-                            # Expectations: list of {stakeholder: {...}, expectation: str}
-                            expectations = risksAndDependencies.get("expectations")
-                            if expectations and isinstance(expectations, list):
-                                exp_items: List[str] = []
-                                for ex in expectations:
-                                    if isinstance(ex, dict):
-                                        stakeholder = ex.get("stakeholder")
-                                        name = None
-                                        if isinstance(stakeholder, dict):
-                                            name = stakeholder.get("name") or stakeholder.get("title")
-                                        elif isinstance(stakeholder, str) and stakeholder.strip():
-                                            name = stakeholder.strip()
-                                        expect_text = ex.get("expectation") or ex.get("expectations") or ex.get("expectationText")
-                                        parts: List[str] = []
-                                        if name:
-                                            parts.append(f"stakeholder={name}")
-                                        if expect_text:
-                                            parts.append(f"expectation={truncate_str(expect_text,120)}")
-                                        if parts:
-                                            exp_items.append("{" + ", ".join(parts) + "}")
-                                        else:
-                                            # fallback to string representation
-                                            exp_items.append(str(ex))
-                                    elif isinstance(ex, str) and ex.strip():
-                                        exp_items.append(ex.strip())
-                                if exp_items:
-                                    base += f", expectations=[{'; '.join(exp_items)}]"
-
-                        # Add estimate if present
-                        estimate = entity.get("estimate")
-                        if estimate and isinstance(estimate, dict):
-                            hr = estimate.get("hr", "0")
-                            min_val = estimate.get("min", "0")
-                            base += f", estimate={hr}h {min_val}m"
-                        elif estimate:
-                            base += f", estimate={estimate}"
-                        
-                        # Add work logs if present
-                        work_logs = entity.get("workLogs")
-                        if work_logs and isinstance(work_logs, list) and len(work_logs) > 0:
-                            total_hours = sum(log.get("hours", 0) for log in work_logs if isinstance(log, dict))
-                            total_mins = sum(log.get("minutes", 0) for log in work_logs if isinstance(log, dict))
-                            total_hours += total_mins // 60
-                            total_mins = total_mins % 60
-                            base += f", logged={total_hours}h {total_mins}m ({len(work_logs)} logs)"
-                            
-                            descriptions = [
-                                log.get("description", "").strip()
-                                for log in work_logs
-                                if isinstance(log, dict) and log.get("description")
-                            ]
-                            descriptions_text = "; ".join(descriptions) if descriptions else "No descriptions"
-
-                            base += f", descriptions=[{descriptions_text}]"
-                        return base
+                    # Removed work management entity rendering: epic, userStory, features
                     
                     # CRM entity rendering
                     if e == "lead":
@@ -1989,6 +1584,67 @@ async def mongo_query(query: str, show_all: bool = False) -> str:
                             # Strip HTML tags for preview
                             body_text = re.sub(r'<[^>]+>', '', str(body))
                             base += f", body={truncate_str(body_text, 120)}"
+                        return base
+                    
+                    if e == "segmentation":
+                        name = entity.get("name")
+                        description = entity.get("description")
+                        is_active = entity.get("isActive")
+                        business_name = entity.get("businessName")
+                        conditions = entity.get("conditions")
+                        conditions_count = entity.get("conditionsCount")
+                        tags = entity.get("tags")
+                        tags_count = entity.get("tagsCount")
+                        
+                        base = f"• {name or 'Segmentation'}"
+                        if description:
+                            base += f" — {truncate_str(description, 80)}"
+                        if is_active is not None:
+                            base += f", active={is_active}"
+                        if business_name:
+                            base += f", business={business_name}"
+                        if conditions:
+                            conditions_str = ", ".join([
+                                f"{c.get('field', '')} {c.get('operator', '')} {c.get('value', '')}"
+                                for c in conditions[:3]
+                            ])
+                            base += f", conditions=[{conditions_str}]"
+                        elif conditions_count:
+                            base += f", conditions={conditions_count} rules"
+                        if tags:
+                            base += f", tags={', '.join(tags[:3])}"
+                        elif tags_count:
+                            base += f", tags={tags_count} tags"
+                        return base
+                    
+                    if e == "leadscorerule":
+                        name = entity.get("name")
+                        description = entity.get("description")
+                        score = entity.get("score")
+                        change = transform_val("change", entity.get("change"))
+                        field = entity.get("field")
+                        operator = transform_val("operator", entity.get("operator"))
+                        value = entity.get("value")
+                        is_active = entity.get("isActive")
+                        business_name = entity.get("businessName")
+                        
+                        base = f"• {name or 'Lead Score Rule'}"
+                        if description:
+                            base += f" — {truncate_str(description, 80)}"
+                        if change:
+                            base += f", change={change}"
+                        if score is not None:
+                            base += f", score={score}"
+                        if field:
+                            base += f", field={field}"
+                        if operator:
+                            base += f", operator={operator}"
+                        if value is not None:
+                            base += f", value={value}"
+                        if is_active is not None:
+                            base += f", active={is_active}"
+                        if business_name:
+                            base += f", business={business_name}"
                         return base
                     
                     # Default fallback
@@ -2268,7 +1924,7 @@ async def rag_search(
     
     Args:
         query: Search query (semantic meaning, not just keywords)
-        content_type: Filter by type - 'lead', 'task', 'activity', 'meeting', 'notes', 'callLog', 'mailInfo' or None (all)
+        content_type: Filter by type - 'lead', 'task', 'activity', 'meeting', 'notes', 'callLog', 'mailInfo', 'segmentation' or None (all)
         group_by: Group results by field - 'leadStatus', 'taskStatus', 'meetingStatus', 'updatedAt', 'priority', 
                  'content_type', 'assignedName', etc. (None = no grouping)
         limit: Max results to retrieve (default 10, increase for broader searches)
@@ -2617,7 +2273,37 @@ async def generate_content(
                 logger.error(f"Failed to persist generated meeting to conversation: {e}")
             
             return "✅ Content generated"
-
+            
+        elif content_type == "leadScoreRule":
+            # Call lead score rule generation endpoint (if available)
+            websocket = get_generation_websocket()
+            if websocket:
+                try:
+                    await websocket.send_json({
+                        "type": "content_generated",
+                        "content_type": "leadScoreRule",
+                        "data": {"name": prompt, "isActive": True},
+                        "success": True
+                    })
+                except Exception as e:
+                    logger.error(f"Could not send to websocket: {e}")
+            return "✅ Content generated"
+            
+        elif content_type == "segmentation":
+            # Call segmentation generation endpoint (if available)
+            websocket = get_generation_websocket()
+            if websocket:
+                try:
+                    await websocket.send_json({
+                        "type": "content_generated",
+                        "content_type": "segmentation",
+                        "data": {"name": prompt, "isActive": True},
+                        "success": True
+                    })
+                except Exception as e:
+                    logger.error(f"Could not send to websocket: {e}")
+            return "✅ Content generated"
+            
         else:  # content_type == "note"
             # Call note generation endpoint (if available)
             websocket = get_generation_websocket()

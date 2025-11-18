@@ -121,14 +121,15 @@ def _generate_natural_action_text(tool_name: str, tool_args: Dict[str, Any]) -> 
             if content_type:
                 type_label = content_type.replace("_", " ").title()
                 type_variants = {
-                    "work_item": ["work items", "tasks", "issues", "items"],
-                    "page": ["pages", "documents", "docs", "notes"],
-                    "cycle": ["cycles", "sprints", "iterations"],
-                    "module": ["modules", "components", "features"],
-                    "epic": ["epics", "initiatives", "large features"],
-                    "project": ["projects", "initiatives"],
-                    "user_story": ["user stories", "stories"],
-                    "feature": ["features", "capabilities"]
+                    "lead": ["leads", "prospects", "contacts"],
+                    "task": ["tasks", "todos", "activities"],
+                    "meeting": ["meetings", "calls", "appointments"],
+                    "note": ["notes", "comments", "remarks"],
+                    "activity": ["activities", "actions", "events"],
+                    "calllog": ["call logs", "calls", "phone calls"],
+                    "mailinfo": ["emails", "mail", "messages"],
+                    "lead_score_rule": ["lead score rule", "scoring rule", "score rule"],
+                    "segmentation": ["segmentation", "segment", "lead segment"]
                 }
                 type_display = type_variants.get(content_type, [type_label.lower()])[0]
                 
@@ -154,11 +155,15 @@ def _generate_natural_action_text(tool_name: str, tool_args: Dict[str, Any]) -> 
             
             # Map content types to natural descriptions
             type_descriptions = {
-                "work_item": ["work item", "task", "issue", "item"],
-                "page": ["page", "document", "doc", "note"],
-                "cycle": ["cycle", "sprint", "iteration"],
-                "module": ["module", "component"],
-                "epic": ["epic", "initiative"]
+                "lead": ["lead", "prospect", "contact"],
+                "task": ["task", "todo", "activity"],
+                "meeting": ["meeting", "call", "appointment"],
+                "note": ["note", "comment", "remark"],
+                "activity": ["activity", "action", "event"],
+                "calllog": ["call log", "call"],
+                "mailinfo": ["email", "mail", "message"],
+                "lead_score_rule": ["lead score rule", "scoring rule"],
+                "segmentation": ["segmentation", "segment"]
             }
             
             type_label = type_descriptions.get(content_type, [content_type])[0]
