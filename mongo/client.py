@@ -16,6 +16,10 @@ logger = logging.getLogger(__name__)
 from mongo.constants import (
     DATABASE_NAME,
     MONGODB_CONNECTION_STRING,
+    uuid_str_to_mongo_binary,
+    COLLECTIONS_WITH_DIRECT_BUSINESS,
+    BUSINESS_UUID,
+    MEMBER_UUID,
 )
 
 
@@ -88,6 +92,36 @@ class DirectMongoClient:
                 raise RuntimeError("MongoDB client not initialized. Call connect() first.")
             
             try:
+                # --- Resolve RBAC context at query time ---
+                def _flag(name: str) -> bool:
+                    return os.getenv(name, "").lower() in ("1", "true", "yes")
+
+                # Prefer runtime websocket context; fall back to env vars (via helpers)
+                biz_uuid: str | None = BUSINESS_UUID()
+                member_uuid: str | None = MEMBER_UUID()
+                enforce_business: bool = _flag("ENFORCE_BUSINESS_FILTER") or bool(biz_uuid)
+                enforce_member: bool = _flag("ENFORCE_MEMBER_FILTER") or bool(member_uuid)
+
+                # Prepare business and member scoping injections (prepend stages)
+                injected_stages: List[Dict[str, Any]] = []
+
+                # 1) Business scoping
+                if enforce_business and biz_uuid:
+                    try:
+                        biz_bin = uuid_str_to_mongo_binary(biz_uuid)
+                        if collection in COLLECTIONS_WITH_DIRECT_BUSINESS:
+                            injected_stages.append({"$match": {"business._id": biz_bin}})
+                    except ValueError as e:
+                        # Invalid UUID format - log and skip business filter
+                        logger.error(f"Invalid BUSINESS_UUID format '{biz_uuid}': {e}")
+                    except Exception as e:
+                        # Other errors - log and skip business filter
+                        logger.error(f"Error applying business filter for {collection}: {e}")
+
+                # 2) Member-level scoping (if needed in future)
+                # For now, CRM doesn't have member-level filtering like work-management
+                # This can be added later if needed
+
                 # Execute aggregation - Motor uses persistent connection pool
                 db = self.client[database]
                 coll = db[collection]
@@ -99,9 +133,12 @@ class DirectMongoClient:
                 print(f"Database: {database}")
                 print(f"Collection: {collection}")
                 print(f"Pipeline: {pipeline}")
+                if injected_stages:
+                    print(f"Injected business filter stages: {injected_stages}")
                 print(f"{'='*80}\n")
                 
-                cursor = coll.aggregate(pipeline)
+                effective_pipeline = (injected_stages + pipeline) if injected_stages else pipeline
+                cursor = coll.aggregate(effective_pipeline)
                 results = await cursor.to_list(length=None)
                 
                 # Print MongoDB query results

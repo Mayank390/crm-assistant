@@ -805,7 +805,6 @@ class AgentExecutor:
         except Exception as e:
             yield f"Error running streaming agent: {str(e)}"
 
-# ProjectManagement Insights Examples
 async def main():
     """Example usage of the ProjectManagement Insights Agent"""
     agent = AgentExecutor()

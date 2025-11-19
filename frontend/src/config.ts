@@ -4,7 +4,7 @@ export const API_WS_URL = import.meta.env.VITE_API_WS_URL || `${API_HTTP_URL.rep
 
 export const getMemberId = () => {
   // HARDCODED FOR TESTING - REMOVE AFTER
-   return '1eff7f64-08ea-6fdc-99d0-3f7ae8229af5';
+   return '1f07a8c4-e420-66cd-9fa6-653e39dc66b5';
   
   // const stored = localStorage.getItem('staffId');
   // if (!stored) return '';
@@ -21,7 +21,7 @@ export const getMemberId = () => {
 
 export const getBusinessId = () => {
   // HARDCODED FOR TESTING - REMOVE AFTER
-   return '1eff7f64-09ef-670e-8c7c-2b9676f8dbb6';
+   return '1eedcb26-d23a-688a-bd63-579d19dab229';
   
   // // First, try the bDetails key (for backward compatibility)
   // const raw = localStorage.getItem('bDetails');

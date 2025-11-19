@@ -117,10 +117,22 @@ class ChunkAwareRetriever:
             raise RuntimeError("Embedding service returned empty vector")
         query_embedding = vectors[0]
         
-        # Build filter with optional content_type
+        # Build filter with optional content_type and global business scoping
         must_conditions = []
         if content_type:
             must_conditions.append(FieldCondition(key="content_type", match=MatchValue(value=content_type)))
+
+        # Business-level scoping
+        # Note: business_id in Qdrant is stored as normalized UUID string from MongoDB Binary
+        # We need to normalize it the same way as insertdocs.py does
+        try:
+            from mongo.constants import BUSINESS_UUID
+            business_uuid = BUSINESS_UUID()
+            if business_uuid:
+                normalized_business_id = self._normalize_business_id(business_uuid)
+                must_conditions.append(FieldCondition(key="business_id", match=MatchValue(value=normalized_business_id)))
+        except Exception as e:
+            logger.warning(f"Failed to apply business filter in Qdrant search: {e}")
 
         search_filter = Filter(must=must_conditions) if must_conditions else None
 
