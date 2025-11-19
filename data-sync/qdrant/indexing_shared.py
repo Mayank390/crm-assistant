@@ -197,6 +197,8 @@ def ensure_collection_with_hybrid(
             ("leadName", qmodels.PayloadSchemaType.KEYWORD),
             ("createdTimeStamp", qmodels.PayloadSchemaType.DATETIME),
             ("updatedTimeStamp", qmodels.PayloadSchemaType.DATETIME),
+            ("createdAt", qmodels.PayloadSchemaType.DATETIME),
+            ("updatedAt", qmodels.PayloadSchemaType.DATETIME),
             ("startDateTime", qmodels.PayloadSchemaType.DATETIME),
             ("endDateTime", qmodels.PayloadSchemaType.DATETIME),
             ("dueDate", qmodels.PayloadSchemaType.DATETIME),
