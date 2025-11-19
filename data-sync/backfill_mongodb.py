@@ -207,6 +207,10 @@ class MongoDBBackfill:
                 page_count = 0
 
                 try:
+                    seen_point_ids = set()  # Track seen point IDs to detect loops
+                    consecutive_empty_pages = 0
+                    max_consecutive_empty = 3  # Stop after 3 consecutive empty pages
+                    
                     while page_count < max_pages:
                         page_count += 1
                         
@@ -224,16 +228,45 @@ class MongoDBBackfill:
                         result = self.qdrant_client.scroll(**scroll_kwargs)
 
                         # Check if result exists and has points
-                        if not result or not result[0]:
-                            break
+                        if not result or not result[0] or len(result[0]) == 0:
+                            consecutive_empty_pages += 1
+                            if consecutive_empty_pages >= max_consecutive_empty:
+                                logger.debug(f"Stopping pagination after {consecutive_empty_pages} consecutive empty pages")
+                                break
+                            # Still check for next page even if current page is empty
+                            if len(result) > 1 and result[1] is not None:
+                                next_page_offset = result[1]
+                                continue
+                            else:
+                                break
 
-                        # Extract unique mongo_ids from results
+                        # Reset consecutive empty counter if we got results
+                        consecutive_empty_pages = 0
+                        
+                        # Extract unique mongo_ids from results and check for duplicate points
+                        points_in_page = 0
                         for point in result[0]:
+                            point_id = str(point.id) if hasattr(point, 'id') else None
+                            
+                            # Safety check: detect if we're seeing the same points repeatedly
+                            if point_id and point_id in seen_point_ids:
+                                logger.warning(f"Detected duplicate point ID {point_id} in pagination, possible loop. Stopping.")
+                                break
+                            if point_id:
+                                seen_point_ids.add(point_id)
+                            
                             if hasattr(point, 'payload') and point.payload:
                                 mongo_id = point.payload.get('mongo_id')
                                 if mongo_id:
                                     batch_found.add(mongo_id)
                                     existing_mongo_ids.add(mongo_id)
+                            points_in_page += 1
+
+                        # Safety check: if we got no new points, break
+                        if points_in_page == 0:
+                            consecutive_empty_pages += 1
+                            if consecutive_empty_pages >= max_consecutive_empty:
+                                break
 
                         # Early exit: if we've found all mongo_ids in this batch, stop paginating
                         if len(batch_found) >= len(batch_mongo_ids):
@@ -250,6 +283,7 @@ class MongoDBBackfill:
                             if next_offset == next_page_offset:
                                 logger.warning(f"Offset unchanged at {next_offset}, stopping pagination")
                                 break
+                            # Safety check: if offset is the same type but different value, still check
                             next_page_offset = next_offset
                         else:
                             # No more pages (shouldn't happen with proper Qdrant client, but safe check)
@@ -338,7 +372,7 @@ class MongoDBBackfill:
             Dictionary with statistics: processed, skipped, errors
         """
         collection = self.database[collection_name]
-        topic_name = f"{DATABASE_NAME}.{collection_name}"
+        topic_name = f"{KAFKA_TOPIC_PREFIX}{collection_name}"
 
         total_count = self.get_collection_count(collection_name)
 

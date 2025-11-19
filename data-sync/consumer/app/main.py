@@ -318,6 +318,11 @@ def main() -> None:
     last_flush_ts = time.monotonic()
     processed_count = 0
     error_count = 0
+    skipped_count = 0
+    max_retries_per_event = int(get_env("MAX_RETRIES_PER_EVENT", "5"))  # Max retries before skipping
+    
+    # Track retry counts for events (using mongo_id as key)
+    event_retry_counts: Dict[str, int] = {}
     
     logger.info(f"Consumer started: group_id={group_id}, topic_pattern={topic_pattern}, collection={collection}")
 
@@ -345,36 +350,69 @@ def main() -> None:
 
             if should_flush:
                 batch_errors = 0
-                failed_events = []
+                
                 for idx, event in enumerate(batch_events):
+                    # Generate event key for retry tracking
+                    event_key = None
+                    if event.full_document:
+                        from qdrant.indexing_shared import normalize_mongo_id
+                        mongo_id = normalize_mongo_id(event.full_document.get("_id"))
+                        if mongo_id:
+                            event_key = f"{event.collection}:{mongo_id}"
+                    
+                    # Check if event has exceeded max retries
+                    if event_key and event_retry_counts.get(event_key, 0) >= max_retries_per_event:
+                        skipped_count += 1
+                        logger.warning(
+                            f"Skipping event after {max_retries_per_event} retries: "
+                            f"collection={event.collection}, operation={event.operation}, "
+                            f"event_key={event_key}"
+                        )
+                        # Remove from retry tracking since we're giving up
+                        event_retry_counts.pop(event_key, None)
+                        continue
+                    
                     try:
                         process_event(event, client, collection, embedder, splade_encoder)
                         processed_count += 1
+                        # Clear retry count on success
+                        if event_key:
+                            event_retry_counts.pop(event_key, None)
                     except Exception as exc:
                         batch_errors += 1
                         error_count += 1
+                        
+                        # Increment retry count
+                        if event_key:
+                            event_retry_counts[event_key] = event_retry_counts.get(event_key, 0) + 1
+                            retry_count = event_retry_counts[event_key]
+                        else:
+                            retry_count = 0
+                        
                         # Log the error with context
                         logger.error(
-                            f"Error processing event {idx}/{len(batch_events)}: "
+                            f"Error processing event {idx}/{len(batch_events)} (retry {retry_count}/{max_retries_per_event}): "
                             f"operation={event.operation}, collection={event.collection}, "
                             f"error={type(exc).__name__}: {exc}",
                             exc_info=True
                         )
-                        failed_events.append((idx, event, exc))
                 
-                # Commit offsets even if there were errors to prevent infinite retry loop
-                # Log a warning if we're committing with errors
-                if batch_errors > 0:
+                # Only commit if no errors to prevent data loss
+                # Failed events will be retried on next poll (Kafka will redeliver)
+                # Events exceeding max_retries_per_event are skipped and won't be retried
+                if batch_errors == 0:
+                    try:
+                        consumer.commit()
+                    except Exception as commit_exc:
+                        logger.error(f"Failed to commit offsets: {commit_exc}", exc_info=True)
+                else:
+                    retry_msg = f"{batch_errors} events will be retried"
+                    if skipped_count > 0:
+                        retry_msg += f", {skipped_count} events skipped after max retries"
                     logger.warning(
-                        f"Committing batch with {batch_errors} errors out of {len(batch_events)} events. "
-                        f"Total errors so far: {error_count}"
+                        f"Skipping commit due to {batch_errors} errors out of {len(batch_events)} events. "
+                        f"Total errors so far: {error_count}. {retry_msg}."
                     )
-                    # Optionally: you could implement a dead-letter queue here for failed events
-                
-                try:
-                    consumer.commit()
-                except Exception as commit_exc:
-                    logger.error(f"Failed to commit offsets: {commit_exc}", exc_info=True)
                 
                 batch_events.clear()
                 last_flush_ts = time.monotonic()
