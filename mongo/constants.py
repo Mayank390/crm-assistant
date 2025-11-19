@@ -67,7 +67,7 @@ def mongo_binary_to_uuid_str(binary: Binary) -> str:
 
 # Collections that have direct businessId field (for RBAC filtering)
 COLLECTIONS_WITH_DIRECT_BUSINESS = {
-    "Lead", "Task", "Activity", "Meeting", "Notes", "CallLog", "MailInfo", "LeadScoreRule", "segmentation"
+    "Lead", "task", "activity", "meeting", "notes", "callLog", "mailInfo", "leadScoreRule", "segmentation"
 }
 
 def _get_business_uuid():

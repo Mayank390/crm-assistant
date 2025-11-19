@@ -10,49 +10,49 @@ REL: Dict[str, Dict[str, dict]] = {
     "Lead": {
         # Lead has embedded references; lookups only if deeper fields needed
         "task": {
-            "target": "Task",
+            "target": "task",
             "localField": "_id",
             "foreignField": "parentId",
             "as": "tasks",
             "many": True
         },
         "activity": {
-            "target": "Activity",
+            "target": "activity",
             "localField": "_id",
             "foreignField": "leadId",
             "as": "activities",
             "many": True
         },
         "meeting": {
-            "target": "Meeting",
+            "target": "meeting",
             "localField": "_id",
             "foreignField": "leadId",
             "as": "meetings",
             "many": True
         },
         "notes": {
-            "target": "Notes",
+            "target": "notes",
             "localField": "_id",
             "foreignField": "leadId",
             "as": "notes",
             "many": True
         },
         "callLog": {
-            "target": "CallLog",
+            "target": "callLog",
             "localField": "_id",
             "foreignField": "leadId",
             "as": "callLogs",
             "many": True
         },
         "mailInfo": {
-            "target": "MailInfo",
+            "target": "mailInfo",
             "localField": "_id",
             "foreignField": "leadId",
             "as": "mailInfos",
             "many": True
         },
     },
-    "Task": {
+    "task": {
         # Task references Lead via parentId
         "lead": {
             "target": "Lead",
@@ -62,7 +62,7 @@ REL: Dict[str, Dict[str, dict]] = {
             "many": False
         },
     },
-    "Activity": {
+    "activity": {
         # Activity references Lead and Task
         "lead": {
             "target": "Lead",
@@ -72,14 +72,14 @@ REL: Dict[str, Dict[str, dict]] = {
             "many": False
         },
         "task": {
-            "target": "Task",
+            "target": "task",
             "localField": "parentId",
             "foreignField": "_id",
             "as": "task",
             "many": False
         },
     },
-    "Meeting": {
+    "meeting": {
         # Meeting references Lead
         "lead": {
             "target": "Lead",
@@ -89,7 +89,7 @@ REL: Dict[str, Dict[str, dict]] = {
             "many": False
         },
     },
-    "Notes": {
+    "notes": {
         # Notes references Lead
         "lead": {
             "target": "Lead",
@@ -99,7 +99,7 @@ REL: Dict[str, Dict[str, dict]] = {
             "many": False
         },
     },
-    "CallLog": {
+    "callLog": {
         # CallLog references Lead
         "lead": {
             "target": "Lead",
@@ -109,7 +109,7 @@ REL: Dict[str, Dict[str, dict]] = {
             "many": False
         },
     },
-    "MailInfo": {
+    "mailInfo": {
         # MailInfo references Lead
         "lead": {
             "target": "Lead",
@@ -119,7 +119,7 @@ REL: Dict[str, Dict[str, dict]] = {
             "many": False
         },
     },
-    "LeadScoreRule": {
+    "leadScoreRule": {
         # LeadScoreRule references Business
         "business": {
             "target": "business",
@@ -129,7 +129,7 @@ REL: Dict[str, Dict[str, dict]] = {
             "many": False
         },
     },
-    "Segmentation": {
+    "segmentation": {
         # Segmentation references Business
         "business": {
             "target": "business",
@@ -155,41 +155,41 @@ ALLOWED_FIELDS: Dict[str, Set[str]] = {
         "pipeline.name", "pipelineStage", "notes", "moreInfo", "fieldData", "company",
         "gstDetails", "shippingAddress"
     },
-    "Task": {
+    "task": {
         "_id", "name", "priority", "dueDate", "taskStatus", "reminderDays", "reminderDate",
         "notify", "description", "parentId", "parentName", "assignedTo", "assignedName",
         "assignToMailId", "createdById", "createdByName", "createdTimeStamp", "updatedTimeStamp",
         "businessId"
     },
-    "Activity": {
+    "activity": {
         "_id", "type", "leadId", "parentId", "activityStatus", "data", "createdTimeStamp",
         "updatedTimeStamp", "businessId", "createdById", "createdByName"
     },
-    "Meeting": {
+    "meeting": {
         "_id", "title", "description", "meetingStatus", "meetingType", "leadId", "leadName",
         "createdById", "createdByName", "assignedTo", "assignedName", "participantsList",
         "meetingLink", "meetingLocated", "remainder", "participantsRemainder", "emailData",
         "startDateTime", "endDateTime", "createdTimeStamp", "updatedTimeStamp", "businessId"
     },
-    "Notes": {
+    "notes": {
         "_id", "subject", "description", "leadId", "leadName", "createdById", "createdByName",
         "taskId", "createdTimeStamp", "updatedTimeStamp", "notesAttachments", "businessId"
     },
-    "CallLog": {
+    "callLog": {
         "_id", "title", "description", "callPurpose", "callStatus", "callType", "call_variant",
         "leadId", "leadName", "createdById", "createdByName", "startDateTime", "otherReason",
         "callDuration", "remainder", "createdTimeStamp", "updatedTimeStamp", "businessId"
     },
-    "MailInfo": {
+    "mailInfo": {
         "_id", "subject", "body", "mailType", "leadId", "toMails", "toCcMails", "toBccMails",
         "attachments", "createdById", "createdByName", "createdTimeStamp", "updatedTimeStamp",
         "businessId"
     },
-    "LeadScoreRule": {
+    "leadScoreRule": {
         "_id", "name", "description", "score", "change", "aiAdjusted", "isActive", "field",
         "operator", "value", "business", "business._id", "business.name", "createdAt", "updatedAt"
     },
-    "Segmentation": {
+    "segmentation": {
         "_id", "name", "description", "conditions", "tags", "isActive", "business", "business._id",
         "business.name", "createdAt", "updatedAt"
     },
@@ -203,22 +203,22 @@ ALIASES: Dict[str, Dict[str, str]] = {
         "email": "personalInfo.email",
         "mobile": "personalInfo.mobile",
     },
-    "Task": {
+    "task": {
         "status": "taskStatus",
     },
-    "Activity": {
+    "activity": {
         "status": "activityStatus",
     },
-    "Meeting": {
+    "meeting": {
         "status": "meetingStatus",
     },
-    "CallLog": {
+    "callLog": {
         "status": "callStatus",
     },
-    "Segmentation": {
+    "segmentation": {
         "status": "isActive",
     },
-    "LeadScoreRule": {
+    "leadScoreRule": {
         "status": "isActive",
     },
 }

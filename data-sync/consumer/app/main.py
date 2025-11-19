@@ -32,35 +32,27 @@ if not any("qdrant" in p for p in sys.path):
 from qdrant.encoder import get_splade_encoder  # noqa: E402
 from qdrant.indexing_shared import (  # noqa: E402
     CHUNKING_CONFIG,
+    canonicalize_collection_name,
     chunk_prepared_document,
     ensure_collection_with_hybrid,
     generate_points,
     normalize_mongo_id,
     prepare_document,
+    CRM_COLLECTIONS,
 )
 
 
 # Updated to match CRM collections
-RELEVANT_COLLECTIONS = {
-    "Lead",
-    "lead",
-    "Task",
-    "task",
-    "Activity",
-    "activity",
-    "Meeting",
-    "meeting",
-    "Notes",
-    "notes",
-    "CallLog",
-    "callLog",
-    "MailInfo",
-    "mailInfo",
-    "LeadScoreRule",
-    "leadScoreRule",
-    "Segmentation",
-    "segmentation",
-}
+# Using canonicalization instead of hardcoded set for better flexibility
+# A collection is relevant if it can be canonicalized and mapped to a content type
+def is_relevant_collection(collection_name: Optional[str]) -> bool:
+    """Check if a collection name is relevant (can be processed)."""
+    if not collection_name:
+        return False
+    canonical = canonicalize_collection_name(collection_name)
+    if canonical is None:
+        return False
+    return canonical in CRM_COLLECTIONS
 
 
 @dataclass
@@ -230,7 +222,8 @@ def process_event(
     embedder: EmbeddingServiceClient,
     splade_encoder: Any,
 ) -> None:
-    if event.collection not in RELEVANT_COLLECTIONS:
+    # Use canonicalization to check if collection is supported
+    if not is_relevant_collection(event.collection):
         return
 
     if event.operation == "delete":

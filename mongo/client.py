@@ -105,28 +105,30 @@ class DirectMongoClient:
                 # Prepare business and member scoping injections (prepend stages)
                 injected_stages: List[Dict[str, Any]] = []
 
-                # 1) Business scoping
-                if enforce_business and biz_uuid:
-                    try:
-                        biz_bin = uuid_str_to_mongo_binary(biz_uuid)
-                        if collection in COLLECTIONS_WITH_DIRECT_BUSINESS:
-                            # Handle different business field formats across collections
-                            if collection == "segmentation":
-                                # Segmentation uses embedded business object
-                                injected_stages.append({"$match": {"business._id": biz_bin}})
-                            else:
-                                # Most collections use direct businessId field
-                                injected_stages.append({"$match": {"businessId": biz_bin}})
-                    except ValueError as e:
-                        # Invalid UUID format - log and skip business filter
-                        logger.error(f"Invalid BUSINESS_UUID format '{biz_uuid}': {e}")
-                    except Exception as e:
-                        # Other errors - log and skip business filter
-                        logger.error(f"Error applying business filter for {collection}: {e}")
+                # COMMENTED OUT: Business filtering disabled
+                # # 1) Business scoping
+                # if enforce_business and biz_uuid:
+                #     try:
+                #         biz_bin = uuid_str_to_mongo_binary(biz_uuid)
+                #         if collection in COLLECTIONS_WITH_DIRECT_BUSINESS:
+                #             # Handle different business field formats across collections
+                #             if collection == "segmentation":
+                #                 # Segmentation uses embedded business object
+                #                 injected_stages.append({"$match": {"business._id": biz_bin}})
+                #             else:
+                #                 # Most collections use direct businessId field
+                #                 injected_stages.append({"$match": {"businessId": biz_bin}})
+                #     except ValueError as e:
+                #         # Invalid UUID format - log and skip business filter
+                #         logger.error(f"Invalid BUSINESS_UUID format '{biz_uuid}': {e}")
+                #     except Exception as e:
+                #         # Other errors - log and skip business filter
+                #         logger.error(f"Error applying business filter for {collection}: {e}")
 
-                # 2) Member-level scoping (if needed in future)
-                # For now, CRM doesn't have member-level filtering like work-management
-                # This can be added later if needed
+                # COMMENTED OUT: Member filtering disabled
+                # # 2) Member-level scoping (if needed in future)
+                # # For now, CRM doesn't have member-level filtering like work-management
+                # # This can be added later if needed
 
                 # Execute aggregation - Motor uses persistent connection pool
                 db = self.client[database]
@@ -139,8 +141,9 @@ class DirectMongoClient:
                 print(f"Database: {database}")
                 print(f"Collection: {collection}")
                 print(f"Pipeline: {pipeline}")
-                if injected_stages:
-                    print(f"Injected business filter stages: {injected_stages}")
+                # COMMENTED OUT: Business/member filtering disabled - injected_stages will always be empty
+                # if injected_stages:
+                #     print(f"Injected business filter stages: {injected_stages}")
                 print(f"{'='*80}\n")
                 
                 effective_pipeline = (injected_stages + pipeline) if injected_stages else pipeline

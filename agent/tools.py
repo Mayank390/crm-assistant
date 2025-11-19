@@ -123,7 +123,7 @@ ENUM_TRANSFORMATIONS: Dict[str, Dict[str, Dict[str, str]]] = {
             "OTHERS": "Others",
         },
     },
-    "Task": {
+    "task": {
         "taskStatus": {
             "NEW": "New",
             "NOT_STARTED": "Not Started",
@@ -163,13 +163,13 @@ ENUM_TRANSFORMATIONS: Dict[str, Dict[str, Dict[str, str]]] = {
             "ON_DATE": "On Date",
         },
     },
-    "Activity": {
+    "activity": {
         "type": {
-            "NOTES": "Notes",
+            "NOTES": "notes",
             "EMAILS": "Emails",
             "TASKS": "Tasks",
             "CALLS": "Calls",
-            "MEETING": "Meeting",
+            "MEETING": "meeting",
         },
         "activityStatus": {
             "OPEN": "Open",
@@ -182,7 +182,7 @@ ENUM_TRANSFORMATIONS: Dict[str, Dict[str, Dict[str, str]]] = {
             "CANCELLED": "Cancelled",
         },
     },
-    "Meeting": {
+    "meeting": {
         "meetingStatus": {
             "NEW": "New",
             "SCHEDULED": "Scheduled",
@@ -204,7 +204,7 @@ ENUM_TRANSFORMATIONS: Dict[str, Dict[str, Dict[str, str]]] = {
             "VIRTUAL": "Virtual",
         },
     },
-    "CallLog": {
+    "callLog": {
         "callStatus": {
             "NEW": "New",
             "ANSWERED": "Answered",
@@ -245,14 +245,14 @@ ENUM_TRANSFORMATIONS: Dict[str, Dict[str, Dict[str, str]]] = {
             "OTHERS": "Others",
         },
     },
-    "MailInfo": {
+    "mailInfo": {
         "mailType": {
             "SEND": "Send",
             "SCHEDULED": "Scheduled",
             "DRAFTS": "Drafts",
         },
     },
-    "Segmentation": {
+    "segmentation": {
         "operator": {
             "CONTAINS": "Contains",
             "EQUALS": "Equals",
@@ -266,7 +266,7 @@ ENUM_TRANSFORMATIONS: Dict[str, Dict[str, Dict[str, str]]] = {
             "ENDS_WITH": "Ends With",
         },
     },
-    "LeadScoreRule": {
+    "leadScoreRule": {
         "change": {
             "POSITIVE": "Positive",
             "NEGATIVE": "Negative",

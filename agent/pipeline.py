@@ -153,29 +153,29 @@ class PipelineGenerator:
                 'callLog': 'callLog',
                 'mailInfo': 'mailInfo',
             },
-            'Task': {
+            'task': {
                 'lead': 'lead',
             },
-            'Activity': {
+            'activity': {
                 'lead': 'lead',
                 'task': 'task',
             },
-            'Meeting': {
+            'meeting': {
                 'lead': 'lead',
             },
-            'Notes': {
+            'notes': {
                 'lead': 'lead',
             },
-            'CallLog': {
+            'callLog': {
                 'lead': 'lead',
             },
-            'MailInfo': {
+            'mailInfo': {
                 'lead': 'lead',
             },
-            'LeadScoreRule': {
+            'leadScoreRule': {
                 'business': 'business',
             },
-            'Segmentation': {
+            'segmentation': {
                 'business': 'business',
             },
         }.get(collection, {})
@@ -1072,7 +1072,7 @@ class PipelineGenerator:
             _apply_date_range(primary_filters, 'createdTimeStamp', filters)
             _apply_date_range(primary_filters, 'updatedTimeStamp', filters)
 
-        elif collection == "Task":
+        elif collection == "task":
             # Only add positive filter if it wasn't already merged with negative filter
             if 'taskStatus' in filters and 'taskStatus' not in primary_filters:
                 if 'taskStatus_not' not in filters:
@@ -1109,7 +1109,7 @@ class PipelineGenerator:
             _apply_date_range(primary_filters, 'createdTimeStamp', filters)
             _apply_date_range(primary_filters, 'updatedTimeStamp', filters)
 
-        elif collection == "Activity":
+        elif collection == "activity":
             # Only add positive filter if it wasn't already merged with negative filter
             if 'activityStatus' in filters and 'activityStatus' not in primary_filters:
                 if 'activityStatus_not' not in filters:
@@ -1127,7 +1127,7 @@ class PipelineGenerator:
             _apply_date_range(primary_filters, 'createdTimeStamp', filters)
             _apply_date_range(primary_filters, 'reminderDate', filters)
 
-        elif collection == "Meeting":
+        elif collection == "meeting":
             # Only add positive filter if it wasn't already merged with negative filter
             if 'meetingStatus' in filters and 'meetingStatus' not in primary_filters:
                 if 'meetingStatus_not' not in filters:
@@ -1164,7 +1164,7 @@ class PipelineGenerator:
             _apply_date_range(primary_filters, 'createdTimeStamp', filters)
             _apply_date_range(primary_filters, 'updatedTimeStamp', filters)
 
-        elif collection == "Notes":
+        elif collection == "notes":
             if 'subject' in filters and isinstance(filters['subject'], str):
                 primary_filters['subject'] = {'$regex': filters['subject'], '$options': 'i'}
             if 'description' in filters and isinstance(filters['description'], str):
@@ -1181,7 +1181,7 @@ class PipelineGenerator:
                 primary_filters['taskId'] = filters['taskId']
             _apply_date_range(primary_filters, 'createdTimeStamp', filters)
 
-        elif collection == "CallLog":
+        elif collection == "callLog":
             # Only add positive filter if it wasn't already merged with negative filter
             if 'callStatus' in filters and 'callStatus' not in primary_filters:
                 if 'callStatus_not' not in filters:
@@ -1225,7 +1225,7 @@ class PipelineGenerator:
             _apply_date_range(primary_filters, 'createdTimeStamp', filters)
             _apply_date_range(primary_filters, 'updatedTimeStamp', filters)
 
-        elif collection == "MailInfo":
+        elif collection == "mailInfo":
             # Only add positive filter if it wasn't already merged with negative filter
             if 'mailType' in filters and 'mailType' not in primary_filters:
                 if 'mailType_not' not in filters:
@@ -1243,7 +1243,7 @@ class PipelineGenerator:
             _apply_date_range(primary_filters, 'createdTimeStamp', filters)
             _apply_date_range(primary_filters, 'updatedTimeStamp', filters)
 
-        elif collection == "LeadScoreRule":
+        elif collection == "leadScoreRule":
             if 'isActive' in filters:
                 primary_filters['isActive'] = bool(filters['isActive'])
             if 'name' in filters and isinstance(filters['name'], str):
@@ -1261,7 +1261,7 @@ class PipelineGenerator:
             _apply_date_range(primary_filters, 'createdAt', filters)
             _apply_date_range(primary_filters, 'updatedAt', filters)
 
-        elif collection == "Segmentation":
+        elif collection == "segmentation":
             if 'isActive' in filters:
                 primary_filters['isActive'] = bool(filters['isActive'])
             if 'name' in filters and isinstance(filters['name'], str):
@@ -1417,12 +1417,12 @@ class PipelineGenerator:
                     {'businessName': {'$regex': filters['business_name'], '$options': 'i'}},
                 ]
             # For LeadScoreRule: through joined business if available
-            if collection == 'LeadScoreRule' and 'business' in REL.get('LeadScoreRule', {}):
+            if collection == 'leadScoreRule' and 'business' in REL.get('leadScoreRule', {}):
                 s['$or'] = s.get('$or', []) + [
                     {'business.name': {'$regex': filters['business_name'], '$options': 'i'}},
                 ]
             # For Segmentation: through joined business if available
-            if collection == 'Segmentation' and 'business' in REL.get('Segmentation', {}):
+            if collection == 'segmentation' and 'business' in REL.get('segmentation', {}):
                 s['$or'] = s.get('$or', []) + [
                     {'business.name': {'$regex': filters['business_name'], '$options': 'i'}},
                 ]
@@ -1461,31 +1461,31 @@ class PipelineGenerator:
                 "referenceNo", "leadStatus", "personalInfo.name", "personalInfo.email", "personalInfo.mobile",
                 "status", "score", "emailCount", "callCount", "createdTimeStamp", "updatedTimeStamp"
             ],
-            "Task": [
+            "task": [
                 "name", "taskStatus", "priority", "dueDate", "assignedName", "createdByName",
                 "description", "createdTimeStamp", "updatedTimeStamp"
             ],
-            "Activity": [
+            "activity": [
                 "type", "activityStatus", "createdTimeStamp"
             ],
-            "Meeting": [
+            "meeting": [
                 "title", "meetingStatus", "meetingType", "leadName", "assignedName", "createdByName",
                 "startDateTime", "endDateTime", "description", "createdTimeStamp", "updatedTimeStamp"
             ],
-            "Notes": [
+            "notes": [
                 "subject", "description", "leadName", "createdByName", "createdTimeStamp"
             ],
-            "CallLog": [
+            "callLog": [
                 "title", "callStatus", "callType", "leadName", "createdByName",
                 "startDateTime", "description", "createdTimeStamp", "updatedTimeStamp"
             ],
-            "MailInfo": [
+            "mailInfo": [
                 "subject", "mailType", "createdByName", "toMails", "createdTimeStamp", "updatedTimeStamp"
             ],
-            "Segmentation": [
+            "segmentation": [
                 "name", "description", "isActive", "createdAt", "updatedAt"
             ],
-            "LeadScoreRule": [
+            "leadScoreRule": [
                 "name", "description", "score", "change", "field", "operator", "value", "isActive", "createdAt", "updatedAt"
             ],
         }

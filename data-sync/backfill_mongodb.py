@@ -46,7 +46,7 @@ KAFKA_BOOTSTRAP_SERVERS = os.getenv("KAFKA_BOOTSTRAP_SERVERS", "kafka:9092")
 KAFKA_TOPIC_PREFIX = os.getenv("KAFKA_TOPIC_PREFIX", "crm.")
 
 # Collections to backfill - configurable via environment
-BACKFILL_COLLECTIONS_STR = os.getenv("BACKFILL_COLLECTIONS", "Lead,Task,Activity,Meeting,Notes,CallLog,MailInfo,LeadScoreRule,Segmentation")
+BACKFILL_COLLECTIONS_STR = os.getenv("BACKFILL_COLLECTIONS", "Lead,task,activity,meeting,notes,callLog,mailInfo,leadScoreRule,segmentation")
 COLLECTIONS_TO_BACKFILL = [col.strip() for col in BACKFILL_COLLECTIONS_STR.split(",") if col.strip()]
 
 # Batch size for processing
@@ -279,14 +279,14 @@ class MongoDBBackfill:
             # Map collection names to content types (matching indexing_shared.py logic)
             content_type_map = {
                 "Lead": "lead",
-                "Task": "task",
-                "Activity": "activity",
-                "Meeting": "meeting",
-                "Notes": "notes",
-                "CallLog": "callLog",
-                "MailInfo": "mailInfo",
-                "LeadScoreRule": "leadScoreRule",
-                "Segmentation": "segmentation",
+                "task": "task",
+                "activity": "activity",
+                "meeting": "meeting",
+                "notes": "notes",
+                "callLog": "callLog",
+                "mailInfo": "mailInfo",
+                "leadScoreRule": "leadScoreRule",
+                "segmentation": "segmentation",
             }
             
             content_type = content_type_map.get(collection_name)

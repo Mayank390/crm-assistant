@@ -67,36 +67,36 @@ class LLMIntentParser:
             "customers": "Lead",
             "contact": "Lead",
             "contacts": "Lead",
-            "task": "Task",
-            "tasks": "Task",
-            "todo": "Task",
-            "todos": "Task",
-            "activity": "Activity",
-            "activities": "Activity",
-            "meeting": "Meeting",
-            "meetings": "Meeting",
-            "call": "Meeting",
-            "calls": "Meeting",
-            "note": "Notes",
-            "notes": "Notes",
-            "calllog": "CallLog",
-            "callLog": "CallLog",
-            "call_log": "CallLog",
-            "call_logs": "CallLog",
-            "mail": "MailInfo",
-            "mailinfo": "MailInfo",
-            "email": "MailInfo",
-            "emails": "MailInfo",
-            "segmentation": "Segmentation",
-            "segmentations": "Segmentation",
-            "segment": "Segmentation",
-            "segments": "Segmentation",
-            "leadscorerule": "LeadScoreRule",
-            "scorerule": "LeadScoreRule",
-            "scoring": "LeadScoreRule",
-            "score rule": "LeadScoreRule",
-            "lead score": "LeadScoreRule",
-            "leadscore": "LeadScoreRule",
+            "task": "task",
+            "tasks": "task",
+            "todo": "task",
+            "todos": "task",
+            "activity": "activity",
+            "activities": "activity",
+            "meeting": "meeting",
+            "meetings": "meeting",
+            "call": "meeting",
+            "calls": "meeting",
+            "note": "notes",
+            "notes": "notes",
+            "calllog": "callLog",
+            "callLog": "callLog",
+            "call_log": "callLog",
+            "call_logs": "callLog",
+            "mail": "mailInfo",
+            "mailinfo": "mailInfo",
+            "email": "mailInfo",
+            "emails": "mailInfo",
+            "segmentation": "segmentation",
+            "segmentations": "segmentation",
+            "segment": "segmentation",
+            "segments": "segmentation",
+            "leadscorerule": "leadScoreRule",
+            "scorerule": "leadScoreRule",
+            "scoring": "leadScoreRule",
+            "score rule": "leadScoreRule",
+            "lead score": "leadScoreRule",
+            "leadscore": "leadScoreRule",
         }
 
     def _is_placeholder(self, v) -> bool:
@@ -817,7 +817,7 @@ class LLMIntentParser:
                 # members commonly use joiningDate
                 created_field = "joiningDate"
                 updated_field = None
-            elif primary_entity in ("LeadScoreRule", "Segmentation"):
+            elif primary_entity in ("leadScoreRule", "segmentation"):
                 # LeadScoreRule and Segmentation use createdAt/updatedAt
                 created_field = "createdAt"
                 updated_field = "updatedAt"
@@ -1006,13 +1006,13 @@ class LLMIntentParser:
             # For CRM entities, map "status" to entity-specific status field
             if primary == "Lead":
                 _maybe_add_group("status")  # or "leadStatus" depending on field name
-            elif primary == "Task":
+            elif primary == "task":
                 _maybe_add_group("taskStatus")
-            elif primary == "Meeting":
+            elif primary == "meeting":
                 _maybe_add_group("meetingStatus")
-            elif primary == "Activity":
+            elif primary == "activity":
                 _maybe_add_group("activityStatus")
-            elif primary == "CallLog":
+            elif primary == "callLog":
                 _maybe_add_group("callStatus")
             else:
                 _maybe_add_group("status")  # Generic fallback
@@ -1033,7 +1033,7 @@ class LLMIntentParser:
                 filters.pop("priority", None)
 
         # 2) Overdue semantics for tasks: dueDate < now and not in done-like states
-        if primary == "Task" and re.search(r"\boverdue\b|\bpast\s+due\b|\blate\b", oq_text):
+        if primary == "task" and re.search(r"\boverdue\b|\bpast\s+due\b|\blate\b", oq_text):
             # Only add if user didn't already specify a dueDate bound
             if "dueDate_to" not in filters:
                 filters["dueDate_to"] = "now"

@@ -41,14 +41,14 @@ try:
     db = mongo_client[mongo_database]
     # CRM collections
     lead_collection = db.get_collection("Lead")
-    task_collection = db.get_collection("Task")
-    activity_collection = db.get_collection("Activity")
-    meeting_collection = db.get_collection("Meeting")
-    notes_collection = db.get_collection("Notes")
-    callLog_collection = db.get_collection("CallLog")
-    mailInfo_collection = db.get_collection("MailInfo")
-    leadScoreRule_collection = db.get_collection("LeadScoreRule")
-    segmentation_collection = db.get_collection("Segmentation")
+    task_collection = db.get_collection("task")
+    activity_collection = db.get_collection("activity")
+    meeting_collection = db.get_collection("meeting")
+    notes_collection = db.get_collection("notes")
+    callLog_collection = db.get_collection("callLog")
+    mailInfo_collection = db.get_collection("mailInfo")
+    leadScoreRule_collection = db.get_collection("leadScoreRule")
+    segmentation_collection = db.get_collection("segmentation")
 
 except Exception as e:
     logger.error(f"MongoDB connection failed: {e}")

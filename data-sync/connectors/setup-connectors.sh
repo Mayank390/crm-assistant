@@ -55,17 +55,19 @@ uri = os.environ.get(
 database = os.environ.get("MONGODB_DATABASE", "crm")
 topic_prefix = os.environ.get("KAFKA_TOPIC_PREFIX", "crm.")
 
+# Use actual MongoDB collection names (matching collections folder)
+# Note: Collection names in MongoDB are inconsistent (some lowercase, some camelCase)
 collections = sorted(
     {
-        "Lead",
-        "Task",
-        "Activity",
-        "Meeting",
-        "Notes",
-        "CallLog",
-        "MailInfo",
-        "LeadScoreRule",
-        "Segmentation"
+        "Lead",           # Capital L
+        "task",           # lowercase
+        "activity",       # lowercase
+        "meeting",        # lowercase
+        "notes",          # lowercase
+        "callLog",        # camelCase
+        "mailInfo",       # camelCase
+        "leadScoreRule",  # camelCase
+        "segmentation"   # lowercase
       }
 )
 

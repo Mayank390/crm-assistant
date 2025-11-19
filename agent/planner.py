@@ -41,7 +41,7 @@ if not groq_api_key:
 @dataclass
 class QueryIntent:
     """Represents the parsed intent of a user query"""
-    primary_entity: str  # Main collection/entity (e.g., "Lead", "Task")
+    primary_entity: str  # Main collection/entity (e.g., "Lead", "task", "activity", "meeting", "notes", "callLog")
     target_entities: List[str]  # Related entities to include
     filters: Dict[str, Any]  # Filter conditions
     aggregations: List[str]  # Aggregation operations (count, group, etc.)

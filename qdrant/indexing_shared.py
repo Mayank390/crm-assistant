@@ -66,35 +66,61 @@ CRM_COLLECTIONS: Dict[str, str] = {
 
 
 COLLECTION_ALIASES: Dict[str, str] = {
+    # Lead variations
     "lead": "lead",
     "Lead": "lead",
     "leads": "lead",
+    "LEAD": "lead",
+    # Task variations
     "task": "task",
     "Task": "task",
     "tasks": "task",
+    "TASK": "task",
+    # Activity variations
     "activity": "activity",
     "Activity": "activity",
     "activities": "activity",
+    "ACTIVITY": "activity",
+    # Meeting variations
     "meeting": "meeting",
     "Meeting": "meeting",
     "meetings": "meeting",
+    "MEETING": "meeting",
+    # Notes variations
     "notes": "notes",
     "Notes": "notes",
     "note": "notes",
     "Note": "notes",
-    "calllog": "calllog",
-    "CallLog": "calllog",
-    "callLog": "calllog",
-    "call_log": "calllog",
-    "mailinfo": "mailinfo",
-    "MailInfo": "mailinfo",
-    "mail_info": "mailinfo",
-    "leadscorerule": "leadscorerule",
-    "LeadScoreRule": "leadscorerule",
-    "lead_score_rule": "leadscorerule",
+    "NOTES": "notes",
+    # CallLog variations - must map to "callLog" (camelCase) to match actual MongoDB collection name
+    "calllog": "callLog",
+    "CallLog": "callLog",
+    "callLog": "callLog",
+    "call_log": "callLog",
+    "Call_Log": "callLog",
+    "CALL_LOG": "callLog",
+    "CALLLOG": "callLog",
+    # MailInfo variations - must map to "mailInfo" (camelCase) to match actual MongoDB collection name
+    "mailinfo": "mailInfo",
+    "MailInfo": "mailInfo",
+    "mailInfo": "mailInfo",
+    "mail_info": "mailInfo",
+    "Mail_Info": "mailInfo",
+    "MAIL_INFO": "mailInfo",
+    "MAILINFO": "mailInfo",
+    # LeadScoreRule variations - must map to "leadScoreRule" (camelCase) to match actual MongoDB collection name
+    "leadscorerule": "leadScoreRule",
+    "LeadScoreRule": "leadScoreRule",
+    "leadScoreRule": "leadScoreRule",
+    "lead_score_rule": "leadScoreRule",
+    "Lead_Score_Rule": "leadScoreRule",
+    "LEAD_SCORE_RULE": "leadScoreRule",
+    "LEADSCORERULE": "leadScoreRule",
+    # Segmentation variations
     "segmentation": "segmentation",
     "Segmentation": "segmentation",
     "segmentations": "segmentation",
+    "SEGMENTATION": "segmentation",
 }
 
 

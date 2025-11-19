@@ -427,7 +427,7 @@ async def create_task(req: TaskCreateRequest):
             await mongodb_tools.connect()
 
         db = mongodb_tools.client[DATABASE_NAME]
-        coll = db["Task"]
+        coll = db["task"]
 
         from datetime import datetime
         from mongo.constants import uuid_str_to_mongo_binary
@@ -486,7 +486,7 @@ async def create_meeting(req: MeetingCreateRequest):
             await mongodb_tools.connect()
 
         db = mongodb_tools.client[DATABASE_NAME]
-        coll = db["Meeting"]
+        coll = db["meeting"]
 
         from datetime import datetime
         from mongo.constants import uuid_str_to_mongo_binary
@@ -541,7 +541,7 @@ async def create_note(req: NoteCreateRequest):
             await mongodb_tools.connect()
 
         db = mongodb_tools.client[DATABASE_NAME]
-        coll = db["Notes"]
+        coll = db["notes"]
 
         from datetime import datetime
         from mongo.constants import uuid_str_to_mongo_binary

@@ -118,29 +118,31 @@ class RAGTool:
                     )
                 )
 
-            business_uuid = BUSINESS_UUID()
-            if business_uuid:
-                normalized_business_id = self._normalize_business_id(business_uuid)
-                must_conditions.append(
-                    FieldCondition(
-                        key="business_id",
-                        match=MatchValue(value=normalized_business_id)
-                    )
-                )
+            # COMMENTED OUT: Business filtering disabled
+            # business_uuid = BUSINESS_UUID()
+            # if business_uuid:
+            #     normalized_business_id = self._normalize_business_id(business_uuid)
+            #     must_conditions.append(
+            #         FieldCondition(
+            #             key="business_id",
+            #             match=MatchValue(value=normalized_business_id)
+            #         )
+            #     )
 
-            # Member-level RBAC scoping for CRM
-            # Note: CRM collections don't have project-level scoping like work-management
-            # Member filtering can be applied based on assignedTo, createdById, or staffId fields
-            member_uuid = MEMBER_UUID()
-            if member_uuid:
-                try:
-                    # For CRM, we can filter by member access if needed
-                    # This is a placeholder - adapt based on your CRM access control model
-                    # For now, we'll skip member-level filtering as CRM doesn't have project-based access
-                    pass
-                except Exception as e:
-                    # Error getting member access - log and skip member filter
-                    logger.error(f"Error applying member filter for '{member_uuid}': {e}")
+            # COMMENTED OUT: Member filtering disabled
+            # # Member-level RBAC scoping for CRM
+            # # Note: CRM collections don't have project-level scoping like work-management
+            # # Member filtering can be applied based on assignedTo, createdById, or staffId fields
+            # member_uuid = MEMBER_UUID()
+            # if member_uuid:
+            #     try:
+            #         # For CRM, we can filter by member access if needed
+            #         # This is a placeholder - adapt based on your CRM access control model
+            #         # For now, we'll skip member-level filtering as CRM doesn't have project-based access
+            #         pass
+            #     except Exception as e:
+            #         # Error getting member access - log and skip member filter
+            #         logger.error(f"Error applying member filter for '{member_uuid}': {e}")
             search_filter = Filter(must=must_conditions) if must_conditions else None
 
             # Hybrid fusion: dense + SPLADE sparse (fallback to keyword over full_text)

@@ -125,37 +125,39 @@ class ChunkAwareRetriever:
         if content_type:
             must_conditions.append(FieldCondition(key="content_type", match=MatchValue(value=content_type)))
 
-        # Business-level scoping
-        # Note: business_id in Qdrant is stored as normalized UUID string from MongoDB Binary
-        # We need to normalize it the same way as insertdocs.py does
-        business_uuid = BUSINESS_UUID()
-        if business_uuid:
-            normalized_business_id = self._normalize_business_id(business_uuid)
-            must_conditions.append(FieldCondition(key="business_id", match=MatchValue(value=normalized_business_id)))
+        # COMMENTED OUT: Business filtering disabled
+        # # Business-level scoping
+        # # Note: business_id in Qdrant is stored as normalized UUID string from MongoDB Binary
+        # # We need to normalize it the same way as insertdocs.py does
+        # business_uuid = BUSINESS_UUID()
+        # if business_uuid:
+        #     normalized_business_id = self._normalize_business_id(business_uuid)
+        #     must_conditions.append(FieldCondition(key="business_id", match=MatchValue(value=normalized_business_id)))
 
-        # Member-level RBAC scoping
-        # ✅ OPTIMIZED: Cache member projects at request start
-        member_uuid = MEMBER_UUID()
-        if member_uuid:
-            try:
-                # Check cache first
-                cache_key = f"{member_uuid}:{business_uuid}"
-                if cache_key not in self._member_projects_cache:
-                    self._member_projects_cache[cache_key] = await self._get_member_projects(member_uuid, business_uuid)
-                member_projects = self._member_projects_cache[cache_key]
-                if member_projects:
-                    # For CRM, member filtering can be applied based on assignedTo, createdById, or staffId
-                    # Since CRM doesn't have project-based access like work-management,
-                    # we can filter by member's assigned items or created items
-                    # For now, we'll apply member filtering to content types that have assignment fields
-                    crm_assigned_content_types = {"task", "activity", "meeting"}
-                    if content_type is None or content_type in crm_assigned_content_types:
-                        # Filter by member's assigned items (using mongo_id matching member's assignments)
-                        # This is a simplified approach - adapt based on your CRM access control model
-                        must_conditions.append(FieldCondition(key="mongo_id", match=MatchAny(any=member_projects)))
-            except Exception as e:
-                # Error getting member projects - log and skip member filter
-                logger.error(f"Error getting member projects for '{member_uuid}': {e}")
+        # COMMENTED OUT: Member filtering disabled
+        # # Member-level RBAC scoping
+        # # ✅ OPTIMIZED: Cache member projects at request start
+        # member_uuid = MEMBER_UUID()
+        # if member_uuid:
+        #     try:
+        #         # Check cache first
+        #         cache_key = f"{member_uuid}:{business_uuid}"
+        #         if cache_key not in self._member_projects_cache:
+        #             self._member_projects_cache[cache_key] = await self._get_member_projects(member_uuid, business_uuid)
+        #         member_projects = self._member_projects_cache[cache_key]
+        #         if member_projects:
+        #             # For CRM, member filtering can be applied based on assignedTo, createdById, or staffId
+        #             # Since CRM doesn't have project-based access like work-management,
+        #             # we can filter by member's assigned items or created items
+        #             # For now, we'll apply member filtering to content types that have assignment fields
+        #             crm_assigned_content_types = {"task", "activity", "meeting"}
+        #             if content_type is None or content_type in crm_assigned_content_types:
+        #                 # Filter by member's assigned items (using mongo_id matching member's assignments)
+        #                 # This is a simplified approach - adapt based on your CRM access control model
+        #                 must_conditions.append(FieldCondition(key="mongo_id", match=MatchAny(any=member_projects)))
+        #     except Exception as e:
+        #         # Error getting member projects - log and skip member filter
+        #         logger.error(f"Error getting member projects for '{member_uuid}': {e}")
 
         search_filter = Filter(must=must_conditions) if must_conditions else None
 
@@ -746,11 +748,11 @@ class ChunkAwareRetriever:
             item_ids = []
 
             # Query CRM collections for items assigned to or created by the member
-            # Collections to check: Task, Activity, Meeting, Lead (if assigned)
+            # Collections to check: task, activity, meeting, Lead (if assigned)
             crm_collections = [
-                ("Task", ["assignedTo", "createdById", "staffId"]),
-                ("Activity", ["assignedTo", "createdById", "staffId"]),
-                ("Meeting", ["assignedTo", "createdById", "staffId"]),
+                ("task", ["assignedTo", "createdById", "staffId"]),
+                ("activity", ["assignedTo", "createdById", "staffId"]),
+                ("meeting", ["assignedTo", "createdById", "staffId"]),
                 ("Lead", ["staffId", "createdById"]),  # Leads may have staff assignment
             ]
 
