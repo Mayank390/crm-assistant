@@ -22,14 +22,15 @@ from typing import List, Dict, Any, Optional
 # Add the parent directory to sys.path so we can import from qdrant
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from qdrant.dbconnection import (
-    page_collection,
-    workitem_collection,
-    cycle_collection,
-    module_collection,
-    project_collection,
-    epic_collection,
-    userStory_collection,
-    features_collection,
+    lead_collection,
+    task_collection,
+    activity_collection,
+    meeting_collection,
+    notes_collection,
+    callLog_collection,
+    mailInfo_collection,
+    leadScoreRule_collection,
+    segmentation_collection,
     qdrant_client,
     QDRANT_COLLECTION
 )
@@ -318,47 +319,51 @@ def point_id_from_seed(seed: str) -> str:
 # Chunking settings per content type
 # Adjust these values to control chunking behavior
 CHUNKING_CONFIG = {
-    "page": {
-        "max_words": 220,
-        "overlap_words": 40,
-        "min_words_to_chunk": 220,  # Only chunk if text is longer than this
-    },
-    "work_item": {
+    "lead": {
         "max_words": 220,
         "overlap_words": 40,
         "min_words_to_chunk": 220,
     },
-    "project": {
+    "task": {
         "max_words": 220,
         "overlap_words": 40,
         "min_words_to_chunk": 220,
     },
-    "cycle": {
+    "activity": {
+        "max_words": 200,
+        "overlap_words": 40,
+        "min_words_to_chunk": 200,
+    },
+    "meeting": {
         "max_words": 220,
         "overlap_words": 40,
         "min_words_to_chunk": 220,
     },
-    "module": {
+    "notes": {
         "max_words": 220,
         "overlap_words": 40,
         "min_words_to_chunk": 220,
     },
-    "epic": {
+    "callLog": {
+        "max_words": 200,
+        "overlap_words": 40,
+        "min_words_to_chunk": 200,
+    },
+    "mailInfo": {
         "max_words": 220,
         "overlap_words": 40,
         "min_words_to_chunk": 220,
     },
-    "feature": {
-        "max_words": 220,
+    "leadScoreRule": {
+        "max_words": 200,
         "overlap_words": 40,
-        "min_words_to_chunk": 220,
+        "min_words_to_chunk": 200,
     },
-    "user_story": {
-        "max_words": 220,
+    "segmentation": {
+        "max_words": 200,
         "overlap_words": 40,
-        "min_words_to_chunk": 220,
+        "min_words_to_chunk": 200,
     },
-    # timeline intentionally excluded from RAG indexing to avoid bulky data
 }
 
 # For more aggressive chunking (more multi-chunk documents), use:
@@ -558,9 +563,9 @@ def _get_common_metadata(doc: Dict) -> Dict:
 
     return metadata
 
-# ------------------ Indexing Functions ------------------
+# ------------------ CRM Indexing Functions ------------------
 
-def index_pages_to_qdrant():
+def index_leads_to_qdrant():
     try:
 
         # Ensure collection and indexes for hybrid search
@@ -579,80 +584,108 @@ def index_pages_to_qdrant():
             else:
                 logger.error(f"Failed to ensure index: {e}")
 
-        # Fetch pages with rich metadata
-        documents = page_collection.find({}, {
-            "_id": 1, "content": 1, "title": 1, "visibility": 1, "isFavourite": 1,
-            "createdAt": 1, "updatedAt": 1, "createdTimeStamp": 1, "updatedTimeStamp": 1,
-            "project": 1, "business": 1, "createdBy": 1
+        documents = lead_collection.find({}, {
+            "_id": 1, "referenceNo": 1, "leadStatus": 1, "personalInfo": 1, 
+            "notes": 1, "moreInfo": 1, "fieldData": 1, "company": 1,
+            "createdTimeStamp": 1, "updatedTimeStamp": 1, "businessId": 1,
+            "createdById": 1, "createdByName": 1, "staffId": 1, "staffName": 1,
+            "pipeline": 1, "source": 1, "type": 1, "customerType": 1
         })
         points = []
-
         splade = get_splade_encoder()
+        
         for doc in documents:
             mongo_id = normalize_mongo_id(doc["_id"])
-            title = doc.get("title", "")
-            blocks, combined_text = parse_editorjs_blocks(doc.get("content", ""))
-
-            # Extract additional text content from other fields in the page
-            if combined_text:
-                # Look for other substantial text fields in the page document
-                for field_name, field_value in doc.items():
-                    if (field_name not in ["_id", "title", "content", "visibility", "isFavourite", "createdAt", "updatedAt", "createdTimeStamp", "updatedTimeStamp", "project", "createdBy", "business"]
-                        and isinstance(field_value, str)
-                        and len(field_value.strip()) > 20):  # Only substantial text
-                        combined_text += " " + field_value.strip()
-
-            if not combined_text and title:
-                combined_text = title
-
+            
+            # Build text content from various fields
+            text_parts = []
+            
+            # Personal info
+            if doc.get("personalInfo"):
+                pi = doc["personalInfo"]
+                if isinstance(pi, dict):
+                    if pi.get("name"):
+                        text_parts.append(f"Name: {pi['name']}")
+                    if pi.get("email"):
+                        text_parts.append(f"Email: {pi['email']}")
+                    if pi.get("mobile"):
+                        text_parts.append(f"Mobile: {pi['mobile']}")
+            
+            # Notes
+            if doc.get("notes"):
+                text_parts.append(f"Notes: {doc['notes']}")
+            
+            # More info
+            if doc.get("moreInfo") and isinstance(doc["moreInfo"], dict):
+                for key, value in doc["moreInfo"].items():
+                    if isinstance(value, str) and value.strip():
+                        text_parts.append(f"{key}: {value}")
+            
+            # Company info
+            if doc.get("company") and isinstance(doc["company"], dict):
+                if doc["company"].get("name"):
+                    text_parts.append(f"Company: {doc['company']['name']}")
+            
+            # Field data
+            if doc.get("fieldData") and isinstance(doc["fieldData"], list):
+                for field in doc["fieldData"]:
+                    if isinstance(field, dict) and field.get("fieldValue"):
+                        field_name = field.get("fieldName", "")
+                        field_value = str(field.get("fieldValue", ""))
+                        if field_value.strip():
+                            text_parts.append(f"{field_name}: {field_value}")
+            
+            combined_text = " ".join(text_parts).strip()
             if not combined_text:
-                logger.error(f"Skipping page {mongo_id} - no title or content")
                 continue
-
-            # Extract metadata for filtering/grouping
+            
+            # Extract metadata
             metadata = {
-                "visibility": doc.get("visibility"),
-                "isFavourite": doc.get("isFavourite", False),
-                "createdAt": doc.get("createdAt") or doc.get("createdTimeStamp"),
-                "updatedAt": doc.get("updatedAt") or doc.get("updatedTimeStamp"),
+                "referenceNo": doc.get("referenceNo"),
+                "leadStatus": doc.get("leadStatus"),
+                "type": doc.get("type"),
+                "customerType": doc.get("customerType"),
+                "source": doc.get("source"),
+                "createdTimeStamp": doc.get("createdTimeStamp"),
+                "updatedTimeStamp": doc.get("updatedTimeStamp"),
             }
             
-            # Extract nested references
-            if doc.get("project"):
-                if isinstance(doc["project"], dict):
-                    metadata["project_name"] = doc["project"].get("name")
-                    metadata["project_id"] = normalize_mongo_id(doc["project"].get("_id")) if doc["project"].get("_id") else None
+            # Business ID
+            if doc.get("businessId"):
+                try:
+                    metadata["business_id"] = normalize_mongo_id(doc["businessId"])
+                except Exception:
+                    pass
             
-            if doc.get("business"):
-                if isinstance(doc["business"], dict):
-                    metadata["business_name"] = doc["business"].get("name")
-                    if doc["business"].get("_id") is not None:
-                        try:
-                            metadata["business_id"] = normalize_mongo_id(doc["business"].get("_id"))
-                        except Exception:
-                            pass
+            # Pipeline
+            if doc.get("pipeline") and isinstance(doc["pipeline"], dict):
+                metadata["pipeline_name"] = doc["pipeline"].get("name")
             
-            if doc.get("createdBy"):
-                if isinstance(doc["createdBy"], dict):
-                    metadata["created_by_name"] = doc["createdBy"].get("name")
-
-            # Chunk combined text for better retrieval
-            chunks = get_chunks_for_content(combined_text, "page")
+            # Created by
+            if doc.get("createdByName"):
+                metadata["created_by_name"] = doc["createdByName"]
+            
+            if doc.get("staffName"):
+                metadata["staff_name"] = doc["staffName"]
+            
+            # Chunk text
+            chunks = get_chunks_for_content(combined_text, "lead")
             if not chunks:
                 chunks = [combined_text]
             
-            # Record statistics
-            word_count = len(combined_text.split()) if combined_text else 0
-            _stats.record("page", mongo_id, title, len(chunks), word_count)
-
+            word_count = len(combined_text.split())
+            _stats.record("lead", mongo_id, doc.get("referenceNo", ""), len(chunks), word_count)
+            
             vectors = embedder.encode(chunks)
             if len(vectors) != len(chunks):
                 raise EmbeddingServiceError("Embedding service returned unexpected vector count")
-
+            
             for idx, chunk in enumerate(chunks):
                 vector = vectors[idx]
+                title = doc.get("referenceNo", f"Lead {mongo_id[:8]}")
                 full_text = f"{title} {chunk}".strip()
                 splade_vec = splade.encode_text(full_text)
+                
                 payload = {
                     "mongo_id": mongo_id,
                     "parent_id": mongo_id,
@@ -660,39 +693,147 @@ def index_pages_to_qdrant():
                     "chunk_count": len(chunks),
                     "title": title,
                     "content": chunk,
-                    # Provide a concatenated text field for full-text search
                     "full_text": full_text,
-                    "content_type": "page"
+                    "content_type": "lead"
                 }
-                # Add metadata, filtering out None values
                 payload.update({k: v for k, v in metadata.items() if v is not None})
                 
                 point_kwargs = {
-                    "id": point_id_from_seed(f"{mongo_id}/page/{idx}"),
-                    "vector": {
-                        "dense": vector,
-                    },
+                    "id": point_id_from_seed(f"{mongo_id}/lead/{idx}"),
+                    "vector": {"dense": vector},
                     "payload": payload,
                 }
                 if splade_vec.get("indices"):
                     point_kwargs["vector"]["sparse"] = SparseVector(
                         indices=splade_vec["indices"], values=splade_vec["values"]
                     )
-                point = PointStruct(**point_kwargs)
-                points.append(point)
-
+                points.append(PointStruct(**point_kwargs))
+        
         if not points:
-            logger.error("No valid pages to index.")
-            return {"status": "warning", "message": "No valid pages found to index."}
-
+            logger.warning("No valid leads to index.")
+            return {"status": "warning", "message": "No valid leads found to index."}
+        
         total_indexed = upload_in_batches(points, QDRANT_COLLECTION)
+        logger.info(f"✅ Indexed {total_indexed} lead chunks to Qdrant.")
         return {"status": "success", "indexed_documents": total_indexed}
-
+    
     except Exception as e:
-        logger.error(f"Error during page indexing: {e}")
+        logger.error(f"Error during lead indexing: {e}")
         return {"status": "error", "message": str(e)}
 
-def index_workitems_to_qdrant():
+def index_tasks_to_qdrant():
+    """Index Task collection to Qdrant"""
+    try:
+        ensure_collection_with_hybrid(QDRANT_COLLECTION, vector_size=EMBEDDING_DIMENSION)
+        
+        try:
+            qdrant_client.create_payload_index(
+                collection_name=QDRANT_COLLECTION,
+                field_name="content_type",
+                field_schema=PayloadSchemaType.KEYWORD
+            )
+        except Exception as e:
+            if "already exists" not in str(e):
+                logger.error(f"Failed to ensure index: {e}")
+
+        documents = task_collection.find({}, {
+            "_id": 1, "name": 1, "description": 1, "priority": 1, "taskStatus": 1,
+            "dueDate": 1, "parentId": 1, "parentName": 1, "assignedTo": 1, "assignedName": 1,
+            "createdById": 1, "createdByName": 1, "createdTimeStamp": 1, "updatedTimeStamp": 1,
+            "businessId": 1
+        })
+        points = []
+        splade = get_splade_encoder()
+        
+        for doc in documents:
+            mongo_id = normalize_mongo_id(doc["_id"])
+            
+            # Build text content
+            text_parts = []
+            if doc.get("name"):
+                text_parts.append(doc["name"])
+            if doc.get("description"):
+                text_parts.append(doc["description"])
+            if doc.get("parentName"):
+                text_parts.append(f"Parent: {doc['parentName']}")
+            
+            combined_text = " ".join(filter(None, text_parts)).strip()
+            if not combined_text:
+                continue
+            
+            # Extract metadata
+            metadata = {
+                "priority": doc.get("priority"),
+                "taskStatus": doc.get("taskStatus"),
+                "dueDate": doc.get("dueDate"),
+                "parentName": doc.get("parentName"),
+                "assignedName": doc.get("assignedName"),
+                "createdByName": doc.get("createdByName"),
+                "createdTimeStamp": doc.get("createdTimeStamp"),
+                "updatedTimeStamp": doc.get("updatedTimeStamp"),
+            }
+            
+            if doc.get("businessId"):
+                try:
+                    metadata["business_id"] = normalize_mongo_id(doc["businessId"])
+                except Exception:
+                    pass
+            
+            # Chunk text
+            chunks = get_chunks_for_content(combined_text, "task")
+            if not chunks:
+                chunks = [combined_text]
+            
+            word_count = len(combined_text.split())
+            _stats.record("task", mongo_id, doc.get("name", ""), len(chunks), word_count)
+            
+            vectors = embedder.encode(chunks)
+            if len(vectors) != len(chunks):
+                raise EmbeddingServiceError("Embedding service returned unexpected vector count")
+            
+            for idx, chunk in enumerate(chunks):
+                vector = vectors[idx]
+                title = doc.get("name", f"Task {mongo_id[:8]}")
+                full_text = f"{title} {chunk}".strip()
+                splade_vec = splade.encode_text(full_text)
+                
+                payload = {
+                    "mongo_id": mongo_id,
+                    "parent_id": mongo_id,
+                    "chunk_index": idx,
+                    "chunk_count": len(chunks),
+                    "title": title,
+                    "content": chunk,
+                    "full_text": full_text,
+                    "content_type": "task"
+                }
+                payload.update({k: v for k, v in metadata.items() if v is not None})
+                
+                point_kwargs = {
+                    "id": point_id_from_seed(f"{mongo_id}/task/{idx}"),
+                    "vector": {"dense": vector},
+                    "payload": payload,
+                }
+                if splade_vec.get("indices"):
+                    point_kwargs["vector"]["sparse"] = SparseVector(
+                        indices=splade_vec["indices"], values=splade_vec["values"]
+                    )
+                points.append(PointStruct(**point_kwargs))
+        
+        if not points:
+            logger.warning("No valid tasks to index.")
+            return {"status": "warning", "message": "No valid tasks found to index."}
+        
+        total_indexed = upload_in_batches(points, QDRANT_COLLECTION)
+        logger.info(f"✅ Indexed {total_indexed} task chunks to Qdrant.")
+        return {"status": "success", "indexed_documents": total_indexed}
+    
+    except Exception as e:
+        logger.error(f"Error during task indexing: {e}")
+        return {"status": "error", "message": str(e)}
+
+
+def index_activities_to_qdrant():
     try:
         ensure_collection_with_hybrid(QDRANT_COLLECTION, vector_size=EMBEDDING_DIMENSION)
 
@@ -708,97 +849,66 @@ def index_workitems_to_qdrant():
             else:
                 logger.error(f"Failed to ensure index: {e}")
 
-        documents = workitem_collection.find({}, {
-            "_id": 1, "title": 1, "description": 1, "displayBugNo": 1,
-            "priority": 1, "status": 1, "state": 1, "assignee": 1,
-            "createdAt": 1, "updatedAt": 1, "createdTimeStamp": 1, "updatedTimeStamp": 1,
-            "project": 1, "cycle": 1, "modules": 1, "business": 1, "createdBy": 1,"workLogs":1
+        documents = activity_collection.find({}, {
+            "_id": 1, "type": 1, "activityStatus": 1, "data": 1,
+            "leadId": 1, "parentId": 1, "createdTimeStamp": 1, "updatedTimeStamp": 1,
+            "businessId": 1, "createdById": 1, "createdByName": 1
         })
         points = []
-
         splade = get_splade_encoder()
+        
         for doc in documents:
             mongo_id = normalize_mongo_id(doc["_id"])
-            # Clean HTML/entities before chunking for better retrieval quality
-            title_clean = html_to_text(doc.get("title", ""))
-            desc_clean = html_to_text(doc.get("description", ""))
-            # Extract work log descriptions (workLogs is an array)
-            worklogs_descriptions = []
-            if doc.get("workLogs") and isinstance(doc["workLogs"], list):
-                worklogs_descriptions = [
-                    log.get("description", "") for log in doc["workLogs"]
-                    if isinstance(log, dict) and log.get("description")
-                ]
-            worklogs_description = " ".join(worklogs_descriptions)
-            combined_text = " ".join(filter(None, [title_clean, desc_clean, worklogs_description])).strip()
+            
+            # Build text content from data field (often JSON string)
+            text_parts = []
+            if doc.get("type"):
+                text_parts.append(f"Type: {doc['type']}")
+            if doc.get("data"):
+                data = doc["data"]
+                if isinstance(data, str):
+                    text_parts.append(data)
+                elif isinstance(data, dict):
+                    # Serialize dict to text
+                    for key, value in data.items():
+                        if isinstance(value, str) and value.strip():
+                            text_parts.append(f"{key}: {value}")
+            
+            combined_text = " ".join(filter(None, text_parts)).strip()
             if not combined_text:
-                logger.error(f"Skipping work item {mongo_id} - no substantial text content found")
                 continue
-
-            # Extract metadata for filtering/grouping
+            
+            # Extract metadata
             metadata = {
-                "displayBugNo": doc.get("displayBugNo"),
-                "priority": doc.get("priority"),
-                "status": doc.get("status"),
-                "createdAt": doc.get("createdAt") or doc.get("createdTimeStamp"),
-                "updatedAt": doc.get("updatedAt") or doc.get("updatedTimeStamp"),
+                "type": doc.get("type"),
+                "activityStatus": doc.get("activityStatus"),
+                "createdByName": doc.get("createdByName"),
+                "createdTimeStamp": doc.get("createdTimeStamp"),
+                "updatedTimeStamp": doc.get("updatedTimeStamp"),
             }
             
-            # Extract nested references
-            if doc.get("state"):
-                if isinstance(doc["state"], dict):
-                    metadata["state_name"] = doc["state"].get("name")
+            if doc.get("businessId"):
+                try:
+                    metadata["business_id"] = normalize_mongo_id(doc["businessId"])
+                except Exception:
+                    pass
             
-            if doc.get("project"):
-                if isinstance(doc["project"], dict):
-                    metadata["project_name"] = doc["project"].get("name")
-                    metadata["project_id"] = normalize_mongo_id(doc["project"].get("_id")) if doc["project"].get("_id") else None
-            
-            if doc.get("cycle"):
-                if isinstance(doc["cycle"], dict):
-                    metadata["cycle_name"] = doc["cycle"].get("name")
-            
-            if doc.get("modules"):
-                if isinstance(doc["modules"], dict):
-                    metadata["module_name"] = doc["modules"].get("name")
-            
-            if doc.get("business"):
-                if isinstance(doc["business"], dict):
-                    metadata["business_name"] = doc["business"].get("name")
-                    if doc["business"].get("_id") is not None:
-                        try:
-                            metadata["business_id"] = normalize_mongo_id(doc["business"].get("_id"))
-                        except Exception:
-                            pass
-            
-            # Handle assignee (can be array or single object)
-            if doc.get("assignee"):
-                assignee = doc["assignee"]
-                if isinstance(assignee, list) and assignee and isinstance(assignee[0], dict):
-                    metadata["assignee_name"] = assignee[0].get("name")
-                elif isinstance(assignee, dict):
-                    metadata["assignee_name"] = assignee.get("name")
-            
-            if doc.get("createdBy"):
-                if isinstance(doc["createdBy"], dict):
-                    metadata["created_by_name"] = doc["createdBy"].get("name")
-
-            # Chunk work items with long descriptions (similar to pages)
-            chunks = get_chunks_for_content(combined_text, "work_item")
+            # Chunk text
+            chunks = get_chunks_for_content(combined_text, "activity")
             if not chunks:
                 chunks = [combined_text]
             
-            # Record statistics
-            word_count = len(combined_text.split()) if combined_text else 0
-            _stats.record("work_item", mongo_id, doc.get("title", ""), len(chunks), word_count)
+            word_count = len(combined_text.split())
+            _stats.record("activity", mongo_id, doc.get("type", ""), len(chunks), word_count)
             
             vectors = embedder.encode(chunks)
             if len(vectors) != len(chunks):
                 raise EmbeddingServiceError("Embedding service returned unexpected vector count")
-
+            
             for idx, chunk in enumerate(chunks):
                 vector = vectors[idx]
-                full_text = f"{doc.get('title', '')} {chunk}".strip()
+                title = doc.get("type", f"Activity {mongo_id[:8]}")
+                full_text = f"{title} {chunk}".strip()
                 splade_vec = splade.encode_text(full_text)
                 
                 payload = {
@@ -806,728 +916,669 @@ def index_workitems_to_qdrant():
                     "parent_id": mongo_id,
                     "chunk_index": idx,
                     "chunk_count": len(chunks),
-                    "title": doc.get("title", ""),
+                    "title": title,
                     "content": chunk,
                     "full_text": full_text,
-                    "content_type": "work_item"
+                    "content_type": "activity"
                 }
-                # Add metadata, filtering out None values
                 payload.update({k: v for k, v in metadata.items() if v is not None})
-
+                
                 point_kwargs = {
-                    "id": point_id_from_seed(f"{mongo_id}/work_item/{idx}"),
-                    "vector": {
-                        "dense": vector,
-                    },
+                    "id": point_id_from_seed(f"{mongo_id}/activity/{idx}"),
+                    "vector": {"dense": vector},
                     "payload": payload,
                 }
                 if splade_vec.get("indices"):
                     point_kwargs["vector"]["sparse"] = SparseVector(
                         indices=splade_vec["indices"], values=splade_vec["values"]
                     )
-                point = PointStruct(**point_kwargs)
-                points.append(point)
-
+                points.append(PointStruct(**point_kwargs))
+        
         if not points:
-            logger.error("No valid work items to index.")
-            return {"status": "warning", "message": "No valid work items found to index."}
-
+            logger.warning("No valid activities to index.")
+            return {"status": "warning", "message": "No valid activities found to index."}
+        
         total_indexed = upload_in_batches(points, QDRANT_COLLECTION)
+        logger.info(f"✅ Indexed {total_indexed} activity chunks to Qdrant.")
         return {"status": "success", "indexed_documents": total_indexed}
-
+    
     except Exception as e:
-        logger.error(f"Error during work item indexing: {e}")
+        logger.error(f"Error during activity indexing: {e}")
         return {"status": "error", "message": str(e)}
 
-def index_projects_to_qdrant():
+def index_meetings_to_qdrant():
+    """Index Meeting collection to Qdrant"""
     try:
         ensure_collection_with_hybrid(QDRANT_COLLECTION, vector_size=EMBEDDING_DIMENSION)
-
-        documents = project_collection.find({}, {"_id": 1, "name": 1, "description": 1, "business": 1})
+        
+        documents = meeting_collection.find({}, {
+            "_id": 1, "title": 1, "description": 1, "meetingStatus": 1, "meetingType": 1,
+            "leadId": 1, "leadName": 1, "startDateTime": 1, "endDateTime": 1,
+            "assignedTo": 1, "assignedName": 1, "participantsList": 1, "meetingLink": 1,
+            "createdById": 1, "createdByName": 1, "createdTimeStamp": 1, "updatedTimeStamp": 1,
+            "businessId": 1
+        })
         points = []
-
         splade = get_splade_encoder()
+        
         for doc in documents:
             mongo_id = normalize_mongo_id(doc["_id"])
-            name = doc.get("name", "")
-            description = (doc.get("description") or "").strip()
-
-            # Extract ALL substantial text content from the project document
+            
+            # Build text content
             text_parts = []
-
-            # Include name if present
-            if name:
-                text_parts.append(name)
-
-            # Include description if present and substantial
-            if description and len(description) > 10:
-                text_parts.append(description)
-
-            # Include any other substantial text fields
-            for field_name, field_value in doc.items():
-                if (field_name not in ["_id", "name", "description", "createdAt", "updatedAt", "createdTimeStamp", "updatedTimeStamp"]
-                    and isinstance(field_value, str)
-                    and len(field_value.strip()) > 20):  # Only substantial text
-                    text_parts.append(field_value.strip())
-
-            combined_text = " ".join(text_parts).strip()
+            if doc.get("title"):
+                text_parts.append(doc["title"])
+            if doc.get("description"):
+                text_parts.append(doc["description"])
+            if doc.get("leadName"):
+                text_parts.append(f"Lead: {doc['leadName']}")
+            if doc.get("participantsList") and isinstance(doc["participantsList"], list):
+                participants = []
+                for p in doc["participantsList"]:
+                    if isinstance(p, dict):
+                        if p.get("leadName"):
+                            participants.append(p["leadName"])
+                if participants:
+                    text_parts.append(f"Participants: {', '.join(participants)}")
+            
+            combined_text = " ".join(filter(None, text_parts)).strip()
             if not combined_text:
-                logger.error(f"Skipping project {mongo_id} - no substantial text content found")
                 continue
+            
+            # Extract metadata
+            metadata = {
+                "meetingStatus": doc.get("meetingStatus"),
+                "meetingType": doc.get("meetingType"),
+                "leadName": doc.get("leadName"),
+                "assignedName": doc.get("assignedName"),
+                "createdByName": doc.get("createdByName"),
+                "startDateTime": doc.get("startDateTime"),
+                "endDateTime": doc.get("endDateTime"),
+                "createdTimeStamp": doc.get("createdTimeStamp"),
+                "updatedTimeStamp": doc.get("updatedTimeStamp"),
+            }
+            
+            if doc.get("businessId"):
+                try:
+                    metadata["business_id"] = normalize_mongo_id(doc["businessId"])
+                except Exception:
+                    pass
+            
+            # Chunk text
+            chunks = get_chunks_for_content(combined_text, "meeting")
+            if not chunks:
+                chunks = [combined_text]
+            
+            word_count = len(combined_text.split())
+            _stats.record("meeting", mongo_id, doc.get("title", ""), len(chunks), word_count)
+            
+            vectors = embedder.encode(chunks)
+            if len(vectors) != len(chunks):
+                raise EmbeddingServiceError("Embedding service returned unexpected vector count")
+            
+            for idx, chunk in enumerate(chunks):
+                vector = vectors[idx]
+                title = doc.get("title", f"Meeting {mongo_id[:8]}")
+                full_text = f"{title} {chunk}".strip()
+                splade_vec = splade.encode_text(full_text)
+                
+                payload = {
+                    "mongo_id": mongo_id,
+                    "parent_id": mongo_id,
+                    "chunk_index": idx,
+                    "chunk_count": len(chunks),
+                    "title": title,
+                    "content": chunk,
+                    "full_text": full_text,
+                    "content_type": "meeting"
+                }
+                payload.update({k: v for k, v in metadata.items() if v is not None})
+                
+                point_kwargs = {
+                    "id": point_id_from_seed(f"{mongo_id}/meeting/{idx}"),
+                    "vector": {"dense": vector},
+                    "payload": payload,
+                }
+                if splade_vec.get("indices"):
+                    point_kwargs["vector"]["sparse"] = SparseVector(
+                        indices=splade_vec["indices"], values=splade_vec["values"]
+                    )
+                points.append(PointStruct(**point_kwargs))
+        
+        if not points:
+            logger.warning("No valid meetings to index.")
+            return {"status": "warning", "message": "No valid meetings found to index."}
+        
+        total_indexed = upload_in_batches(points, QDRANT_COLLECTION)
+        logger.info(f"✅ Indexed {total_indexed} meeting chunks to Qdrant.")
+        return {"status": "success", "indexed_documents": total_indexed}
+    
+    except Exception as e:
+        logger.error(f"Error during meeting indexing: {e}")
+        return {"status": "error", "message": str(e)}
 
-            # Build metadata
-            metadata = {}
+def index_notes_to_qdrant():
+    """Index Notes collection to Qdrant"""
+    try:
+        ensure_collection_with_hybrid(QDRANT_COLLECTION, vector_size=EMBEDDING_DIMENSION)
+        
+        documents = notes_collection.find({}, {
+            "_id": 1, "subject": 1, "description": 1, "leadId": 1, "leadName": 1,
+            "taskId": 1, "createdById": 1, "createdByName": 1,
+            "createdTimeStamp": 1, "updatedTimeStamp": 1, "businessId": 1
+        })
+        points = []
+        splade = get_splade_encoder()
+        
+        for doc in documents:
+            mongo_id = normalize_mongo_id(doc["_id"])
+            
+            # Build text content
+            text_parts = []
+            if doc.get("subject"):
+                text_parts.append(doc["subject"])
+            if doc.get("description"):
+                text_parts.append(doc["description"])
+            if doc.get("leadName"):
+                text_parts.append(f"Lead: {doc['leadName']}")
+            
+            combined_text = " ".join(filter(None, text_parts)).strip()
+            if not combined_text:
+                continue
+            
+            # Extract metadata
+            metadata = {
+                "leadName": doc.get("leadName"),
+                "createdByName": doc.get("createdByName"),
+                "createdTimeStamp": doc.get("createdTimeStamp"),
+                "updatedTimeStamp": doc.get("updatedTimeStamp"),
+            }
+            
+            if doc.get("businessId"):
+                try:
+                    metadata["business_id"] = normalize_mongo_id(doc["businessId"])
+                except Exception:
+                    pass
+            
+            # Chunk text
+            chunks = get_chunks_for_content(combined_text, "notes")
+            if not chunks:
+                chunks = [combined_text]
+            
+            word_count = len(combined_text.split())
+            _stats.record("notes", mongo_id, doc.get("subject", ""), len(chunks), word_count)
+            
+            vectors = embedder.encode(chunks)
+            if len(vectors) != len(chunks):
+                raise EmbeddingServiceError("Embedding service returned unexpected vector count")
+            
+            for idx, chunk in enumerate(chunks):
+                vector = vectors[idx]
+                title = doc.get("subject", f"Note {mongo_id[:8]}")
+                full_text = f"{title} {chunk}".strip()
+                splade_vec = splade.encode_text(full_text)
+                
+                payload = {
+                    "mongo_id": mongo_id,
+                    "parent_id": mongo_id,
+                    "chunk_index": idx,
+                    "chunk_count": len(chunks),
+                    "title": title,
+                    "content": chunk,
+                    "full_text": full_text,
+                    "content_type": "notes"
+                }
+                payload.update({k: v for k, v in metadata.items() if v is not None})
+                
+                point_kwargs = {
+                    "id": point_id_from_seed(f"{mongo_id}/notes/{idx}"),
+                    "vector": {"dense": vector},
+                    "payload": payload,
+                }
+                if splade_vec.get("indices"):
+                    point_kwargs["vector"]["sparse"] = SparseVector(
+                        indices=splade_vec["indices"], values=splade_vec["values"]
+                    )
+                points.append(PointStruct(**point_kwargs))
+        
+        if not points:
+            logger.warning("No valid notes to index.")
+            return {"status": "warning", "message": "No valid notes found to index."}
+        
+        total_indexed = upload_in_batches(points, QDRANT_COLLECTION)
+        logger.info(f"✅ Indexed {total_indexed} notes chunks to Qdrant.")
+        return {"status": "success", "indexed_documents": total_indexed}
+    
+    except Exception as e:
+        logger.error(f"Error during notes indexing: {e}")
+        return {"status": "error", "message": str(e)}
+
+def index_callLogs_to_qdrant():
+    """Index CallLog collection to Qdrant"""
+    try:
+        ensure_collection_with_hybrid(QDRANT_COLLECTION, vector_size=EMBEDDING_DIMENSION)
+        
+        documents = callLog_collection.find({}, {
+            "_id": 1, "title": 1, "description": 1, "callPurpose": 1, "callStatus": 1,
+            "callType": 1, "leadId": 1, "leadName": 1, "startDateTime": 1, "callDuration": 1,
+            "otherReason": 1, "createdById": 1, "createdByName": 1,
+            "createdTimeStamp": 1, "updatedTimeStamp": 1, "businessId": 1
+        })
+        points = []
+        splade = get_splade_encoder()
+        
+        for doc in documents:
+            mongo_id = normalize_mongo_id(doc["_id"])
+            
+            # Build text content
+            text_parts = []
+            if doc.get("title"):
+                text_parts.append(doc["title"])
+            if doc.get("description"):
+                text_parts.append(doc["description"])
+            if doc.get("callPurpose"):
+                text_parts.append(f"Purpose: {doc['callPurpose']}")
+            if doc.get("otherReason"):
+                text_parts.append(f"Reason: {doc['otherReason']}")
+            if doc.get("leadName"):
+                text_parts.append(f"Lead: {doc['leadName']}")
+            
+            combined_text = " ".join(filter(None, text_parts)).strip()
+            if not combined_text:
+                continue
+            
+            # Extract metadata
+            metadata = {
+                "callStatus": doc.get("callStatus"),
+                "callType": doc.get("callType"),
+                "callPurpose": doc.get("callPurpose"),
+                "leadName": doc.get("leadName"),
+                "createdByName": doc.get("createdByName"),
+                "startDateTime": doc.get("startDateTime"),
+                "callDuration": doc.get("callDuration"),
+                "createdTimeStamp": doc.get("createdTimeStamp"),
+                "updatedTimeStamp": doc.get("updatedTimeStamp"),
+            }
+            
+            if doc.get("businessId"):
+                try:
+                    metadata["business_id"] = normalize_mongo_id(doc["businessId"])
+                except Exception:
+                    pass
+            
+            # Chunk text
+            chunks = get_chunks_for_content(combined_text, "callLog")
+            if not chunks:
+                chunks = [combined_text]
+            
+            word_count = len(combined_text.split())
+            _stats.record("callLog", mongo_id, doc.get("title", ""), len(chunks), word_count)
+            
+            vectors = embedder.encode(chunks)
+            if len(vectors) != len(chunks):
+                raise EmbeddingServiceError("Embedding service returned unexpected vector count")
+            
+            for idx, chunk in enumerate(chunks):
+                vector = vectors[idx]
+                title = doc.get("title", f"Call Log {mongo_id[:8]}")
+                full_text = f"{title} {chunk}".strip()
+                splade_vec = splade.encode_text(full_text)
+                
+                payload = {
+                    "mongo_id": mongo_id,
+                    "parent_id": mongo_id,
+                    "chunk_index": idx,
+                    "chunk_count": len(chunks),
+                    "title": title,
+                    "content": chunk,
+                    "full_text": full_text,
+                    "content_type": "callLog"
+                }
+                payload.update({k: v for k, v in metadata.items() if v is not None})
+                
+                point_kwargs = {
+                    "id": point_id_from_seed(f"{mongo_id}/callLog/{idx}"),
+                    "vector": {"dense": vector},
+                    "payload": payload,
+                }
+                if splade_vec.get("indices"):
+                    point_kwargs["vector"]["sparse"] = SparseVector(
+                        indices=splade_vec["indices"], values=splade_vec["values"]
+                    )
+                points.append(PointStruct(**point_kwargs))
+        
+        if not points:
+            logger.warning("No valid call logs to index.")
+            return {"status": "warning", "message": "No valid call logs found to index."}
+        
+        total_indexed = upload_in_batches(points, QDRANT_COLLECTION)
+        logger.info(f"✅ Indexed {total_indexed} call log chunks to Qdrant.")
+        return {"status": "success", "indexed_documents": total_indexed}
+    
+    except Exception as e:
+        logger.error(f"Error during call log indexing: {e}")
+        return {"status": "error", "message": str(e)}
+
+def index_mailInfos_to_qdrant():
+    """Index MailInfo collection to Qdrant"""
+    try:
+        ensure_collection_with_hybrid(QDRANT_COLLECTION, vector_size=EMBEDDING_DIMENSION)
+        
+        documents = mailInfo_collection.find({}, {
+            "_id": 1, "subject": 1, "body": 1, "mailType": 1, "leadId": 1,
+            "toMails": 1, "toCcMails": 1, "toBccMails": 1, "attachments": 1,
+            "createdById": 1, "createdByName": 1, "createdTimeStamp": 1,
+            "updatedTimeStamp": 1, "businessId": 1
+        })
+        points = []
+        splade = get_splade_encoder()
+        
+        for doc in documents:
+            mongo_id = normalize_mongo_id(doc["_id"])
+            
+            # Build text content
+            text_parts = []
+            if doc.get("subject"):
+                text_parts.append(doc["subject"])
+            if doc.get("body"):
+                body_clean = html_to_text(doc["body"])
+                if body_clean:
+                    text_parts.append(body_clean)
+            if doc.get("toMails"):
+                if isinstance(doc["toMails"], list):
+                    text_parts.append(f"To: {', '.join(doc['toMails'])}")
+                elif isinstance(doc["toMails"], str):
+                    text_parts.append(f"To: {doc['toMails']}")
+            
+            combined_text = " ".join(filter(None, text_parts)).strip()
+            if not combined_text:
+                continue
+            
+            # Extract metadata
+            metadata = {
+                "mailType": doc.get("mailType"),
+                "createdByName": doc.get("createdByName"),
+                "createdTimeStamp": doc.get("createdTimeStamp"),
+                "updatedTimeStamp": doc.get("updatedTimeStamp"),
+            }
+            
+            if doc.get("businessId"):
+                try:
+                    metadata["business_id"] = normalize_mongo_id(doc["businessId"])
+                except Exception:
+                    pass
+            
+            # Chunk text
+            chunks = get_chunks_for_content(combined_text, "mailInfo")
+            if not chunks:
+                chunks = [combined_text]
+            
+            word_count = len(combined_text.split())
+            _stats.record("mailInfo", mongo_id, doc.get("subject", ""), len(chunks), word_count)
+            
+            vectors = embedder.encode(chunks)
+            if len(vectors) != len(chunks):
+                raise EmbeddingServiceError("Embedding service returned unexpected vector count")
+            
+            for idx, chunk in enumerate(chunks):
+                vector = vectors[idx]
+                title = doc.get("subject", f"Mail {mongo_id[:8]}")
+                full_text = f"{title} {chunk}".strip()
+                splade_vec = splade.encode_text(full_text)
+                
+                payload = {
+                    "mongo_id": mongo_id,
+                    "parent_id": mongo_id,
+                    "chunk_index": idx,
+                    "chunk_count": len(chunks),
+                    "title": title,
+                    "content": chunk,
+                    "full_text": full_text,
+                    "content_type": "mailInfo"
+                }
+                payload.update({k: v for k, v in metadata.items() if v is not None})
+                
+                point_kwargs = {
+                    "id": point_id_from_seed(f"{mongo_id}/mailInfo/{idx}"),
+                    "vector": {"dense": vector},
+                    "payload": payload,
+                }
+                if splade_vec.get("indices"):
+                    point_kwargs["vector"]["sparse"] = SparseVector(
+                        indices=splade_vec["indices"], values=splade_vec["values"]
+                    )
+                points.append(PointStruct(**point_kwargs))
+        
+        if not points:
+            logger.warning("No valid mail infos to index.")
+            return {"status": "warning", "message": "No valid mail infos found to index."}
+        
+        total_indexed = upload_in_batches(points, QDRANT_COLLECTION)
+        logger.info(f"✅ Indexed {total_indexed} mail info chunks to Qdrant.")
+        return {"status": "success", "indexed_documents": total_indexed}
+    
+    except Exception as e:
+        logger.error(f"Error during mail info indexing: {e}")
+        return {"status": "error", "message": str(e)}
+
+def index_leadScoreRules_to_qdrant():
+    """Index LeadScoreRule collection to Qdrant"""
+    try:
+        ensure_collection_with_hybrid(QDRANT_COLLECTION, vector_size=EMBEDDING_DIMENSION)
+        
+        documents = leadScoreRule_collection.find({}, {
+            "_id": 1, "name": 1, "description": 1, "score": 1, "change": 1,
+            "isActive": 1, "field": 1, "operator": 1, "value": 1,
+            "business": 1, "createdAt": 1, "updatedAt": 1
+        })
+        points = []
+        splade = get_splade_encoder()
+        
+        for doc in documents:
+            mongo_id = normalize_mongo_id(doc["_id"])
+            
+            # Build text content
+            text_parts = []
+            if doc.get("name"):
+                text_parts.append(doc["name"])
+            if doc.get("description"):
+                text_parts.append(doc["description"])
+            if doc.get("field"):
+                text_parts.append(f"Field: {doc['field']}")
+            if doc.get("operator"):
+                text_parts.append(f"Operator: {doc['operator']}")
+            if doc.get("value"):
+                text_parts.append(f"Value: {doc['value']}")
+            
+            combined_text = " ".join(filter(None, text_parts)).strip()
+            if not combined_text:
+                continue
+            
+            # Extract metadata
+            metadata = {
+                "score": doc.get("score"),
+                "change": doc.get("change"),
+                "isActive": doc.get("isActive"),
+                "field": doc.get("field"),
+                "operator": doc.get("operator"),
+                "value": doc.get("value"),
+                "createdAt": doc.get("createdAt"),
+                "updatedAt": doc.get("updatedAt"),
+            }
+            
             if doc.get("business") and isinstance(doc["business"], dict):
-                metadata["business_name"] = doc["business"].get("name")
-                if doc["business"].get("_id") is not None:
+                if doc["business"].get("_id"):
                     try:
-                        metadata["business_id"] = normalize_mongo_id(doc["business"].get("_id"))
+                        metadata["business_id"] = normalize_mongo_id(doc["business"]["_id"])
                     except Exception:
                         pass
-
-            # Chunk projects with long descriptions
-            chunks = get_chunks_for_content(combined_text, "project")
+            
+            # Chunk text
+            chunks = get_chunks_for_content(combined_text, "leadScoreRule")
             if not chunks:
                 chunks = [combined_text]
-
-            # Record statistics
-            word_count = len(combined_text.split()) if combined_text else 0
-            _stats.record("project", mongo_id, name, len(chunks), word_count)
-
+            
+            word_count = len(combined_text.split())
+            _stats.record("leadScoreRule", mongo_id, doc.get("name", ""), len(chunks), word_count)
+            
             vectors = embedder.encode(chunks)
             if len(vectors) != len(chunks):
                 raise EmbeddingServiceError("Embedding service returned unexpected vector count")
-
+            
             for idx, chunk in enumerate(chunks):
                 vector = vectors[idx]
-                full_text = f"{name} {chunk}".strip()
+                title = doc.get("name", f"Lead Score Rule {mongo_id[:8]}")
+                full_text = f"{title} {chunk}".strip()
                 splade_vec = splade.encode_text(full_text)
+                
                 payload = {
                     "mongo_id": mongo_id,
                     "parent_id": mongo_id,
                     "chunk_index": idx,
                     "chunk_count": len(chunks),
-                    "title": name,
+                    "title": title,
                     "content": chunk,
                     "full_text": full_text,
-                    "content_type": "project"
+                    "content_type": "leadScoreRule"
                 }
                 payload.update({k: v for k, v in metadata.items() if v is not None})
+                
                 point_kwargs = {
-                    "id": point_id_from_seed(f"{mongo_id}/project/{idx}"),
-                    "vector": {
-                        "dense": vector,
-                        },
-                        "payload": payload,
-                    }
+                    "id": point_id_from_seed(f"{mongo_id}/leadScoreRule/{idx}"),
+                    "vector": {"dense": vector},
+                    "payload": payload,
+                }
                 if splade_vec.get("indices"):
                     point_kwargs["vector"]["sparse"] = SparseVector(
                         indices=splade_vec["indices"], values=splade_vec["values"]
                     )
-                point = PointStruct(**point_kwargs)
-                points.append(point)
-
+                points.append(PointStruct(**point_kwargs))
+        
         if not points:
-            logger.error("No projects with descriptions to index.")
-            return {"status": "warning", "message": "No projects to index."}
-
+            logger.warning("No valid lead score rules to index.")
+            return {"status": "warning", "message": "No valid lead score rules found to index."}
+        
         total_indexed = upload_in_batches(points, QDRANT_COLLECTION)
+        logger.info(f"✅ Indexed {total_indexed} lead score rule chunks to Qdrant.")
         return {"status": "success", "indexed_documents": total_indexed}
+    
     except Exception as e:
-        logger.error(f"Error during project indexing: {e}")
+        logger.error(f"Error during lead score rule indexing: {e}")
         return {"status": "error", "message": str(e)}
 
-def index_cycles_to_qdrant():
+def index_segmentations_to_qdrant():
+    """Index Segmentation collection to Qdrant"""
     try:
         ensure_collection_with_hybrid(QDRANT_COLLECTION, vector_size=EMBEDDING_DIMENSION)
-
-        documents = cycle_collection.find({}, {"_id": 1, "name": 1, "title": 1, "description": 1, "business": 1})
-        points = []
-
-        splade = get_splade_encoder()
-        for doc in documents:
-            mongo_id = normalize_mongo_id(doc["_id"])
-            name = doc.get("name") or doc.get("title") or ""
-            description = (doc.get("description") or "").strip()
-
-            # Extract ALL substantial text content from the cycle document
-            text_parts = []
-
-            # Include name if present
-            if name:
-                text_parts.append(name)
-
-            # Include description if present and substantial
-            if description and len(description) > 10:
-                text_parts.append(description)
-
-            # Include any other substantial text fields
-            for field_name, field_value in doc.items():
-                if (field_name not in ["_id", "name", "title", "description", "createdAt", "updatedAt", "createdTimeStamp", "updatedTimeStamp"]
-                    and isinstance(field_value, str)
-                    and len(field_value.strip()) > 20):  # Only substantial text
-                    text_parts.append(field_value.strip())
-
-            combined_text = " ".join(text_parts).strip()
-            if not combined_text:
-                logger.error(f"Skipping cycle {mongo_id} - no substantial text content found")
-                
-
-                # Build metadata
-                metadata = {}
-                if doc.get("business") and isinstance(doc["business"], dict):
-                    metadata["business_name"] = doc["business"].get("name")
-                    if doc["business"].get("_id") is not None:
-                        try:
-                            metadata["business_id"] = normalize_mongo_id(doc["business"].get("_id"))
-                        except Exception:
-                            pass
-
-                # Chunk cycles with long descriptions
-                chunks = get_chunks_for_content(combined_text, "cycle")
-                if not chunks:
-                    chunks = [combined_text]
-
-                # Record statistics
-                word_count = len(combined_text.split()) if combined_text else 0
-                _stats.record("cycle", mongo_id, name, len(chunks), word_count)
-
-                vectors = embedder.encode(chunks)
-                if len(vectors) != len(chunks):
-                    raise EmbeddingServiceError("Embedding service returned unexpected vector count")
-
-                for idx, chunk in enumerate(chunks):
-                    vector = vectors[idx]
-                    full_text = f"{name} {chunk}".strip()
-                    splade_vec = splade.encode_text(full_text)
-                    payload = {
-                        "mongo_id": mongo_id,
-                        "parent_id": mongo_id,
-                        "chunk_index": idx,
-                        "chunk_count": len(chunks),
-                        "title": name,
-                        "content": chunk,
-                        "full_text": full_text,
-                        "content_type": "cycle"
-                    }
-                    payload.update({k: v for k, v in metadata.items() if v is not None})
-                    point_kwargs = {
-                        "id": point_id_from_seed(f"{mongo_id}/cycle/{idx}"),
-                        "vector": {
-                            "dense": vector,
-                            },
-                            "payload": payload,
-                        }
-                    if splade_vec.get("indices"):
-                        point_kwargs["vector"]["sparse"] = SparseVector(
-                            indices=splade_vec["indices"], values=splade_vec["values"]
-                        )
-                    point = PointStruct(**point_kwargs)
-                    points.append(point)
-
-        if not points:
-            logger.error("No cycles with descriptions to index.")
-            return {"status": "warning", "message": "No cycles to index."}
-
-        total_indexed = upload_in_batches(points, QDRANT_COLLECTION)
-        return {"status": "success", "indexed_documents": total_indexed}
-    except Exception as e:
-        logger.error(f"Error during cycle indexing: {e}")
-        return {"status": "error", "message": str(e)}
-
-def index_modules_to_qdrant():
-    try:
-        ensure_collection_with_hybrid(QDRANT_COLLECTION, vector_size=EMBEDDING_DIMENSION)
-
-        documents = module_collection.find({}, {"_id": 1, "name": 1, "title": 1, "description": 1, "business": 1})
-        points = []
-
-        splade = get_splade_encoder()
-        for doc in documents:
-            mongo_id = normalize_mongo_id(doc["_id"])
-            name = doc.get("name") or doc.get("title") or ""
-            description = (doc.get("description") or "").strip()
-
-            # Extract ALL substantial text content from the module document
-            text_parts = []
-
-            # Include name if present
-            if name:
-                text_parts.append(name)
-
-            # Include description if present and substantial
-            if description and len(description) > 10:
-                text_parts.append(description)
-
-            # Include any other substantial text fields
-            for field_name, field_value in doc.items():
-                if (field_name not in ["_id", "name", "title", "description", "createdAt", "updatedAt", "createdTimeStamp", "updatedTimeStamp"]
-                    and isinstance(field_value, str)
-                    and len(field_value.strip()) > 20):  # Only substantial text
-                    text_parts.append(field_value.strip())
-
-            combined_text = " ".join(text_parts).strip()
-            if not combined_text:
-                logger.error(f"Skipping module {mongo_id} - no substantial text content found")
-                continue
-
-                # Build metadata
-                metadata = {}
-                if doc.get("business") and isinstance(doc["business"], dict):
-                    metadata["business_name"] = doc["business"].get("name")
-                    if doc["business"].get("_id") is not None:
-                        try:
-                            metadata["business_id"] = normalize_mongo_id(doc["business"].get("_id"))
-                        except Exception:
-                            pass
-
-                # Chunk modules with long descriptions
-                chunks = get_chunks_for_content(combined_text, "module")
-                if not chunks:
-                    chunks = [combined_text]
-
-                # Record statistics
-                word_count = len(combined_text.split()) if combined_text else 0
-                _stats.record("module", mongo_id, name, len(chunks), word_count)
-
-                vectors = embedder.encode(chunks)
-                if len(vectors) != len(chunks):
-                    raise EmbeddingServiceError("Embedding service returned unexpected vector count")
-
-                for idx, chunk in enumerate(chunks):
-                    vector = vectors[idx]
-                    full_text = f"{name} {chunk}".strip()
-                    splade_vec = splade.encode_text(full_text)
-                    payload = {
-                        "mongo_id": mongo_id,
-                        "parent_id": mongo_id,
-                        "chunk_index": idx,
-                        "chunk_count": len(chunks),
-                        "title": name,
-                        "content": chunk,
-                        "full_text": full_text,
-                        "content_type": "module"
-                    }
-                    payload.update({k: v for k, v in metadata.items() if v is not None})
-                    point_kwargs = {
-                        "id": point_id_from_seed(f"{mongo_id}/module/{idx}"),
-                        "vector": {
-                            "dense": vector,
-                            },
-                            "payload": payload,
-                        }
-                    if splade_vec.get("indices"):
-                        point_kwargs["vector"]["sparse"] = SparseVector(
-                            indices=splade_vec["indices"], values=splade_vec["values"]
-                        )
-                    point = PointStruct(**point_kwargs)
-                    points.append(point)
-
-        if not points:
-            logger.error("No modules with descriptions to index.")
-            return {"status": "warning", "message": "No modules to index."}
-
-        total_indexed = upload_in_batches(points, QDRANT_COLLECTION)
-        return {"status": "success", "indexed_documents": total_indexed}
-    except Exception as e:
-        logger.error(f"Error during module indexing: {e}")
-        return {"status": "error", "message": str(e)}
-
-def index_epic_to_qdrant():
-    try:
-        ensure_collection_with_hybrid(QDRANT_COLLECTION, vector_size=EMBEDDING_DIMENSION)
-
-        try:
-            qdrant_client.create_payload_index(
-                collection_name=QDRANT_COLLECTION,
-                field_name="content_type",
-                field_schema=PayloadSchemaType.KEYWORD
-            )
-        except Exception as e:
-            if "already exists" in str(e):
-                pass
-            else:
-                logger.error(f"Failed to ensure index: {e}")
-
-        documents = epic_collection.find({}, {
-            "_id": 1,
-            "title": 1,
-            "description": 1,
-            "bugNo": 1,
-            "priority": 1,
-            "assignee": 1,
-            "createdAt": 1,
-            "updatedAt": 1,
-            "createdTimeStamp": 1,
-            "updatedTimeStamp": 1,
-            "project": 1,
-            "business": 1,
-            "state": 1,
-            "stateMaster": 1,
-            "createdBy": 1
+        
+        documents = segmentation_collection.find({}, {
+            "_id": 1, "name": 1, "description": 1, "conditions": 1, "tags": 1,
+            "isActive": 1, "business": 1, "createdAt": 1, "updatedAt": 1
         })
         points = []
-
         splade = get_splade_encoder()
+        
         for doc in documents:
             mongo_id = normalize_mongo_id(doc["_id"])
-            title_clean = html_to_text(doc.get("title", ""))
-            desc_clean = html_to_text(doc.get("description", ""))
-            combined_text = " ".join(filter(None, [title_clean, desc_clean])).strip()
+            
+            # Build text content
+            text_parts = []
+            if doc.get("name"):
+                text_parts.append(doc["name"])
+            if doc.get("description"):
+                text_parts.append(doc["description"])
+            if doc.get("conditions"):
+                if isinstance(doc["conditions"], dict):
+                    # Serialize conditions dict
+                    conditions_text = json.dumps(doc["conditions"], indent=2)
+                    text_parts.append(f"Conditions: {conditions_text}")
+                elif isinstance(doc["conditions"], str):
+                    text_parts.append(f"Conditions: {doc['conditions']}")
+            if doc.get("tags") and isinstance(doc["tags"], list):
+                text_parts.append(f"Tags: {', '.join(doc['tags'])}")
+            
+            combined_text = " ".join(filter(None, text_parts)).strip()
             if not combined_text:
-                logger.error(f"Skipping epic {mongo_id} - no substantial text content found")
                 continue
-
+            
+            # Extract metadata
             metadata = {
-                "bugNo": doc.get("bugNo"),
-                "priority": doc.get("priority"),
-                "createdAt": doc.get("createdAt") or doc.get("createdTimeStamp"),
-                "updatedAt": doc.get("updatedAt") or doc.get("updatedTimeStamp"),
+                "isActive": doc.get("isActive"),
+                "createdAt": doc.get("createdAt"),
+                "updatedAt": doc.get("updatedAt"),
             }
             
-            if doc.get("state"):
-                if isinstance(doc["state"], dict):
-                    metadata["state_name"] = doc["state"].get("name")
-
-            if doc.get("stateMaster"):
-                if isinstance(doc["stateMaster"], dict):
-                    metadata["stateMaster_name"] = doc["stateMaster"].get("name")
-
-            if doc.get("project"):
-                if isinstance(doc["project"], dict):
-                    metadata["project_name"] = doc["project"].get("name")
-                    metadata["project_id"] = normalize_mongo_id(doc["project"].get("_id")) if doc["project"].get("_id") else None
-
-            if doc.get("business"):
-                if isinstance(doc["business"], dict):
-                    metadata["business_name"] = doc["business"].get("name")
-                    if doc["business"].get("_id") is not None:
-                        try:
-                            metadata["business_id"] = normalize_mongo_id(doc["business"].get("_id"))
-                        except Exception:
-                            pass
-
-            if doc.get("assignee"):
-                assignee = doc["assignee"]
-                if isinstance(assignee, list) and assignee and isinstance(assignee[0], dict):
-                    metadata["assignee_name"] = assignee[0].get("name")
-                elif isinstance(assignee, dict):
-                    metadata["assignee_name"] = assignee.get("name")
-
-            if doc.get("createdBy"):
-                if isinstance(doc["createdBy"], dict):
-                    metadata["created_by_name"] = doc["createdBy"].get("name")
-
-            chunks = get_chunks_for_content(combined_text, "epic")
+            if doc.get("tags") and isinstance(doc["tags"], list):
+                metadata["tags"] = doc["tags"]
+            
+            if doc.get("business") and isinstance(doc["business"], dict):
+                if doc["business"].get("_id"):
+                    try:
+                        metadata["business_id"] = normalize_mongo_id(doc["business"]["_id"])
+                    except Exception:
+                        pass
+            
+            # Chunk text
+            chunks = get_chunks_for_content(combined_text, "segmentation")
             if not chunks:
                 chunks = [combined_text]
-
-            word_count = len(combined_text.split()) if combined_text else 0
-            _stats.record("epic", mongo_id, doc.get("title", ""), len(chunks), word_count)
-
+            
+            word_count = len(combined_text.split())
+            _stats.record("segmentation", mongo_id, doc.get("name", ""), len(chunks), word_count)
+            
             vectors = embedder.encode(chunks)
             if len(vectors) != len(chunks):
                 raise EmbeddingServiceError("Embedding service returned unexpected vector count")
-
+            
             for idx, chunk in enumerate(chunks):
                 vector = vectors[idx]
-                full_text = f"{doc.get('title', '')} {chunk}".strip()
+                title = doc.get("name", f"Segmentation {mongo_id[:8]}")
+                full_text = f"{title} {chunk}".strip()
                 splade_vec = splade.encode_text(full_text)
+                
                 payload = {
                     "mongo_id": mongo_id,
                     "parent_id": mongo_id,
                     "chunk_index": idx,
                     "chunk_count": len(chunks),
-                    "title": doc.get("title", ""),
+                    "title": title,
                     "content": chunk,
                     "full_text": full_text,
-                    "content_type": "epic"
+                    "content_type": "segmentation"
                 }
-
                 payload.update({k: v for k, v in metadata.items() if v is not None})
-
+                
                 point_kwargs = {
-                    "id": point_id_from_seed(f"{mongo_id}/epic/{idx}"),
-                    "vector": {
-                        "dense": vector,
-                    },
-                    "payload": dict(payload),
+                    "id": point_id_from_seed(f"{mongo_id}/segmentation/{idx}"),
+                    "vector": {"dense": vector},
+                    "payload": payload,
                 }
                 if splade_vec.get("indices"):
                     point_kwargs["vector"]["sparse"] = SparseVector(
                         indices=splade_vec["indices"], values=splade_vec["values"]
                     )
-                point = PointStruct(**point_kwargs)
-                points.append(point)
-
+                points.append(PointStruct(**point_kwargs))
+        
         if not points:
-            logger.error("No valid epics to index.")
-            return {"status": "warning", "message": "No valid epics found to index."}
-
+            logger.warning("No valid segmentations to index.")
+            return {"status": "warning", "message": "No valid segmentations found to index."}
+        
         total_indexed = upload_in_batches(points, QDRANT_COLLECTION)
+        logger.info(f"✅ Indexed {total_indexed} segmentation chunks to Qdrant.")
         return {"status": "success", "indexed_documents": total_indexed}
-
-    except Exception as e:
-        logger.error(f"Error during epic indexing: {e}")
-        return {"status": "error", "message": str(e)}
     
-#New function to index userStory to qdrant
-def index_userStory_to_qdrant():
-    try:
-        print("🔄 Indexing user stories from MongoDB to Qdrant...")
-        ensure_collection_with_hybrid(QDRANT_COLLECTION, vector_size=768)
-
-        projection = {
-            "_id": 1, "title": 1, "name": 1, "description": 1, "displayBugNo": 1,
-            "userGoal": 1, "persona": 1, "demographics": 1, "feature": 1,
-            "acceptanceCriteria": 1, "epic": 1, "business": 1, "stateName": 1,
-            "state": 1, "assignees": 1, "assignee": 1, "priority": 1, "label": 1,
-            "project": 1, "createdAt": 1, "updatedAt": 1
-        }
-        documents = userStory_collection.find({}, projection)
-        points = []
-        splade = get_splade_encoder()
-
-        for doc in documents:
-            mongo_id = normalize_mongo_id(doc["_id"])
-            title = doc.get("title") or doc.get("name") or ""
-            
-            # Aggregate all key text fields for rich content
-            text_parts = [
-                title,
-                html_to_text(doc.get("description", "")),
-                f"User Goal: {doc.get('userGoal', '')}",
-                f"Acceptance Criteria: {doc.get('acceptanceCriteria', '')}",
-            ]
-            
-            # Serialize persona
-            persona = doc.get("persona")
-            if isinstance(persona, dict):
-                persona_text = _serialize_text_fields(persona, {
-                    "personaName": "Persona",
-                    "role": "Role",
-                    "techLevel": "Tech Level"
-                })
-                goals = _serialize_list_of_strings_or_dicts(persona.get("goals"), "title")
-                if goals:
-                    persona_text += f". Goals: {goals}"
-                text_parts.append(persona_text)
-            elif isinstance(persona, str) and persona.strip():
-                text_parts.append(f"Persona: {persona}")
-            
-            # Serialize demographics
-            demographics = doc.get("demographics")
-            if isinstance(demographics, dict):
-                demo_text = ", ".join([f"{k}: {v}" for k, v in demographics.items() if v])
-                if demo_text:
-                    text_parts.append(f"Demographics: {demo_text}")
-            elif isinstance(demographics, str) and demographics.strip():
-                text_parts.append(f"Demographics: {demographics}")
-
-            combined_text = " ".join(filter(None, text_parts)).strip()
-            if not combined_text:
-                print(f"⚠️ Skipping user story {mongo_id} - no substantial text content found")
-                continue
-
-            metadata = _get_common_metadata(doc)
-            metadata["displayBugNo"] = doc.get("displayBugNo")
-            if doc.get("feature") and isinstance(doc["feature"], dict):
-                metadata["feature_name"] = doc["feature"].get("name")
-            if doc.get("epic") and isinstance(doc["epic"], dict):
-                metadata["epic_name"] = doc["epic"].get("name")
-
-            chunks = get_chunks_for_content(combined_text, "user_story")
-            word_count = len(combined_text.split()) if combined_text else 0
-            _stats.record("user_story", mongo_id, title, len(chunks), word_count)
-
-            for idx, chunk in enumerate(chunks):
-                vector = embedder.encode(chunk).tolist()
-                full_text = f"{title} {chunk}".strip()
-                splade_vec = splade.encode_text(full_text)
-                
-                payload = {
-                    "mongo_id": mongo_id,
-                    "parent_id": mongo_id,
-                    "chunk_index": idx,
-                    "chunk_count": len(chunks),
-                    "title": title,
-                    "content": chunk,
-                    "full_text": full_text,
-                    "content_type": "user_story"
-                }
-                payload.update({k: v for k, v in metadata.items() if v is not None})
-
-                point_kwargs = {
-                    "id": point_id_from_seed(f"{mongo_id}/user_story/{idx}"),
-                    "vector": {"dense": vector},
-                    "payload": payload,
-                }
-                if splade_vec.get("indices"):
-                    point_kwargs["vector"]["sparse"] = SparseVector(
-                        indices=splade_vec["indices"], values=splade_vec["values"]
-                    )
-                points.append(PointStruct(**point_kwargs))
-
-        if not points:
-            print("⚠️ No valid user stories to index.")
-            return {"status": "warning", "message": "No valid user stories found to index."}
-
-        total_indexed = upload_in_batches(points, QDRANT_COLLECTION)
-        print(f"✅ Indexed {total_indexed} user story chunks to Qdrant.")
-        return {"status": "success", "indexed_documents": total_indexed}
-
     except Exception as e:
-        print(f"❌ Error during user story indexing: {e}")
-        return {"status": "error", "message": str(e)}
-
-def index_features_to_qdrant():
-    try:
-        print("🔄 Indexing features from MongoDB to Qdrant...")
-        ensure_collection_with_hybrid(QDRANT_COLLECTION, vector_size=768)
-
-        projection = {
-            "_id": 1, "title": 1, "name": 1, "description": 1, "displayBugNo": 1,
-            "basicInfo": 1, "problemInfo": 1, "persona": 1, "requirements": 1,
-            "riskAndDependencies": 1, "projectName": 1, "project": 1, "scope": 1,
-            "workItems": 1, "userStories": 1, "addLink": 1, "business": 1,
-            "stateName": 1, "state": 1, "leadName": 1, "lead": 1, "assignees": 1,
-            "assignee": 1, "cycle": 1, "modules": 1, "parent": 1, "priority": 1,
-            "label": 1, "estimateSystem": 1, "estimate": 1, "workLogs": 1,
-            "createdAt": 1, "updatedAt": 1
-        }
-        documents = features_collection.find({}, projection)
-        points = []
-        splade = get_splade_encoder()
-
-        for doc in documents:
-            mongo_id = normalize_mongo_id(doc["_id"])
-            title = doc.get("title") or doc.get("name") or ""
-            
-            # Aggregate all key text fields for rich content
-            text_parts = [
-                title,
-                html_to_text(doc.get("description", "")),
-            ]
-            
-            # Serialize structured info
-            text_parts.append(_serialize_text_fields(doc.get("basicInfo"), {
-                "title": "Info", "status": "Status", "description": "Details"
-            }))
-            
-            text_parts.append(_serialize_text_fields(doc.get("problemInfo"), {
-                "statement": "Problem", "objective": "Objective", "successCriteria": "Success Criteria"
-            }))
-            
-            persona = doc.get("persona")
-            if isinstance(persona, dict):
-                persona_text = _serialize_text_fields(persona, {
-                    "personaName": "Persona", "role": "Role", "techLevel": "Tech Level"
-                })
-                goals = _serialize_list_of_strings_or_dicts(persona.get("goals"), "title")
-                if goals: persona_text += f". Goals: {goals}"
-                pains = _serialize_list_of_strings_or_dicts(persona.get("painPoints"), "title")
-                if pains: persona_text += f". Pain Points: {pains}"
-                text_parts.append(persona_text)
-            
-            reqs = doc.get("requirements")
-            if isinstance(reqs, dict):
-                func = _serialize_list_of_strings_or_dicts(reqs.get("functionalRequirements"), "title")
-                if func: text_parts.append(f"Functional Requirements: {func}")
-                nonfunc = _serialize_list_of_strings_or_dicts(reqs.get("nonFunctionalRequirements"), "title")
-                if nonfunc: text_parts.append(f"Non-Functional Requirements: {nonfunc}")
-
-            risks = doc.get("riskAndDependencies")
-            if isinstance(risks, dict):
-                text_parts.append(_serialize_risks(risks.get("risks")))
-                deps = _serialize_list_of_strings_or_dicts(risks.get("dependencies"), "title")
-                if deps: text_parts.append(f"Dependencies: {deps}")
-                # Skipping designLinks and expectations for brevity, can be added if needed
-
-            # Add related item titles
-            stories = _serialize_list_of_strings_or_dicts(doc.get("userStories"), "title")
-            if stories: text_parts.append(f"User Stories: {stories}")
-            items = _serialize_list_of_strings_or_dicts(doc.get("workItems"), "title")
-            if items: text_parts.append(f"Work Items: {items}")
-
-            # Add worklog descriptions
-            text_parts.append(_get_worklog_text(doc.get("workLogs")))
-
-            combined_text = " ".join(filter(None, text_parts)).strip()
-            if not combined_text:
-                print(f"⚠️ Skipping feature {mongo_id} - no substantial text content found")
-                continue
-
-            # --- Metadata ---
-            metadata = _get_common_metadata(doc)
-            metadata["displayBugNo"] = doc.get("displayBugNo")
-            # metadata["scope"] = doc.get("scope")
-            metadata["estimateSystem"] = doc.get("estimateSystem")
-            
-            lead = doc.get("leadName") or _get_nested_val(doc, "lead.name")
-            if lead: metadata["lead_name"] = lead
-            if doc.get("cycle") and isinstance(doc["cycle"], dict):
-                metadata["cycle_name"] = doc["cycle"].get("name")
-            if doc.get("modules") and isinstance(doc["modules"], dict):
-                metadata["module_name"] = doc["modules"].get("name")
-            if doc.get("parent") and isinstance(doc["parent"], dict):
-                metadata["parent_name"] = doc["parent"].get("name")
-
-            estimate = doc.get("estimate")
-            if isinstance(estimate, dict):
-                metadata["estimate_str"] = f"{estimate.get('hr', 0)}h {estimate.get('min', 0)}m"
-            
-            # --- Chunking and Upload ---
-            chunks = get_chunks_for_content(combined_text, "feature")
-            word_count = len(combined_text.split()) if combined_text else 0
-            _stats.record("feature", mongo_id, title, len(chunks), word_count)
-
-            for idx, chunk in enumerate(chunks):
-                vector = embedder.encode(chunk).tolist()
-                full_text = f"{title} {chunk}".strip()
-                splade_vec = splade.encode_text(full_text)
-                
-                payload = {
-                    "mongo_id": mongo_id,
-                    "parent_id": mongo_id,
-                    "chunk_index": idx,
-                    "chunk_count": len(chunks),
-                    "title": title,
-                    "content": chunk,
-                    "full_text": full_text,
-                    "content_type": "feature"
-                }
-                payload.update({k: v for k, v in metadata.items() if v is not None})
-
-                point_kwargs = {
-                    "id": point_id_from_seed(f"{mongo_id}/feature/{idx}"),
-                    "vector": {"dense": vector},
-                    "payload": payload,
-                }
-                if splade_vec.get("indices"):
-                    point_kwargs["vector"]["sparse"] = SparseVector(
-                        indices=splade_vec["indices"], values=splade_vec["values"]
-                    )
-                points.append(PointStruct(**point_kwargs))
-
-        if not points:
-            print("⚠️ No valid features to index.")
-            return {"status": "warning", "message": "No valid features found to index."}
-
-        total_indexed = upload_in_batches(points, QDRANT_COLLECTION)
-        print(f"✅ Indexed {total_indexed} feature chunks to Qdrant.")
-        return {"status": "success", "indexed_documents": total_indexed}
-
-    except Exception as e:
-        print(f"❌ Error during feature indexing: {e}")
+        logger.error(f"Error during segmentation indexing: {e}")
         return {"status": "error", "message": str(e)}
 
 if __name__ == "__main__":
-    index_pages_to_qdrant()
-    index_workitems_to_qdrant()
-    index_projects_to_qdrant()
-    index_cycles_to_qdrant()
-    index_modules_to_qdrant()
-    index_epic_to_qdrant()
-    index_userStory_to_qdrant()
-    index_features_to_qdrant()
+    index_leads_to_qdrant()
+    index_tasks_to_qdrant()
+    index_activities_to_qdrant()
+    index_meetings_to_qdrant()
+    index_notes_to_qdrant()
+    index_callLogs_to_qdrant()
+    index_mailInfos_to_qdrant()
+    index_leadScoreRules_to_qdrant()
+    index_segmentations_to_qdrant()
     

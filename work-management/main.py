@@ -24,8 +24,6 @@ from mongo.conversations import ensure_conversation_client_connected
 from mongo.conversations import conversation_mongo_client, CONVERSATIONS_DB_NAME, CONVERSATIONS_COLLECTION_NAME ,TEMPLATES_COLLECTION_NAME
 from mongo.conversations import update_message_reaction
 from mongo.constants import mongodb_tools, DATABASE_NAME
-from mongo.user_context import user_context as user_context_service
-from mongo.user_preferences import user_preferences
 # Pydantic models for API requests/responses
 class ChatRequest(BaseModel):
     message: str
@@ -167,19 +165,6 @@ async def lifespan(app: FastAPI):
     from template_generator.generator import TemplateGenerator
     template_generator = TemplateGenerator()
     set_template_generator_instance(template_generator)
-    
-    # ✅ NEW: Initialize Mem0 for user memory management
-    logger.info("Initializing Mem0 memory management...")
-    try:
-        from agent.knowledge_graph.client import get_mem0_client
-        
-        # Initialize Mem0 client
-        mem0_client = get_mem0_client()
-        logger.info("✅ Mem0 client initialized")
-        
-    except Exception as e:
-        logger.warning(f"Mem0 initialization failed: {e}")
-    
     # Ensure conversation DB connection pool is ready
     try:
         await ensure_conversation_client_connected()
@@ -193,8 +178,6 @@ async def lifespan(app: FastAPI):
     # Close Redis conversation memory
     from agent.memory import conversation_memory
     await conversation_memory.close()
-    
-    # Mem0 cleanup is handled automatically by the client
 
 # Create FastAPI app
 app = FastAPI(
@@ -699,64 +682,6 @@ async def set_reaction(req: ReactionRequest):
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-class UserContextRequest(BaseModel):
-    user_id: str
-    business_id: str
-    content: str
-    metadata: Optional[Dict[str, Any]] = None
-
-
-class UserContextResponse(BaseModel):
-    id: str
-    success: bool
-    message: str
-
-
-@app.post("/api/user-context", response_model=UserContextResponse)
-async def create_user_context(req: UserContextRequest):
-    """Create or update long-term user context document.
-    
-    Stores the context in MongoDB and indexes it in Qdrant for semantic retrieval.
-    Also updates the Knowledge Graph with relevant entities.
-    """
-    try:
-        # Store in MongoDB
-        doc_id = await user_context_service.create_context_document(
-            user_id=req.user_id,
-            business_id=req.business_id,
-            content=req.content,
-            metadata=req.metadata,
-            source="explicit"
-        )
-        
-        if not doc_id:
-            raise HTTPException(status_code=500, detail="Failed to create context document")
-        
-        # ✅ NEW: Queue user context for Mem0 learning (non-blocking)
-        # Mem0 handles semantic indexing automatically, no need for separate Qdrant indexing
-        try:
-            from agent.knowledge_graph.learning import queue_user_context_to_mem0
-            queue_user_context_to_mem0(
-                user_id=req.user_id,
-                business_id=req.business_id,
-                document_id=doc_id,
-                content=req.content
-            )
-        except Exception as e:
-            logger.warning(f"Failed to queue Mem0 learning: {e}")
-        
-        return UserContextResponse(
-            id=doc_id,
-            success=True,
-            message="User context created successfully"
-        )
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Failed to create user context: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 

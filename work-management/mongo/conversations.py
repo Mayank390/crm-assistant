@@ -10,6 +10,16 @@ import os
 import logging
 from dotenv import load_dotenv
 
+try:
+    from openinference.semconv.trace import SpanAttributes as OI
+except Exception:
+    class _OI:
+        TOOL_INPUT = "tool.input"
+        TOOL_OUTPUT = "tool.output"
+        ERROR_TYPE = "error.type"
+        ERROR_MESSAGE = "error.message"
+    OI = _OI()
+
 
 # Ensure environment variables are loaded when running locally
 load_dotenv()
@@ -76,7 +86,7 @@ class ConversationMongoClient:
 # Initialize conversations client with the provided connection string
 CONVERSATIONS_CONNECTION_STRING = os.getenv(
     "CONVERSATIONS_MONGODB_URI",
-    os.getenv("MONGODB_URI", "mongodb://Harshit:10_Harshith_29@4.213.88.219:27017/?authMechanism=DEFAULT&authSource=admin"),
+    os.getenv("MONGODB_URI", "mongodb://WebsiteBuilderAdmin:JfOCiOKMVgSIMPOBUILDERGkli8@13.90.63.91:27017,172.171.192.172:27017/ProjectManagement?authSource=admin&replicaSet=rs0"),
 )
 conversation_mongo_client = ConversationMongoClient(CONVERSATIONS_CONNECTION_STRING)
 
@@ -172,7 +182,7 @@ async def _get_collection():
     return await conversation_mongo_client.get_collection(CONVERSATIONS_DB_NAME, CONVERSATIONS_COLLECTION_NAME)
 
 
-async def append_message(conversation_id: str, message: Dict[str, Any], project_id: Optional[str] = None) -> None:
+async def append_message(conversation_id: str, message: Dict[str, Any]) -> None:
     coll = await _get_collection()
     safe_message = _ensure_message_shape(message)
     # Resolve business/member identifiers and persist them at the document level
@@ -189,16 +199,6 @@ async def append_message(conversation_id: str, message: Dict[str, Any], project_
         set_fields["businessId"] = ctx_ids["businessId"]
     if ctx_ids.get("memberId"):
         set_fields["memberId"] = ctx_ids["memberId"]
-    
-    # ✅ NEW: Add project_id support
-    if project_id:
-        try:
-            from .constants import uuid_str_to_mongo_binary
-            project_bin = uuid_str_to_mongo_binary(project_id)
-            set_fields["project_id"] = project_bin
-        except Exception as e:
-            logger.warning(f"Failed to convert project_id to MongoDB Binary: {e}")
-            set_fields["project_id"] = project_id
 
     await coll.update_one(
         {"conversationId": conversation_id},
@@ -211,14 +211,13 @@ async def append_message(conversation_id: str, message: Dict[str, Any], project_
     )
 
 
-async def save_user_message(conversation_id: str, content: str, project_id: Optional[str] = None) -> None:
+async def save_user_message(conversation_id: str, content: str) -> None:
     await append_message(
         conversation_id,
         {
             "type": "user",
             "content": content or "",
         },
-        project_id=project_id,
     )
 
 

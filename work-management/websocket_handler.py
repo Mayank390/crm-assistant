@@ -135,7 +135,6 @@ async def handle_chat_websocket(websocket: WebSocket, mongodb_agent):
         user_context = {
             "user_id": None,
             "businessId": None,
-            "preferences": None,  # Cached user preferences
         }
 
         # Set a timeout for handshake completion (30 seconds)
@@ -208,39 +207,6 @@ async def handle_chat_websocket(websocket: WebSocket, mongodb_agent):
                 # Connect with the actual user_id (no placeholder "connecting" needed)
                 await ws_manager.connect(websocket, user_context["user_id"])
 
-                # ✅ NEW: Load user preferences from MongoDB/KG
-                if user_context["user_id"] and user_context["businessId"]:
-                    try:
-                        from mongo.user_preferences import user_preferences
-                        prefs_data = await user_preferences.get_preferences(
-                            user_context["user_id"],
-                            user_context["businessId"]
-                        )
-                        user_context["preferences"] = prefs_data.get("preferences", {})
-                        
-                        # If preferences are sent in handshake, update them
-                        if data.get("preferences"):
-                            await user_preferences.update_preferences(
-                                user_context["user_id"],
-                                user_context["businessId"],
-                                data.get("preferences")
-                            )
-                            user_context["preferences"] = data.get("preferences")
-                            
-                            # ✅ NEW: Queue preference update for Mem0 learning
-                            try:
-                                from agent.knowledge_graph.learning import queue_preference_to_mem0
-                                queue_preference_to_mem0(
-                                    user_id=user_context["user_id"],
-                                    business_id=user_context["businessId"],
-                                    preferences=data.get("preferences", {})
-                                )
-                            except Exception as e:
-                                logger.debug(f"Failed to queue preference to Mem0: {e}")
-                    except Exception as e:
-                        logger.warning(f"Failed to load user preferences: {e}")
-                        user_context["preferences"] = {}
-
                 # Mark as authenticated now that handshake is complete
                 authenticated = True
 
@@ -285,30 +251,6 @@ async def handle_chat_websocket(websocket: WebSocket, mongodb_agent):
             message = data.get("message", "")
             conversation_id = data.get("conversation_id") or f"conv_{user_id}"
             force_planner = data.get("planner", False)
-            
-            # ✅ NEW: Handle preferences update in message
-            if data.get("preferences") and user_context["user_id"] and user_context["businessId"]:
-                try:
-                    from mongo.user_preferences import user_preferences
-                    await user_preferences.update_preferences(
-                        user_context["user_id"],
-                        user_context["businessId"],
-                        data.get("preferences")
-                    )
-                    user_context["preferences"] = data.get("preferences")
-                    
-                    # ✅ NEW: Queue preference update for Mem0 learning
-                    try:
-                        from agent.knowledge_graph.learning import queue_preference_to_mem0
-                        queue_preference_to_mem0(
-                            user_id=user_context["user_id"],
-                            business_id=user_context["businessId"],
-                            preferences=data.get("preferences", {})
-                        )
-                    except Exception as e:
-                        logger.debug(f"Failed to queue preference to Mem0: {e}")
-                except Exception as e:
-                    logger.warning(f"Failed to update preferences: {e}")
 
             # ✅ NEW: Handle new vs existing conversations
             from agent.memory import conversation_memory
@@ -332,33 +274,7 @@ async def handle_chat_websocket(websocket: WebSocket, mongodb_agent):
             # ✅ OPTIMIZED: Persist user message to ProjectManagement.conversations (fire-and-forget)
             try:
                 # Fire-and-forget: don't block request processing
-                # ✅ NEW: Include project_id when saving message
-                asyncio.create_task(save_user_message(conversation_id, message, project_id=project_id))
-                
-                # ✅ NEW: Queue conversation for Mem0 learning (non-blocking)
-                try:
-                    from agent.knowledge_graph.learning import queue_conversation_to_mem0
-                    from agent.memory import conversation_memory
-                    
-                    # Get recent messages for learning
-                    recent_messages = await conversation_memory.get_recent_context(conversation_id, max_tokens=2000)
-                    messages_data = [
-                        {
-                            "type": msg.__class__.__name__,
-                            "content": msg.content if hasattr(msg, "content") else str(msg)
-                        }
-                        for msg in recent_messages[-10:]  # Last 10 messages
-                    ]
-                    
-                    queue_conversation_to_mem0(
-                        user_id=user_id,
-                        business_id=business_id,
-                        conversation_id=conversation_id,
-                        messages=messages_data,
-                        project_id=project_id
-                    )
-                except Exception as e:
-                    logger.debug(f"Failed to queue conversation for Mem0 learning: {e}")
+                asyncio.create_task(save_user_message(conversation_id, message))
             except Exception as e:
                 # Non-fatal: log error, continue processing
                 logger.error(f"Failed to save user message: {e}")
@@ -420,9 +336,7 @@ async def handle_chat_websocket(websocket: WebSocket, mongodb_agent):
                         async for _ in mongodb_agent.run_streaming(
                             query=message,
                             websocket=websocket,
-                            conversation_id=conversation_id,
-                            user_id=user_id,
-                            business_id=business_id
+                            conversation_id=conversation_id
                         ):
                             # The streaming is handled internally by the callback handler
                             # Just iterate through the generator to complete the streaming

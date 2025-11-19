@@ -1,96 +1,82 @@
-"""
-Embedding service client wrapper for SentenceTransformer.
-Provides compatibility with the EmbeddingServiceClient interface.
-"""
+from __future__ import annotations
 
+from typing import List, Sequence
+import json
 import os
-import logging
-from typing import List
-from sentence_transformers import SentenceTransformer
-from huggingface_hub import login
-import mongo.constants
 
-logger = logging.getLogger(__name__)
+import httpx
 
 
-class EmbeddingServiceError(Exception):
-    """Exception raised by embedding service operations."""
-    pass
+class EmbeddingServiceError(RuntimeError):
+    """Raised when the embedding service returns an error response."""
 
 
 class EmbeddingServiceClient:
+    """Synchronous client for an embedding microservice.
+
+    The microservice must expose a POST /embed endpoint that accepts:
+        {"inputs": ["text a", "text b", ...]}
+
+    and responds with:
+        {"embeddings": [[...], [...], ...]}
     """
-    Wrapper around SentenceTransformer that provides the EmbeddingServiceClient interface.
-    This allows the codebase to use SentenceTransformer directly without requiring
-    an external embedding service.
-    """
-    
-    def __init__(self, service_url: str = None):
-        """
-        Initialize the embedding client.
-        
-        Args:
-            service_url: Ignored (kept for compatibility), uses SentenceTransformer instead
-        """
-        # Authenticate with HuggingFace if token is available (required for gated models)
-        hf_token = os.getenv("HuggingFace_API_KEY")
-        if hf_token:
-            try:
-                login(token=hf_token, add_to_git_credential=False)
-                logger.info("✓ Authenticated with HuggingFace")
-            except Exception as auth_exc:
-                logger.warning(f"⚠ HuggingFace authentication failed: {auth_exc}")
-        
-        # Load the embedding model
-        model_name = mongo.constants.EMBEDDING_MODEL or "sentence-transformers/all-mpnet-base-v2"
-        try:
-            self.model = SentenceTransformer(model_name)
-            logger.info(f"✓ Loaded embedding model: {model_name}")
-        except Exception as e:
-            logger.warning(f"⚠ Failed to load embedding model '{model_name}': {e}")
-            logger.info("Falling back to 'sentence-transformers/all-MiniLM-L6-v2'")
-            self.model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
-        
-        # Cache the dimension
-        self._dimension = self.model.get_sentence_embedding_dimension()
-    
-    def get_dimension(self) -> int:
-        """
-        Get the dimension of the embedding vectors.
-        
-        Returns:
-            The embedding dimension (e.g., 384, 768, etc.)
-        """
-        return self._dimension
-    
-    def encode(self, texts: List[str], **kwargs) -> List[List[float]]:
-        """
-        Encode a list of texts into embedding vectors.
-        
-        Args:
-            texts: List of text strings to encode
-            **kwargs: Additional arguments passed to SentenceTransformer.encode()
-        
-        Returns:
-            List of embedding vectors (each vector is a list of floats)
-        
-        Raises:
-            EmbeddingServiceError: If encoding fails
-        """
+
+    def __init__(
+        self,
+        base_url: str | None = None,
+        *,
+        timeout: float = 30.0,
+        headers: dict[str, str] | None = None,
+    ) -> None:
+        url = base_url or os.getenv("EMBEDDING_SERVICE_URL")
+        if not url:
+            raise ValueError("Embedding service URL is not configured")
+
+        self.base_url = url.rstrip("/")
+        self.client = httpx.Client(timeout=timeout, headers=headers)
+
+    def encode(self, texts: Sequence[str]) -> List[List[float]]:
         if not texts:
             return []
-        
-        try:
-            # SentenceTransformer.encode() returns a numpy array
-            embeddings = self.model.encode(texts, **kwargs)
-            
-            # Convert numpy array to list of lists
-            if len(embeddings.shape) == 1:
-                # Single text case
-                return [embeddings.tolist()]
-            else:
-                # Multiple texts case
-                return embeddings.tolist()
-        except Exception as e:
-            raise EmbeddingServiceError(f"Failed to encode texts: {e}") from e
 
+        payload = {"inputs": list(texts)}
+        try:
+            response = self.client.post(f"{self.base_url}/embed", json=payload)
+        except Exception as exc:  # pragma: no cover - network failure guard
+            raise EmbeddingServiceError(f"Failed to reach embedding service: {exc}") from exc
+
+        if response.status_code >= 400:
+            detail = _safe_extract_error(response)
+            raise EmbeddingServiceError(
+                f"Embedding service returned {response.status_code}: {detail}"
+            )
+
+        data = response.json()
+        embeddings = data.get("embeddings") or data.get("data")
+        if embeddings is None:
+            raise EmbeddingServiceError("Embedding service response missing 'embeddings'")
+
+        return [
+            [float(value) for value in vector]
+            for vector in embeddings
+        ]
+
+    def get_dimension(self) -> int:
+        """Infer embedding dimensionality by encoding a dummy string."""
+        vectors = self.encode(["dimension probe"])
+        if not vectors or not vectors[0]:
+            raise EmbeddingServiceError("Embedding service returned empty vector")
+        return len(vectors[0])
+
+    def close(self) -> None:
+        self.client.close()
+
+
+def _safe_extract_error(response: httpx.Response) -> str:
+    try:
+        data = response.json()
+        if isinstance(data, dict):
+            return data.get("error") or data.get("detail") or json.dumps(data)
+    except Exception:
+        pass
+    return response.text

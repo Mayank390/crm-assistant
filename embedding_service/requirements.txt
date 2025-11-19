@@ -1,0 +1,4 @@
+# Embedding service specific dependencies
+accelerate==0.34.2
+sentence-transformers==5.1.0
+

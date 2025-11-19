@@ -1,0 +1,292 @@
+services:
+  backend:
+    # Use ACR image if ACR_REGISTRY is set: aiplanboard.azurecr.io/aiplanboard-backend:latest
+    # Otherwise Docker Compose will use the build configuration below
+    #image: ${ACR_REGISTRY}/${IMAGE_PREFIX:-aiplanboard}-backend:${IMAGE_TAG:-latest}
+    build:
+      context: .
+      dockerfile: agent/Dockerfile
+    env_file:
+      - .env
+    environment:
+      EMBEDDING_SERVICE_URL: http://embedding:8080
+      SPLADE_SERVICE_URL: http://splade:8080
+    ports:
+      - "${APP_PORT:-8000}:8000"
+    depends_on:
+      embedding:
+        condition: service_healthy
+      splade:
+        condition: service_healthy
+      qdrant:
+        condition: service_started
+      kafka:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    networks:
+      - app-net
+
+  redis:
+    image: redis/redis-stack:latest
+    container_name: redis
+    command: ["redis-stack-server", "--save", "60", "1"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - app-net
+
+  embedding:
+    # Use ACR image if ACR_REGISTRY is set: aiplanboard.azurecr.io/aiplanboard-embedding:latest
+    # Otherwise Docker Compose will use the build configuration below
+    #image: ${ACR_REGISTRY}/${IMAGE_PREFIX:-aiplanboard}-embedding:${IMAGE_TAG:-latest}
+    build:
+      context: .
+      dockerfile: embedding_service/Dockerfile
+    container_name: embedding
+    env_file:
+      - .env
+    environment:
+      EMBEDDING_MODEL_NAME: ${EMBEDDING_MODEL:-google/embeddinggemma-300m}
+      EMBEDDING_BATCH_SIZE: ${EMBEDDING_BATCH_SIZE:-16}
+      EMBEDDING_MAX_LENGTH: ${EMBEDDING_MAX_LENGTH:-512}
+      HF_TOKEN: ${HF_TOKEN:-}
+    ports:
+      - "${EMBEDDING_PORT:-8081}:8080"
+    volumes:
+      - hf_cache:/app/.cache/huggingface
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 15s
+      timeout: 10s
+      retries: 20
+      start_period: 180s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4g
+    networks:
+      - app-net
+
+  splade:
+    # Use ACR image if ACR_REGISTRY is set: aiplanboard.azurecr.io/aiplanboard-splade:latest
+    # Otherwise Docker Compose will use the build configuration below
+    #image: ${ACR_REGISTRY}/${IMAGE_PREFIX:-aiplanboard}-splade:${IMAGE_TAG:-latest}
+    build:
+      context: .
+      dockerfile: splade_service/Dockerfile
+    container_name: splade
+    env_file:
+      - .env
+    environment:
+      SPLADE_MODEL_NAME: ${SPLADE_MODEL_NAME:-naver/splade-cocondenser-ensembledistil}
+      SPLADE_MAX_TERMS: ${SPLADE_MAX_TERMS:-200}
+      HF_TOKEN: ${HF_TOKEN:-}
+    ports:
+      - "${SPLADE_PORT:-8082}:8080"
+    volumes:
+      - hf_cache:/app/.cache/huggingface
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 15s
+      timeout: 10s
+      retries: 20
+      start_period: 180s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4g
+    networks:
+      - app-net
+
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: qdrant
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    volumes:
+      - qdrant_data:/qdrant/storage
+    networks:
+      - app-net
+
+  kafka:
+    image: confluentinc/cp-kafka:7.8.0
+    container_name: kafka
+    ports:
+      - "${KAFKA_EXTERNAL_PORT:-9094}:9094"
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      CLUSTER_ID: MkU3OEVBNTcwNTJENDM2Qk
+    healthcheck:
+      test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "kafka:9092"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+    networks:
+      - app-net
+
+  kafka-connect:
+    image: confluentinc/cp-kafka-connect:7.8.0
+    container_name: kafka-connect
+    env_file:
+      - .env
+    environment:
+      CONNECT_BOOTSTRAP_SERVERS: kafka:9092
+      CONNECT_REST_ADVERTISED_HOST_NAME: kafka-connect
+      CONNECT_REST_PORT: 8083
+      CONNECT_GROUP_ID: kafka-connect-group
+      CONNECT_CONFIG_STORAGE_TOPIC: _connect-configs
+      CONNECT_OFFSET_STORAGE_TOPIC: _connect-offsets
+      CONNECT_STATUS_STORAGE_TOPIC: _connect-status
+      CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_KEY_CONVERTER: org.apache.kafka.connect.storage.StringConverter
+      CONNECT_VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      CONNECT_INTERNAL_KEY_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      CONNECT_INTERNAL_VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      CONNECT_PLUGIN_PATH: /usr/share/java,/usr/share/confluent-hub-components
+      MONGODB_URI: ${MONGODB_URI:-mongodb://Harshit:10_Harshith_29@4.213.88.219:27017/?authMechanism=DEFAULT&authSource=admin}
+      MONGODB_DATABASE: ${MONGODB_DATABASE:-crm}
+      KAFKA_TOPIC_PREFIX: ${KAFKA_TOPIC_PREFIX:-crm.}
+    ports:
+      - "8083:8083"
+    volumes:
+      - ./data-sync/connectors:/connectors
+    command:
+      - bash
+      - -c
+      - |
+        if [ ! -d "/usr/share/confluent-hub-components/mongodb-kafka-connect-mongodb" ]; then
+          confluent-hub install --no-prompt mongodb/kafka-connect-mongodb:1.13.0
+        fi
+        /etc/confluent/docker/run &
+        sleep 30
+        /connectors/setup-connectors.sh
+        wait
+    depends_on:
+      kafka:
+        condition: service_healthy
+    networks:
+      - app-net
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:v0.7.2
+    container_name: kafka-ui
+    environment:
+      - KAFKA_CLUSTERS_0_NAME=local
+      - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=kafka:9092
+    ports:
+      - "8084:8080"
+    depends_on:
+      kafka:
+        condition: service_healthy
+    networks:
+      - app-net
+
+  backfill:
+    # Use ACR image if ACR_REGISTRY is set: aiplanboard.azurecr.io/aiplanboard-consumer:latest
+    # Otherwise Docker Compose will use the build configuration below
+    #image: ${ACR_REGISTRY}/${IMAGE_PREFIX:-aiplanboard}-consumer:${IMAGE_TAG:-latest}
+    build:
+      context: .
+      dockerfile: data-sync/consumer/Dockerfile
+    container_name: mongodb-backfill
+    env_file:
+      - .env
+    environment:
+      - EMBEDDING_SERVICE_URL=http://embedding:8080
+      - SPLADE_SERVICE_URL=http://splade:8080
+      - MONGODB_URI=${MONGODB_URI:-mongodb://Harshit:10_Harshith_29@4.213.88.219:27017/?authMechanism=DEFAULT&authSource=admin}
+      - MONGODB_DATABASE=${MONGODB_DATABASE:-crm}
+      - KAFKA_BOOTSTRAP_SERVERS=${KAFKA_BOOTSTRAP_SERVERS:-kafka:9092}
+      - KAFKA_TOPIC_PREFIX=${KAFKA_TOPIC_PREFIX:-crm.}
+      - BACKFILL_COLLECTIONS=${BACKFILL_COLLECTIONS:-Lead,Task,Activity,Meeting,Notes,CallLog,MailInfo,LeadScoreRule,Segmentation}
+      - BACKFILL_BATCH_SIZE=${BACKFILL_BATCH_SIZE:-1000}
+      - BACKFILL_SLEEP=${BACKFILL_SLEEP:-1.0}
+      - QDRANT_URL=${QDRANT_URL:-http://qdrant:6333}
+      - QDRANT_COLLECTION=${QDRANT_COLLECTION:-crm}
+      - INCREMENTAL_BACKFILL=${INCREMENTAL_BACKFILL:-true}
+      - QDRANT_CHECK_BATCH_SIZE=${QDRANT_CHECK_BATCH_SIZE:-1000}
+      - HF_TOKEN=${HF_TOKEN:-}
+    command: ["python", "/app/backfill_mongodb.py"]
+    volumes:
+      - ./data-sync/backfill_mongodb.py:/app/backfill_mongodb.py:ro
+      - hf_cache:/app/.cache/huggingface
+    restart: "no"
+    depends_on:
+      kafka:
+        condition: service_healthy
+      kafka-connect:
+        condition: service_started
+      qdrant:
+        condition: service_started
+      embedding:
+        condition: service_healthy
+      splade:
+        condition: service_healthy
+    networks:
+      - app-net
+
+  consumer:
+    # Use ACR image if ACR_REGISTRY is set: aiplanboard.azurecr.io/aiplanboard-consumer:latest
+    # Otherwise Docker Compose will use the build configuration below
+    #image: ${ACR_REGISTRY}/${IMAGE_PREFIX:-aiplanboard}-consumer:${IMAGE_TAG:-latest}
+    build:
+      context: .
+      dockerfile: data-sync/consumer/Dockerfile
+    container_name: qdrant-consumer
+    env_file:
+      - .env
+    environment:
+      - EMBEDDING_SERVICE_URL=http://embedding:8080
+      - SPLADE_SERVICE_URL=http://splade:8080
+      - KAFKA_BOOTSTRAP_SERVERS=${KAFKA_BOOTSTRAP_SERVERS:-kafka:9092}
+      - KAFKA_TOPIC=${KAFKA_TOPIC:-crm\..*}
+      - KAFKA_GROUP_ID=${KAFKA_GROUP_ID:-qdrant-consumer}
+      - QDRANT_URL=${QDRANT_URL:-http://qdrant:6333}
+      - QDRANT_COLLECTION=${QDRANT_COLLECTION:-crm}
+      - EMBEDDING_MODEL=${EMBEDDING_MODEL:-google/embeddinggemma-300m}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - HF_HUB_DOWNLOAD_TIMEOUT=${HF_HUB_DOWNLOAD_TIMEOUT:-300}
+      - HF_HUB_ETAG_TIMEOUT=${HF_HUB_ETAG_TIMEOUT:-300}
+      - BATCH_MAX_MESSAGES=${BATCH_MAX_MESSAGES:-256}
+      - BATCH_MAX_SECONDS=${BATCH_MAX_SECONDS:-2}
+      - HF_TOKEN=${HF_TOKEN:-}
+    depends_on:
+      kafka:
+        condition: service_healthy
+      qdrant:
+        condition: service_started
+      embedding:
+        condition: service_started
+      splade:
+        condition: service_started
+      backfill:
+        condition: service_completed_successfully
+    networks:
+      - app-net
+
+volumes:
+  qdrant_data:
+  redis_data:
+  hf_cache:
+
+networks:
+  app-net:
+    driver: bridge

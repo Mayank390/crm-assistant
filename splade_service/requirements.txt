@@ -1,0 +1,7 @@
+# SPLADE service specific dependencies
+transformers==4.57.1
+torch==2.6.0
+huggingface-hub==0.36.0
+sentencepiece==0.2.0
+safetensors==0.4.5
+

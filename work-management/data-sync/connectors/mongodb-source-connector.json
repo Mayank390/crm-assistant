@@ -1,0 +1,17 @@
+{
+  "name": "mongodb-source-connector",
+  "config": {
+    "connector.class": "com.mongodb.kafka.connect.MongoSourceConnector",
+      "connection.uri": "mongodb://WebsiteBuilderAdmin:JfOCiOKMVgSIMPOBUILDERGkli8@13.90.63.91:27017,172.171.192.172:27017/ProjectManagement?authSource=admin&replicaSet=rs0",
+    "database": "ProjectManagement",
+    "change.stream.full.document": "updateLookup",
+    "publish.full.document.only": "true",
+      "pipeline": "[{\"$match\": {\"ns.coll\": {\"$in\": [\"epic\", \"features\", \"cycle\", \"module\", \"project\", \"workItem\", \"userStory\", \"page\"]}}}]",
+      "copy.existing.pipeline": "[{\"$match\": {\"ns.coll\": {\"$in\": [\"epic\", \"features\", \"cycle\", \"module\", \"project\", \"workItem\", \"userStory\", \"page\"]}}}]",
+    "copy.existing": "true",
+    "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+    "key.converter.schemas.enable": "false",
+    "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "value.converter.schemas.enable": "false"
+  }
+}

@@ -110,7 +110,13 @@ class DirectMongoClient:
                     try:
                         biz_bin = uuid_str_to_mongo_binary(biz_uuid)
                         if collection in COLLECTIONS_WITH_DIRECT_BUSINESS:
-                            injected_stages.append({"$match": {"business._id": biz_bin}})
+                            # Handle different business field formats across collections
+                            if collection == "segmentation":
+                                # Segmentation uses embedded business object
+                                injected_stages.append({"$match": {"business._id": biz_bin}})
+                            else:
+                                # Most collections use direct businessId field
+                                injected_stages.append({"$match": {"businessId": biz_bin}})
                     except ValueError as e:
                         # Invalid UUID format - log and skip business filter
                         logger.error(f"Invalid BUSINESS_UUID format '{biz_uuid}': {e}")

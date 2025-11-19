@@ -1,0 +1,58 @@
+{
+  "services": [
+    {
+      "name": "backend",
+      "description": "Main PMS Assistant API",
+      "url": "http://backend:8000/health",
+      "method": "GET",
+      "timeout": 10,
+      "expected_statuses": [200],
+      "failure_threshold": 1
+    },
+    {
+      "name": "embedding",
+      "description": "Embedding service health endpoint",
+      "url": "http://embedding:8080/health",
+      "method": "GET",
+      "timeout": 30,
+      "expected_statuses": [200],
+      "failure_threshold": 1
+    },
+    {
+      "name": "splade",
+      "description": "SPLADE service health endpoint",
+      "url": "http://splade:8080/health",
+      "method": "GET",
+      "timeout": 30,
+      "expected_statuses": [200],
+      "failure_threshold": 1
+    },
+    {
+      "name": "qdrant",
+      "description": "Qdrant vector database",
+      "url": "http://qdrant:6333/collections",
+      "method": "GET",
+      "timeout": 10,
+      "expected_statuses": [200],
+      "failure_threshold": 1
+    },
+    {
+      "name": "kafka_connect",
+      "description": "Kafka Connect for MongoDB integration",
+      "url": "http://kafka-connect:8083/connectors",
+      "method": "GET",
+      "timeout": 15,
+      "expected_statuses": [200],
+      "failure_threshold": 1
+    },
+    {
+      "name": "kafka_ui",
+      "description": "Kafka UI management interface",
+      "url": "http://kafka-ui:8080",
+      "method": "GET",
+      "timeout": 10,
+      "expected_statuses": [200],
+      "failure_threshold": 1
+    }
+  ]
+}

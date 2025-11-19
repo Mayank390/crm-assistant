@@ -13,6 +13,7 @@ import re
 import uuid
 import logging
 from bson import ObjectId, Binary
+from mongo.constants import BUSINESS_UUID, MEMBER_UUID
 from collections import defaultdict
 from dataclasses import dataclass
 import asyncio
@@ -58,6 +59,8 @@ class ChunkAwareRetriever:
     def __init__(self, qdrant_client, embedding_client):
         self.qdrant_client = qdrant_client
         self.embedding_client = embedding_client
+        # ✅ OPTIMIZED: Cache member projects per request to avoid repeated MongoDB queries
+        self._member_projects_cache: Dict[str, List[str]] = {}
         # Minimal English stopword list for lightweight keyword-overlap filtering
         self._STOPWORDS: Set[str] = {
             "a", "an", "the", "and", "or", "but", "if", "then", "else", "when", "at", "by",
@@ -125,14 +128,34 @@ class ChunkAwareRetriever:
         # Business-level scoping
         # Note: business_id in Qdrant is stored as normalized UUID string from MongoDB Binary
         # We need to normalize it the same way as insertdocs.py does
-        try:
-            from mongo.constants import BUSINESS_UUID
-            business_uuid = BUSINESS_UUID()
-            if business_uuid:
-                normalized_business_id = self._normalize_business_id(business_uuid)
-                must_conditions.append(FieldCondition(key="business_id", match=MatchValue(value=normalized_business_id)))
-        except Exception as e:
-            logger.warning(f"Failed to apply business filter in Qdrant search: {e}")
+        business_uuid = BUSINESS_UUID()
+        if business_uuid:
+            normalized_business_id = self._normalize_business_id(business_uuid)
+            must_conditions.append(FieldCondition(key="business_id", match=MatchValue(value=normalized_business_id)))
+
+        # Member-level RBAC scoping
+        # ✅ OPTIMIZED: Cache member projects at request start
+        member_uuid = MEMBER_UUID()
+        if member_uuid:
+            try:
+                # Check cache first
+                cache_key = f"{member_uuid}:{business_uuid}"
+                if cache_key not in self._member_projects_cache:
+                    self._member_projects_cache[cache_key] = await self._get_member_projects(member_uuid, business_uuid)
+                member_projects = self._member_projects_cache[cache_key]
+                if member_projects:
+                    # For CRM, member filtering can be applied based on assignedTo, createdById, or staffId
+                    # Since CRM doesn't have project-based access like work-management,
+                    # we can filter by member's assigned items or created items
+                    # For now, we'll apply member filtering to content types that have assignment fields
+                    crm_assigned_content_types = {"task", "activity", "meeting"}
+                    if content_type is None or content_type in crm_assigned_content_types:
+                        # Filter by member's assigned items (using mongo_id matching member's assignments)
+                        # This is a simplified approach - adapt based on your CRM access control model
+                        must_conditions.append(FieldCondition(key="mongo_id", match=MatchAny(any=member_projects)))
+            except Exception as e:
+                # Error getting member projects - log and skip member filter
+                logger.error(f"Error getting member projects for '{member_uuid}': {e}")
 
         search_filter = Filter(must=must_conditions) if must_conditions else None
 
@@ -704,75 +727,85 @@ class ChunkAwareRetriever:
 
     async def _get_member_projects(self, member_uuid: str, business_uuid: str) -> List[str]:
         """
-        Get list of project IDs that the member has access to.
+        Get list of item IDs that the member has access to in CRM.
+        For CRM, this returns items (tasks, activities, meetings, leads) assigned to or created by the member.
 
         Args:
-            member_uuid: The member's UUID
+            member_uuid: The member's UUID (staff ID)
             business_uuid: The business UUID for additional scoping
 
         Returns:
-            List of project IDs the member can access (normalized like Qdrant expects)
+            List of item IDs the member can access (normalized like Qdrant expects)
         """
         try:
             # Import here to avoid circular imports
             from mongo.client import direct_mongo_client
-            from mongo.constants import uuid_str_to_mongo_binary
+            from mongo.constants import uuid_str_to_mongo_binary, DATABASE_NAME
 
-            # Query MongoDB to get projects the member is associated with
-            # memberId is the staff ID (staff identifier)
             member_bin = uuid_str_to_mongo_binary(member_uuid)
-            pipeline = [
-                {
-                    "$match": {
-                        "$or": [
-                            {"memberId": member_bin},
-                            {"staff._id": member_bin}
-                        ]
-                    }
-                }
+            item_ids = []
+
+            # Query CRM collections for items assigned to or created by the member
+            # Collections to check: Task, Activity, Meeting, Lead (if assigned)
+            crm_collections = [
+                ("Task", ["assignedTo", "createdById", "staffId"]),
+                ("Activity", ["assignedTo", "createdById", "staffId"]),
+                ("Meeting", ["assignedTo", "createdById", "staffId"]),
+                ("Lead", ["staffId", "createdById"]),  # Leads may have staff assignment
             ]
 
-            # Add business scoping if available - need to join with project collection first
-            if business_uuid:
-                biz_bin = uuid_str_to_mongo_binary(business_uuid)
-                pipeline.extend([
-                    {
-                        "$lookup": {
-                            "from": "project",
-                            "localField": "project._id",
-                            "foreignField": "_id",
-                            "as": "__biz_proj__"
+            for collection_name, field_names in crm_collections:
+                try:
+                    # Build match conditions for any of the assignment fields
+                    match_conditions = []
+                    for field in field_names:
+                        # Handle both direct field and nested field (e.g., assignedTo._id)
+                        match_conditions.append({field: member_bin})
+                        match_conditions.append({f"{field}._id": member_bin})
+                        if field == "assignedTo" and isinstance(member_bin, Binary):
+                            # Also check if assignedTo is a list containing the member
+                            match_conditions.append({field: {"$in": [member_bin]}})
+
+                    pipeline = [
+                        {
+                            "$match": {
+                                "$or": match_conditions
+                            }
+                        },
+                        {
+                            "$project": {
+                                "_id": 1
+                            }
                         }
-                    },
-                    {
-                        "$match": {
-                            "__biz_proj__.business._id": biz_bin
-                        }
-                    },
-                    {
-                        "$unset": "__biz_proj__"
-                    }
-                ])
+                    ]
 
-            # Project the project_id
-            pipeline.append({
-                "$project": {
-                    "project_id": "$project._id"
-                }
-            })
+                    # Add business scoping if available
+                    if business_uuid:
+                        biz_bin = uuid_str_to_mongo_binary(business_uuid)
+                        pipeline.insert(-1, {
+                            "$match": {
+                                "$or": [
+                                    {"businessId": biz_bin},
+                                    {"business._id": biz_bin}
+                                ]
+                            }
+                        })
 
-            results = await direct_mongo_client.aggregate("ProjectManagement", "members", pipeline)
+                    results = await direct_mongo_client.aggregate(DATABASE_NAME, collection_name, pipeline)
 
-            # Extract project IDs and convert back to string format using same normalization as Qdrant
-            project_ids = []
-            for result in results:
-                if result.get("project_id"):
-                    project_ids.append(self._normalize_mongo_id(result["project_id"]))
+                    # Extract item IDs and normalize
+                    for result in results:
+                        if result.get("_id"):
+                            item_ids.append(self._normalize_mongo_id(result["_id"]))
 
-            return project_ids
+                except Exception as e:
+                    logger.warning(f"Error querying {collection_name} for member '{member_uuid}': {e}")
+                    continue
+
+            return item_ids
 
         except Exception as e:
-            logger.error(f"Error querying member projects: {e}")
+            logger.error(f"Error querying member items: {e}")
             return []
 
 

@@ -10,7 +10,7 @@ load_dotenv()
 DATABASE_NAME = os.getenv("MONGODB_DATABASE", "ProjectManagement")
 MONGODB_CONNECTION_STRING = os.getenv(
     "MONGODB_URI",
-    "mongodb://Harshit:10_Harshith_29@4.213.88.219:27017/?authMechanism=DEFAULT&authSource=admin",
+    "mongodb://WebsiteBuilderAdmin:JfOCiOKMVgSIMPOBUILDERGkli8@13.90.63.91:27017,172.171.192.172:27017/ProjectManagement?authSource=admin&replicaSet=rs0",
 )
 
 # Qdrant configuration

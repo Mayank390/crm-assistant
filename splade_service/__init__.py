@@ -1,0 +1,2 @@
+"""SPLADE service for CRM."""
+

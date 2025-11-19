@@ -20,8 +20,9 @@ from qdrant_client.models import (
     Fusion,
     SparseVector,
 )
-from sentence_transformers import SentenceTransformer
-from huggingface_hub import login
+from embedding.service_client import EmbeddingServiceClient, EmbeddingServiceError
+# sentence_transformers and huggingface_hub are not needed - backend uses EmbeddingServiceClient microservice
+# These imports are only used in commented-out code for local development
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -61,66 +62,66 @@ class RAGTool:
             )
         return cls._instance
 
-    # async def connect(self):
-    #     # This method's internal logic remains the same
-    #     if self.connected:
-    #         return
-    #     try:
-    #         self.qdrant_client = QdrantClient(
-    #             url=mongo.constants.QDRANT_URL,
-    #             api_key=mongo.constants.QDRANT_API_KEY,
-    #         )
-    #         self.embedding_client = EmbeddingServiceClient(os.getenv("EMBEDDING_SERVICE_URL"))
-    #         try:
-    #             dimension = self.embedding_client.get_dimension()
-    #         except EmbeddingServiceError as exc:
-    #             raise RuntimeError(f"Failed to initialize embedding service: {exc}") from exc
-    #         self.connected = True
-    #         # Lightweight verification that sparse vectors are configured and present
-    #         try:
-    #             col = self.qdrant_client.get_collection(mongo.constants.QDRANT_COLLECTION_NAME)
-    #             # If call succeeds, we assume sparse config exists as we create it during indexing
-    #         except Exception as e:
-    #             logger.error(f"Could not verify collection config: {e}")
-    #     except Exception as e:
-    #         logger.error(f"Failed to connect RAGTool components: {e}")
-    #         raise
-    
     async def connect(self):
         # This method's internal logic remains the same
         if self.connected:
             return
         try:
-            self.qdrant_client = QdrantClient(url=mongo.constants.QDRANT_URL, api_key=mongo.constants.QDRANT_API_KEY)
-            
-            # Authenticate with HuggingFace if token is available (required for gated models)
-            hf_token = (
-                os.getenv("HuggingFace_API_KEY")
+            self.qdrant_client = QdrantClient(
+                url=mongo.constants.QDRANT_URL,
+                api_key=mongo.constants.QDRANT_API_KEY,
             )
-            if hf_token:
-                try:
-                    login(token=hf_token, add_to_git_credential=False)
-                    print("✓ Authenticated with HuggingFace")
-                except Exception as auth_exc:
-                    logger.warning(f"⚠ HuggingFace authentication failed: {auth_exc}")
-            
-            model_name = mongo.constants.EMBEDDING_MODEL
+            self.embedding_client = EmbeddingServiceClient(os.getenv("EMBEDDING_SERVICE_URL"))
             try:
-                self.embedding_client = SentenceTransformer(mongo.constants.EMBEDDING_MODEL)
-            except Exception as e:
-                print(f"⚠ Failed to load embedding model '{mongo.constants.EMBEDDING_MODEL}': {e}\nFalling back to 'sentence-transformers/all-MiniLM-L6-v2'")
+                dimension = self.embedding_client.get_dimension()
+            except EmbeddingServiceError as exc:
+                raise RuntimeError(f"Failed to initialize embedding service: {exc}") from exc
             self.connected = True
-            print(f"Successfully connected to Qdrant at {mongo.constants.QDRANT_URL}")
             # Lightweight verification that sparse vectors are configured and present
             try:
                 col = self.qdrant_client.get_collection(mongo.constants.QDRANT_COLLECTION_NAME)
                 # If call succeeds, we assume sparse config exists as we create it during indexing
-                print(f"ℹ Collection loaded: {getattr(col, 'name', mongo.constants.QDRANT_COLLECTION_NAME)}")
             except Exception as e:
-                print(f"⚠ Could not verify collection config: {e}")
+                logger.error(f"Could not verify collection config: {e}")
         except Exception as e:
-            print(f"Failed to connect RAGTool components: {e}")
+            logger.error(f"Failed to connect RAGTool components: {e}")
             raise
+    
+    # async def connect(self):
+    #     # This method's internal logic remains the same
+    #     if self.connected:
+    #         return
+    #     try:
+    #         self.qdrant_client = QdrantClient(url=mongo.constants.QDRANT_URL, api_key=mongo.constants.QDRANT_API_KEY)
+            
+    #         # Authenticate with HuggingFace if token is available (required for gated models)
+    #         hf_token = (
+    #             os.getenv("HuggingFace_API_KEY")
+    #         )
+    #         if hf_token:
+    #             try:
+    #                 login(token=hf_token, add_to_git_credential=False)
+    #                 print("✓ Authenticated with HuggingFace")
+    #             except Exception as auth_exc:
+    #                 logger.warning(f"⚠ HuggingFace authentication failed: {auth_exc}")
+            
+    #         model_name = mongo.constants.EMBEDDING_MODEL
+    #         try:
+    #             self.embedding_client = SentenceTransformer(mongo.constants.EMBEDDING_MODEL)
+    #         except Exception as e:
+    #             print(f"⚠ Failed to load embedding model '{mongo.constants.EMBEDDING_MODEL}': {e}\nFalling back to 'sentence-transformers/all-MiniLM-L6-v2'")
+    #         self.connected = True
+    #         print(f"Successfully connected to Qdrant at {mongo.constants.QDRANT_URL}")
+    #         # Lightweight verification that sparse vectors are configured and present
+    #         try:
+    #             col = self.qdrant_client.get_collection(mongo.constants.QDRANT_COLLECTION_NAME)
+    #             # If call succeeds, we assume sparse config exists as we create it during indexing
+    #             print(f"ℹ Collection loaded: {getattr(col, 'name', mongo.constants.QDRANT_COLLECTION_NAME)}")
+    #         except Exception as e:
+    #             print(f"⚠ Could not verify collection config: {e}")
+    #     except Exception as e:
+    #         print(f"Failed to connect RAGTool components: {e}")
+    #         raise
 
 
     # ... all other methods like search_content() and get_content_context() remain unchanged ...
@@ -146,9 +147,6 @@ class RAGTool:
                     )
                 )
 
-            # Business-level scoping
-            # Note: business_id in Qdrant is stored as normalized UUID string from MongoDB Binary
-            # We need to normalize it the same way as insertdocs.py does
             business_uuid = BUSINESS_UUID()
             if business_uuid:
                 normalized_business_id = self._normalize_business_id(business_uuid)

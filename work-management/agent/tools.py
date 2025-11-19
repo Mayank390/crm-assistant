@@ -46,7 +46,6 @@ CONTENT_TYPE_DEFAULT_LIMITS: Dict[str, int] = {
     "cycle": 6,
     "module": 6,
     "epic": 6,
-    # Note: user_context is NOT a content_type - it's handled via mem0_hybrid_layer.py
 }
 
 # Fallback when content_type is unknown or not provided
@@ -63,7 +62,6 @@ CONTENT_TYPE_CHUNKS_PER_DOC: Dict[str, int] = {
     "cycle": 2,
     "module": 2,
     "epic": 2,
-    # Note: user_context is NOT a content_type - it's handled via mem0_hybrid_layer.py
 }
 
 CONTENT_TYPE_INCLUDE_ADJACENT: Dict[str, bool] = {
@@ -73,7 +71,6 @@ CONTENT_TYPE_INCLUDE_ADJACENT: Dict[str, bool] = {
     "cycle": False,
     "module": False,
     "epic": False,
-    # Note: user_context is NOT a content_type - it's handled via mem0_hybrid_layer.py
 }
 
 CONTENT_TYPE_MIN_SCORE: Dict[str, float] = {
@@ -83,7 +80,6 @@ CONTENT_TYPE_MIN_SCORE: Dict[str, float] = {
     "cycle": 0.55,
     "module": 0.55,
     "epic": 0.55,
-    # Note: user_context is NOT a content_type - it's handled via mem0_hybrid_layer.py
 }
 
 
@@ -1438,7 +1434,6 @@ async def rag_search(
     Args:
         query: Search query (semantic meaning, not just keywords)
         content_type: Filter by type - 'page', 'work_item', 'project', 'cycle', 'module', 'epic', 'userStory', 'features' or None (all)
-                     Note: User context is handled via Mem0 hybrid layer, not as a content_type
         group_by: Group results by field - 'project_name', 'updatedAt', 'priority', 'state_name', 
                  'content_type', 'assignee_name', 'visibility', etc. (None = no grouping)
         limit: Max results to retrieve (default 10, increase for broader searches)

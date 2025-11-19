@@ -1,0 +1,2 @@
+"""Embedding service for CRM."""
+

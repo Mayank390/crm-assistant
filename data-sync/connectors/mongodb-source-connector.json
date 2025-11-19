@@ -1,0 +1,18 @@
+{
+  "name": "mongodb-source-connector",
+  "config": {
+    "connector.class": "com.mongodb.kafka.connect.MongoSourceConnector",
+    "connection.uri": "mongodb://Harshit:10_Harshith_29@4.213.88.219:27017/?authMechanism=DEFAULT&authSource=admin",
+    "database": "crm",
+    "change.stream.full.document": "updateLookup",
+    "publish.full.document.only": "true",
+    "pipeline": "[{\"$match\": {\"ns.coll\": {\"$in\": [\"Lead\", \"Task\", \"Activity\", \"Meeting\", \"Notes\", \"CallLog\", \"MailInfo\", \"LeadScoreRule\", \"Segmentation\"]}}}]",
+    "copy.existing.pipeline": "[{\"$match\": {\"ns.coll\": {\"$in\": [\"Lead\", \"Task\", \"Activity\", \"Meeting\", \"Notes\", \"CallLog\", \"MailInfo\", \"LeadScoreRule\", \"Segmentation\"]}}}]",
+    "copy.existing": "true",
+    "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+    "key.converter.schemas.enable": "false",
+    "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "value.converter.schemas.enable": "false"
+  }
+}
+

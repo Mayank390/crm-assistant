@@ -1,2 +1,1 @@
-# Embedding module
-
+# Embedding service client package

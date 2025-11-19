@@ -447,6 +447,16 @@ class AgentExecutor:
         business_id: Optional[str] = None
     ) -> AsyncGenerator[str, None]:
         """Run the agent with streaming support and conversation context"""
+        # Set websocket context for business filtering
+        if business_id:
+            try:
+                import websocket_handler
+                websocket_handler.business_id_global = business_id
+                if user_id:
+                    websocket_handler.user_id_global = user_id
+            except Exception as e:
+                logger.warning(f"Failed to set websocket context: {e}")
+
         if not self.connected:
             await self.connect()
 

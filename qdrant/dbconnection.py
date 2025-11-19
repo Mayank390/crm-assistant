@@ -17,14 +17,16 @@ mongo_database = os.getenv("MONGODB_DATABASE", "crm")
 
 mongo_client = None
 db = None
-page_collection = None
-workitem_collection = None
-cycle_collection = None
-module_collection = None
-project_collection = None
-epic_collection = None
-userStory_collection = None
-features_collection = None
+# CRM collections
+lead_collection = None
+task_collection = None
+activity_collection = None
+meeting_collection = None
+notes_collection = None
+callLog_collection = None
+mailInfo_collection = None
+leadScoreRule_collection = None
+segmentation_collection = None
 
 try:
     mongo_client = MongoClient(
@@ -37,14 +39,16 @@ try:
 
     # Access your specific collections
     db = mongo_client[mongo_database]
-    page_collection = db.get_collection("page")
-    workitem_collection = db.get_collection("workItem")
-    cycle_collection = db.get_collection("cycle")
-    module_collection = db.get_collection("module")
-    project_collection = db.get_collection("project")
-    epic_collection = db.get_collection("epic")
-    userStory_collection = db.get_collection("userStory")
-    features_collection = db.get_collection("features")
+    # CRM collections
+    lead_collection = db.get_collection("Lead")
+    task_collection = db.get_collection("Task")
+    activity_collection = db.get_collection("Activity")
+    meeting_collection = db.get_collection("Meeting")
+    notes_collection = db.get_collection("Notes")
+    callLog_collection = db.get_collection("CallLog")
+    mailInfo_collection = db.get_collection("MailInfo")
+    leadScoreRule_collection = db.get_collection("LeadScoreRule")
+    segmentation_collection = db.get_collection("Segmentation")
 
 except Exception as e:
     logger.error(f"MongoDB connection failed: {e}")

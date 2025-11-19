@@ -1,0 +1,192 @@
+services:
+  kafka-connect:
+    image: confluentinc/cp-kafka-connect:7.8.0
+    container_name: kafka-connect
+    ports:
+      - "8083:8083"
+    environment:
+      CONNECT_BOOTSTRAP_SERVERS: kafka:9092
+      CONNECT_REST_ADVERTISED_HOST_NAME: kafka-connect
+      CONNECT_REST_PORT: 8083
+      CONNECT_GROUP_ID: kafka-connect-group
+      CONNECT_CONFIG_STORAGE_TOPIC: _connect-configs
+      CONNECT_OFFSET_STORAGE_TOPIC: _connect-offsets
+      CONNECT_STATUS_STORAGE_TOPIC: _connect-status
+      CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_KEY_CONVERTER: org.apache.kafka.connect.storage.StringConverter
+      CONNECT_VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      CONNECT_INTERNAL_KEY_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      CONNECT_INTERNAL_VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      CONNECT_PLUGIN_PATH: /usr/share/java,/usr/share/confluent-hub-components
+      MONGODB_URI: ${MONGODB_URI:-mongodb://Harshit:10_Harshith_29@4.213.88.219:27017/?authMechanism=DEFAULT&authSource=admin}
+      MONGODB_DATABASE: ${MONGODB_DATABASE:-crm}
+      KAFKA_TOPIC_PREFIX: ${KAFKA_TOPIC_PREFIX:-crm.}
+    volumes:
+      - ./connectors:/connectors
+    extra_hosts:
+      - "host.docker.internal:host-gateway"  # Essential for host access
+    command:
+      - bash
+      - -c
+      - |
+        # YES - This is still needed for external MongoDB!
+        if [ ! -d "/usr/share/confluent-hub-components/mongodb-kafka-connect-mongodb" ]; then
+          confluent-hub install --no-prompt mongodb/kafka-connect-mongodb:1.13.0
+        fi
+        /etc/confluent/docker/run &
+        sleep 30
+        /connectors/setup-connectors.sh
+        wait
+    depends_on:
+      kafka:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - vector-net
+
+
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: qdrant
+    ports:
+      - "6333:6333" # HTTP
+      - "6334:6334" # gRPC
+    volumes:
+      - qdrant_data:/qdrant/storage
+    restart: unless-stopped
+    networks:
+      - vector-net
+
+  kafka:
+    image: confluentinc/cp-kafka:7.8.0
+    container_name: kafka
+    ports:
+      - "9094:9094"
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093,EXTERNAL://0.0.0.0:9094
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,EXTERNAL://host.docker.internal:9094
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      CLUSTER_ID: MkU3OEVBNTcwNTJENDM2Qk
+    healthcheck:
+      test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "kafka:9092"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+    restart: unless-stopped
+    networks:
+      - vector-net
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:v0.7.2
+    container_name: kafka-ui
+    ports:
+      - "8084:8080"
+    environment:
+      - KAFKA_CLUSTERS_0_NAME=local
+      - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=kafka:9092
+    depends_on:
+      kafka:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - vector-net
+
+  splade:
+    build:
+      context: ..
+      dockerfile: splade_service/Dockerfile
+    container_name: splade
+    env_file:
+      - ../.env
+    environment:
+      SPLADE_MODEL_NAME: ${SPLADE_MODEL_NAME:-naver/splade-cocondenser-ensembledistil}
+      SPLADE_MAX_TERMS: ${SPLADE_MAX_TERMS:-200}
+    ports:
+      - "8082:8080"
+    restart: unless-stopped
+    networks:
+      - vector-net
+
+  backfill:
+    build:
+      context: .
+      dockerfile: consumer/Dockerfile
+    container_name: mongodb-backfill
+    environment:
+      - MONGODB_URI=${MONGODB_URI:-mongodb://Harshit:10_Harshith_29@4.213.88.219:27017/?authMechanism=DEFAULT&authSource=admin}
+      - MONGODB_DATABASE=${MONGODB_DATABASE:-crm}
+      - KAFKA_BOOTSTRAP_SERVERS=${KAFKA_BOOTSTRAP_SERVERS:-kafka:9092}
+      - KAFKA_TOPIC_PREFIX=${KAFKA_TOPIC_PREFIX:-crm.}
+      - BACKFILL_COLLECTIONS=${BACKFILL_COLLECTIONS:-Lead,Task,Activity,Meeting,Notes,CallLog,MailInfo,LeadScoreRule,Segmentation}
+      - BACKFILL_BATCH_SIZE=${BACKFILL_BATCH_SIZE:-1000}
+      - BACKFILL_SLEEP=${BACKFILL_SLEEP:-1.0}
+      - QDRANT_URL=${QDRANT_URL:-http://qdrant:6333}
+      - QDRANT_COLLECTION=${QDRANT_COLLECTION:-crm}
+      - INCREMENTAL_BACKFILL=${INCREMENTAL_BACKFILL:-true}
+      - QDRANT_CHECK_BATCH_SIZE=${QDRANT_CHECK_BATCH_SIZE:-1000}
+    depends_on:
+      kafka:
+        condition: service_healthy
+      kafka-connect:
+        condition: service_started
+      qdrant:
+        condition: service_started
+      splade:
+        condition: service_started
+    restart: "no"  # Run once and exit
+    command: ["python", "/app/backfill_mongodb.py"]
+    volumes:
+      - ./backfill_mongodb.py:/app/backfill_mongodb.py:ro
+    networks:
+      - vector-net
+
+  consumer:
+    build:
+      context: .
+      dockerfile: consumer/Dockerfile
+    container_name: qdrant-consumer
+    environment:
+      - KAFKA_BOOTSTRAP_SERVERS=${KAFKA_BOOTSTRAP_SERVERS:-kafka:9092}
+      - KAFKA_TOPIC=${KAFKA_TOPIC:-crm\..*}
+      - KAFKA_GROUP_ID=${KAFKA_GROUP_ID:-qdrant-consumer}
+      - QDRANT_URL=${QDRANT_URL:-http://qdrant:6333}
+      - QDRANT_COLLECTION=${QDRANT_COLLECTION:-crm}
+      - EMBEDDING_MODEL=${EMBEDDING_MODEL:-google/embeddinggemma-300m}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - HF_HUB_DOWNLOAD_TIMEOUT=${HF_HUB_DOWNLOAD_TIMEOUT:-300}
+      - HF_HUB_ETAG_TIMEOUT=${HF_HUB_ETAG_TIMEOUT:-300}
+      - BATCH_MAX_MESSAGES=${BATCH_MAX_MESSAGES:-256}
+      - BATCH_MAX_SECONDS=${BATCH_MAX_SECONDS:-2}
+      - HuggingFace_API_KEY=${HuggingFace_API_KEY:-}
+    depends_on:
+      backfill:
+        condition: service_completed_successfully  # Wait for backfill to complete
+      kafka:
+        condition: service_healthy
+      qdrant:
+        condition: service_started
+      splade:
+        condition: service_started
+    restart: unless-stopped
+    networks:
+      - vector-net
+
+volumes:
+#  mongodb_data:
+#  mongodb_config:
+  qdrant_data:
+
+networks:
+  vector-net:
+    driver: bridge
+

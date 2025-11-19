@@ -16,7 +16,6 @@ from typing import Dict, Any, List, AsyncGenerator, Optional
 from agent.memory import conversation_memory
 from typing import Tuple
 from agent import tools as agent_tools
-from agent.knowledge_graph.search_tool import mem0_search, mem0_get_preferences, mem0_get_traits
 from datetime import datetime
 import time
 from time import perf_counter
@@ -29,14 +28,6 @@ try:
     tools_list = agent_tools.tools
 except AttributeError:
     tools_list = []
-
-# ✅ NEW: Add Mem0 search tools to tools list
-if mem0_search not in tools_list:
-    tools_list.append(mem0_search)
-if mem0_get_preferences not in tools_list:
-    tools_list.append(mem0_get_preferences)
-if mem0_get_traits not in tools_list:
-    tools_list.append(mem0_get_traits)
 import os
 from langchain_groq import ChatGroq
 from mongo.constants import DATABASE_NAME, mongodb_tools
@@ -109,8 +100,10 @@ DEFAULT_SYSTEM_PROMPT = (
     "TOOL EXECUTION STRATEGY:\n"
     "- When tools are INDEPENDENT (can run without each other's results): Call them together in one batch.\n"
     "- When tools are DEPENDENT (one needs another's output): Call them separately in sequence.\n"
+    "- EXCEPTION: For 'generate_content' tool calls, always call them sequentially even if independent, to ensure each generated item appears individually in the chat.\n"
     "- Examples of INDEPENDENT: 'Show bug counts AND feature counts' → call both tools together\n"
-    "- Examples of DEPENDENT: 'Find bugs by John, THEN search docs about those bugs' → call mongo_query first, wait for results, then call rag_search\n\n"
+    "- Examples of DEPENDENT: 'Find bugs by John, THEN search docs about those bugs' → call mongo_query first, wait for results, then call rag_search\n"
+    "- Examples of generate_content: 'Create 5 work items' → call generate_content 5 times sequentially, not in parallel\n\n"
     "DECISION GUIDE:\n"
     "1) Use 'mongo_query' for structured questions about entities/fields in collections: project, workItem, cycle, module, epic, members, page, projectState, userStory, features.\n"
     "   - Examples: counts, lists, filters, sort, group by, breakdowns by assignee/state/project/priority/date.\n"
@@ -157,7 +150,7 @@ DEFAULT_SYSTEM_PROMPT = (
     "- 'What is the next release about?' → rag_search(query='next release', content_type='page')\n"
     "- 'What are recent work items about?' → rag_search(query='recent work items', content_type='work_item')\n"
     "- 'What is the active cycle about?' → rag_search(query='active cycle', content_type='cycle')\n"
-    "- 'What is the crm module about?' → rag_search(query='crm module', content_type='module')\n"
+    "- 'What is the CRM module about?' → rag_search(query='CRM module', content_type='module')\n"
     "- 'Find content about authentication' → rag_search(query='authentication', content_type=None)  # searches all types\n"
     "- 'How many work items have multiple assignees?' → mongo_query(query='work items with multiple assignees')\n"
     "- 'Show 7-day rolling average of bug creation' → mongo_query(query='7-day rolling average of bug creation')\n"
@@ -173,7 +166,6 @@ DEFAULT_SYSTEM_PROMPT = (
     "- Advanced analytics (multiple assignees, time-series, trends, anomalies, complex aggregations) → mongo_query.\n"
     "- Question about content meaning/semantics (find docs, analyze patterns, content search, descriptions) → rag_search.\n"
     "- Request to CREATE/GENERATE new content → generate_content.\n"
-    "- Question about user preferences, traits, patterns, or context → mem0_search or mem0_get_preferences/mem0_get_traits.\n"
     "- Question needs both structured + semantic analysis → use BOTH tools together.\n\n"
     "Respond with tool calls first, then synthesize a concise answer grounded ONLY in tool outputs."
 )
@@ -389,14 +381,7 @@ class AgentExecutor:
         pass
 
 
-    async def run_streaming(
-        self,
-        query: str,
-        websocket=None,
-        conversation_id: Optional[str] = None,
-        user_id: Optional[str] = None,
-        business_id: Optional[str] = None
-    ) -> AsyncGenerator[str, None]:
+    async def run_streaming(self, query: str, websocket=None, conversation_id: Optional[str] = None) -> AsyncGenerator[str, None]:
         """Run the agent with streaming support and conversation context"""
         if not self.connected:
             await self.connect()
@@ -429,31 +414,6 @@ class AgentExecutor:
                 if self.system_prompt:
                     messages.append(SystemMessage(content=self.system_prompt))
 
-                # ✅ NEW: Add Mem0 hybrid context layer (persona + relevant context + awareness + personalized instructions)
-                if user_id and business_id:
-                    try:
-                        from agent.knowledge_graph.hybrid_layer import mem0_hybrid_layer
-                        from mongo.user_preferences import user_preferences
-                        
-                        # Get user preferences to check if long-term context is enabled and get response style preferences
-                        prefs_data = await user_preferences.get_preferences(user_id, business_id)
-                        user_prefs = prefs_data.get("preferences", {})
-                        remember_long_term = user_prefs.get("rememberLongTermContext", True)
-                        
-                        # Build and inject Mem0 context layer (persona + relevant context + awareness + personalized instructions)
-                        context_layer = await mem0_hybrid_layer.build_context_layer(
-                            user_id=user_id,
-                            business_id=business_id,
-                            query=query,  # Use query to retrieve semantically relevant context
-                            include_long_term=remember_long_term,
-                            user_preferences=user_prefs  # Pass preferences for personalized response style
-                        )
-                        if context_layer:
-                            messages.append(context_layer)
-                            
-                    except Exception as e:
-                        logger.warning(f"Failed to load Mem0 hybrid context layer: {e}")
-
                 messages.extend(conversation_context)
 
                 # Add current user message
@@ -481,7 +441,9 @@ class AgentExecutor:
                             "PLANNING & ROUTING:\n"
                             "- Break the user request into logical steps.\n"
                             "- For INDEPENDENT operations: Call multiple tools together.\n"
-                            "- For DEPENDENT operations: Call tools separately (wait for results before next call).\n\n"
+                            "- For DEPENDENT operations: Call tools separately (wait for results before next call).\n"
+                            "- EXCEPTION: For 'generate_content' tool calls, always call them sequentially even if independent, to ensure each generated item appears individually in the chat.\n"
+                            "- Examples of generate_content: 'Create 5 work items' → call generate_content 5 times sequentially, not in parallel\n\n"
                             "RESPONSE FORMATTING (CRITICAL):\n"
                             "- ALWAYS format your responses using **markdown** for maximum readability.\n"
                             "- Use headings (##, ###) to organize sections and break up content.\n"
@@ -534,18 +496,12 @@ class AgentExecutor:
                             "- generate_content(content_type:str, prompt:str, template_title:str='', template_content:str='', context:dict=None): Generate work items/pages/cycles/modules/epics.\n"
                             "  REQUIRED: content_type ('work_item'|'page'|'cycle'|'module'|'epic'), prompt.\n"
                             "  OPTIONAL: template_title, template_content, context.\n"
-                            "  NOTE: Returns '✅ Content generated' only - content goes directly to frontend.\n"
-                            "- mem0_search(query:str, user_id:str|None=None, business_id:str|None=None, memory_types:str|None=None, limit:int=10): Search Mem0 memories for user context, preferences, traits, and patterns.\n"
-                            "  REQUIRED: query (search query), user_id.\n"
-                            "  OPTIONAL: business_id, memory_types (comma-separated: 'user_preference,user_trait,user_context'), limit.\n"
-                            "- mem0_get_preferences(user_id:str, business_id:str|None=None): Get user preferences from Mem0.\n"
-                            "- mem0_get_traits(user_id:str, business_id:str|None=None): Get user traits from Mem0.\n"
-                            "  Use when: Understanding user preferences/traits, finding relevant context from past interactions.\n\n"
+                            "  NOTE: Returns '✅ Content generated' only - content goes directly to frontend.\n\n"
                             "CONTENT TYPE EXAMPLES:\n"
                             "- 'What is next release about?' → rag_search(query='next release', content_type='page')\n"
                             "- 'Recent work items about auth?' → rag_search(query='recent work items auth', content_type='work_item')\n"
                             "- 'Active cycle details?' → rag_search(query='active cycle', content_type='cycle')\n"
-                            "- 'crm module overview?' → rag_search(query='crm module', content_type='module')\n"
+                            "- 'CRM module overview?' → rag_search(query='CRM module', content_type='module')\n"
                             "- 'Epic roadmap for onboarding?' → rag_search(query='onboarding epic', content_type='epic')\n"
                             "- 'Create bug for login' → generate_content(content_type='work_item', prompt='Bug: login fails on mobile')\n"
                             "- 'Generate API docs' → generate_content(content_type='page', prompt='API documentation for auth')\n"
