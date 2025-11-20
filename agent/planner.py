@@ -54,18 +54,6 @@ class QueryIntent:
     wants_count: bool  # Whether the user asked for a count
     fetch_one: bool  # Whether the user wants a single specific item
     # Advanced aggregation fields
-    # Time-series analysis fields
-    window_field: Optional[str] = None  # Field for time window operations
-    window_size: Optional[str] = None  # Size of sliding window (e.g., "7d", "30d")
-    window_unit: Optional[str] = None  # Unit for window (day, week, month)
-    trend_field: Optional[str] = None  # Field for trend analysis
-    trend_period: Optional[str] = None  # Period for trend (week, month, quarter)
-    trend_metric: Optional[str] = None  # Metric to trend (count, sum, avg)
-    anomaly_field: Optional[str] = None  # Field for anomaly detection
-    anomaly_metric: Optional[str] = None  # Metric for anomaly detection
-    anomaly_threshold: Optional[float] = None  # Standard deviation threshold
-    forecast_field: Optional[str] = None  # Field for forecasting
-    forecast_periods: Optional[int] = None  # Number of periods to forecast
     needs_pattern_analysis: bool = False  # Whether this query requires pattern analysis using both mongo_query and rag_search
 
 @dataclass

@@ -106,8 +106,6 @@ DEFAULT_SYSTEM_PROMPT = (
     "DECISION GUIDE:\n"
     "1) Use 'mongo_query' for structured questions about entities/fields in collections: Lead, Task, Activity, Meeting, Notes, CallLog, MailInfo, LeadScoreRule, Segmentation.\n"
     "   - Examples: counts, lists, filters, sort, group by, breakdowns by leadStatus/taskStatus/assignedName/priority/date.\n"
-    "   - Advanced capabilities: array size queries, complex aggregations, time-series analysis (trends, anomalies), advanced filtering.\n"
-    "   - Use for: 'count leads by status', 'tasks with high priority', '7-day rolling averages', 'detect anomalies', 'monthly trends'.\n"
     "   - The query planner automatically determines when complex joins are beneficial and adds strategic relationships only when they improve query performance.\n"
     "   - PAGINATION: For large datasets, use natural language pagination in queries:\n"
     "     * 'page 2 of leads' → returns items 51-100\n"

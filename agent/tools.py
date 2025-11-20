@@ -1246,7 +1246,7 @@ async def mongo_query(query: str, show_all: bool = False) -> str:
             return "❌ Invalid query: query cannot be empty."
         
         result = await plan_and_execute_query(query)
-        
+        print(result)
         # Validate result structure
         if not isinstance(result, dict):
             return f"❌ Unexpected result format from query planner: {type(result)}"
@@ -1998,6 +1998,7 @@ async def mongo_query(query: str, show_all: bool = False) -> str:
                 response += "No results found."
             elapsed_ms = (perf_counter() - tool_start_time) * 1000
             print(f"mongo_query (including planner) for '{query[:50]}...' took {elapsed_ms:.2f} ms")
+            print(response)
             return response
         else:
             return f"❌ QUERY FAILED:\nQuery: '{query}'\nError: {result['error']}"

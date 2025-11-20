@@ -440,14 +440,6 @@ class LLMIntentParser:
             "- toCcMails → toCcMails_count (for MailInfo)\n"
             "- toBccMails → toBccMails_count (for MailInfo)\n"
             "- emailData → emailData_count (for Meeting)\n\n"
-            "## TIME-SERIES ANALYSIS\n"
-            "Support for time-based analytical operations:\n"
-            "- 'sliding window of 7 days' → $setWindowFields for moving averages\n"
-            "- 'rolling average over 30 days' → time window aggregations\n"
-            "- 'trend analysis for last quarter' → period-over-period comparisons\n"
-            "- 'anomaly detection in leads/tasks' → statistical outlier detection\n"
-            "- 'time series forecasting' → trend projection and prediction\n"
-            "- Express temporal analysis queries with sliding windows and trends\n"
 
             "## TIME-BASED SORTING (CRITICAL)\n"
             "Infer sort_order from phrasing when the user implies recency or age.\n"
@@ -600,17 +592,6 @@ class LLMIntentParser:
             '  "wants_details": true,\n'
             '  "wants_count": false,\n'
             '  "fetch_one": false,\n'
-            '  "window_field": null,\n'
-            '  "window_size": null,\n'
-            '  "window_unit": null,\n'
-            '  "trend_field": null,\n'
-            '  "trend_period": null,\n'
-            '  "trend_metric": null,\n'
-            '  "anomaly_field": null,\n'
-            '  "anomaly_metric": null,\n'
-            '  "anomaly_threshold": null,\n'
-            '  "forecast_field": null,\n'
-            '  "forecast_periods": null\n'
             "}\n\n"
 
             "## EXAMPLES\n"
@@ -654,17 +635,6 @@ class LLMIntentParser:
             "- 'count emails with multiple recipients' → {\"primary_entity\": \"MailInfo\", \"filters\": {\"toMails_count\": \">1\"}, \"aggregations\": [\"count\"]}\n"
             "- 'epics with at least 3 custom properties' → {\"primary_entity\": \"epic\", \"filters\": {\"customProperties_count\": \">=3\"}, \"aggregations\": []}\n\n"
             "CRITICAL: When you see phrases like 'multiple', 'more than', 'at least', 'exactly', 'no', 'unassigned', 'with X', 'has X' combined with array field names (assignees, labels, dependencies, etc.), you MUST add the corresponding _count filter.\n\n"
-            "## ADVANCED OPERATOR EXAMPLES (MUST FOLLOW THESE PATTERNS)\n"
-            "- Query: 'meetings with participants matching role Manager'\n"
-            "  → filters: {\"participantsList_elemMatch\": {\"role\": \"Manager\"}}\n"
-            "- Query: 'meetings with participants matching name John and department Sales'\n"
-            "  → filters: {\"participantsList_elemMatch\": {\"name\": \"John\", \"department\": \"Sales\"}}\n\n"
-            "CRITICAL: When users mention 'matching X', 'participants matching', etc., you MUST add the appropriate $elemMatch filter.\n\n"
-            "## TIME-SERIES EXAMPLES\n"
-            "- '7-day rolling average of leads' → {\"primary_entity\": \"Lead\", \"aggregations\": [\"timeWindow\"], \"window_field\": \"createdTimeStamp\", \"window_size\": \"7d\", \"window_unit\": \"day\"}\n"
-            "- 'trend analysis for last month' → {\"primary_entity\": \"Lead\", \"aggregations\": [\"trend\"], \"trend_field\": \"createdTimeStamp\", \"trend_period\": \"month\", \"trend_metric\": \"count\"}\n"
-            "- 'detect anomalies in lead creation' → {\"primary_entity\": \"Lead\", \"aggregations\": [\"anomaly\"], \"anomaly_field\": \"createdTimeStamp\", \"anomaly_metric\": \"count\", \"anomaly_threshold\": 2.0}\n"
-            "- 'forecast lead creation for next week' → {\"primary_entity\": \"Lead\", \"aggregations\": [\"forecast\"], \"forecast_field\": \"createdTimeStamp\", \"forecast_periods\": 7, \"forecast_metric\": \"count\"}\n\n"
 
             "Always output valid JSON. No explanations, no thinking, just the JSON object."
         )
@@ -890,13 +860,6 @@ class LLMIntentParser:
         
         # Also accept $elemMatch operator filters with suffix (_elemMatch)
         # These are dynamically detected based on field names + suffix
-        for key in list(raw_filters.keys()):
-            if key.endswith('_elemMatch'):
-                # Extract base field name
-                base_field = key[:-len('_elemMatch')]
-                # Add to known_filter_keys if base field is valid
-                if base_field in allowed_primary_fields or base_field in {"assignee", "label", "description", "_id"}:
-                    known_filter_keys.add(key)
         
         # Also accept negative filters with suffix (_not)
         # These are dynamically detected based on field names + suffix
@@ -972,9 +935,6 @@ class LLMIntentParser:
             elif k == "$text" and isinstance(v, str):
                 # Full-text search: keep as-is
                 filters[k] = v.strip()
-            elif k.endswith("_elemMatch") and isinstance(v, dict):
-                # $elemMatch operator filters: keep as-is (values are objects)
-                filters[k] = v
             elif k.endswith("_not"):
                 # Negative filters: keep as-is (values are arrays or single values to exclude)
                 # Convert single values to arrays for consistency
@@ -1043,83 +1003,6 @@ class LLMIntentParser:
 
         # 3) Advanced feature detection from query text (heuristic fallback)
         
-        
-        # Time window detection (rolling/moving averages)
-        if re.search(r"\b(\d+)[\s-]?day\s+rolling\s+averages?\b|\brolling\s+averages?\s+.*\b(\d+)\s+days?\b|\bmoving\s+averages?\s+.*\b(\d+)\s+days?\b|\b(\d+)[\s-]?day\s+window\b", oq_text):
-            if "timeWindow" not in (data.get("aggregations") or []):
-                aggregations = data.get("aggregations") or []
-                aggregations.append("timeWindow")
-                data["aggregations"] = aggregations
-            # Extract window size
-            window_match = re.search(r"\b(\d+)[\s-]?day", oq_text)
-            if window_match and not data.get("window_size"):
-                data["window_size"] = f"{window_match.group(1)}d"
-            # Infer window field from context
-            if not data.get("window_field"):
-                if "created" in oq_text or "creation" in oq_text:
-                    data["window_field"] = "createdTimeStamp"
-                elif "updated" in oq_text or "modified" in oq_text:
-                    data["window_field"] = "updatedTimeStamp"
-        
-        # Trend detection
-        if re.search(r"\btrends?\b|\bmonthly\s+trends?\b|\bweekly\s+trends?\b|\bquarterly\s+trends?\b|\bperiod\s+over\s+period\b", oq_text):
-            if "trend" not in (data.get("aggregations") or []):
-                aggregations = data.get("aggregations") or []
-                aggregations.append("trend")
-                data["aggregations"] = aggregations
-            # Infer trend period
-            if not data.get("trend_period"):
-                if re.search(r"\bmonthly\b|\bmonth\b", oq_text):
-                    data["trend_period"] = "month"
-                elif re.search(r"\bweekly\b|\bweek\b", oq_text):
-                    data["trend_period"] = "week"
-                elif re.search(r"\bquarterly\b|\bquarter\b", oq_text):
-                    data["trend_period"] = "quarter"
-            # Infer trend field
-            if not data.get("trend_field"):
-                if "created" in oq_text or "creation" in oq_text:
-                    data["trend_field"] = "createdTimeStamp"
-                elif "updated" in oq_text or "modified" in oq_text:
-                    data["trend_field"] = "updatedTimeStamp"
-        
-        # Anomaly detection
-        if re.search(r"\banomal(?:y|ies)\b|\bunusual\b|\boutlier\b|\bspike\b|\bdetect.*\banomal\b", oq_text):
-            if "anomaly" not in (data.get("aggregations") or []):
-                aggregations = data.get("aggregations") or []
-                aggregations.append("anomaly")
-                data["aggregations"] = aggregations
-            # Infer anomaly field
-            if not data.get("anomaly_field"):
-                if "created" in oq_text or "creation" in oq_text:
-                    data["anomaly_field"] = "createdTimeStamp"
-                elif "updated" in oq_text or "modified" in oq_text:
-                    data["anomaly_field"] = "updatedTimeStamp"
-                elif "completion" in oq_text:
-                    data["anomaly_field"] = "updatedTimeStamp"
-        
-        # Forecasting detection
-        if re.search(r"\bforecast\b|\bpredict\b|\bprojection\b|\bprojected\b|\bnext\s+\d+\s+days?\b|\bnext\s+week\b|\bnext\s+month\b", oq_text):
-            if "forecast" not in (data.get("aggregations") or []):
-                aggregations = data.get("aggregations") or []
-                aggregations.append("forecast")
-                data["aggregations"] = aggregations
-            # Extract forecast periods
-            forecast_match = re.search(r"\bnext\s+(\d+)\s+days?\b|\b(\d+)\s+days?\s+ahead\b", oq_text)
-            if forecast_match and not data.get("forecast_periods"):
-                periods = forecast_match.group(1) or forecast_match.group(2)
-                if periods:
-                    data["forecast_periods"] = int(periods)
-            elif re.search(r"\bnext\s+week\b", oq_text) and not data.get("forecast_periods"):
-                data["forecast_periods"] = 7
-            elif re.search(r"\bnext\s+month\b", oq_text) and not data.get("forecast_periods"):
-                data["forecast_periods"] = 30
-            # Infer forecast field
-            if not data.get("forecast_field"):
-                if "created" in oq_text or "creation" in oq_text:
-                    data["forecast_field"] = "createdTimeStamp"
-                elif "updated" in oq_text or "modified" in oq_text:
-                    data["forecast_field"] = "updatedTimeStamp"
-        
         # Pattern analysis detection - automatically detect when queries need pattern analysis
         # Keywords: "most common", "frequent", "patterns", "trends", "influence", "factors", "why", "what causes"
         # Question types: "What objections are most common?", "What factors influence win rates?", "Why do deals slip?"
@@ -1149,7 +1032,6 @@ class LLMIntentParser:
         # Aggregations - include new advanced aggregation types
         allowed_aggs = {
             "count", "group", "summary",
-            "timeWindow", "trend", "anomaly", "forecast"
         }
         aggregations = [a for a in (data.get("aggregations") or []) if a in allowed_aggs]
 
@@ -1280,19 +1162,6 @@ class LLMIntentParser:
         fetch_one = bool(data.get("fetch_one", False)) or (limit == 1)
 
         # Extract advanced aggregation fields
-        
-        # Time-series analysis fields
-        window_field = data.get("window_field")
-        window_size = data.get("window_size")
-        window_unit = data.get("window_unit")
-        trend_field = data.get("trend_field")
-        trend_period = data.get("trend_period")
-        trend_metric = data.get("trend_metric")
-        anomaly_field = data.get("anomaly_field")
-        anomaly_metric = data.get("anomaly_metric")
-        anomaly_threshold = data.get("anomaly_threshold")
-        forecast_field = data.get("forecast_field")
-        forecast_periods = data.get("forecast_periods")
 
         needs_pattern_analysis = bool(data.get("needs_pattern_analysis", False))
         
@@ -1309,17 +1178,6 @@ class LLMIntentParser:
             wants_details=wants_details,
             wants_count=wants_count,
             fetch_one=fetch_one,
-            window_field=window_field if window_field else None,
-            window_size=window_size if window_size else None,
-            window_unit=window_unit if window_unit else None,
-            trend_field=trend_field if trend_field else None,
-            trend_period=trend_period if trend_period else None,
-            trend_metric=trend_metric if trend_metric else None,
-            anomaly_field=anomaly_field if anomaly_field else None,
-            anomaly_metric=anomaly_metric if anomaly_metric else None,
-            anomaly_threshold=float(anomaly_threshold) if anomaly_threshold is not None else None,
-            forecast_field=forecast_field if forecast_field else None,
-            forecast_periods=int(forecast_periods) if forecast_periods is not None else None,
             needs_pattern_analysis=needs_pattern_analysis,
         )
 
