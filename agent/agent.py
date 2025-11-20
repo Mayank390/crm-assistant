@@ -115,21 +115,21 @@ DEFAULT_SYSTEM_PROMPT = (
     "     * 'show results 21-40' → returns specific range\n"
     "     * 'group leads by status, page 2' → paginated grouped results\n"
     "     * Pagination works with all query types (list, count, grouped, aggregated)\n"
-    "     * Default page size is 50. Use 'all' or 'every' for maximum results (up to 1000).\n"
+    "     * Default page size is 50. Use 'all' or 'every' for maximum results (up to 1000)\n"
     "   - Do NOT answer from memory; run a query.\n"
     "2) Use 'rag_search' for content-based searches (semantic meaning, not just keywords).\n"
     "   - Returns FULL chunk content (no truncation) for accurate synthesis and formatting.\n"
     "   - Find leads/tasks/meetings/notes by meaning, analyze content patterns, search CRM content.\n"
     "   - Examples: 'find notes about follow-up', 'show meeting notes', 'content mentioning customer', 'analyze patterns in descriptions'.\n"
     "   - INTELLIGENT CONTENT TYPE ROUTING: Choose content_type based on query context:\n"
-    "      * Questions about 'leads', 'prospects', 'customers' → content_type='lead'\n"
-     "     * Questions about 'tasks', 'todos', 'follow-ups' → content_type='task'\n"
-     "     * Questions about 'meetings', 'calls', 'appointments' → content_type='meeting'\n"
-     "     * Questions about 'notes', 'comments' → content_type='notes'\n"
-     "     * Questions about 'call logs', 'call history' → content_type='callLog'\n"
-     "     * Questions about 'emails', 'mail' → content_type='mailInfo'\n"
-     "     * Questions about 'activities' → content_type='activity'\n"
-     "     * Questions about 'segmentation', 'segments' → content_type='segmentation'\n"
+    "     * Questions about 'leads', 'prospects', 'customers' → content_type='lead'\n"
+    "     * Questions about 'tasks', 'todos', 'follow-ups' → content_type='task'\n"
+    "     * Questions about 'meetings', 'calls', 'appointments' → content_type='meeting'\n"
+    "     * Questions about 'notes', 'comments' → content_type='notes'\n"
+    "     * Questions about 'call logs', 'call history' → content_type='callLog'\n"
+    "     * Questions about 'emails', 'mail' → content_type='mailInfo'\n"
+    "     * Questions about 'activities' → content_type='activity'\n"
+    "     * Questions about 'segmentation', 'segments' → content_type='segmentation'\n"
     "     * Ambiguous queries → omit content_type (searches all types) OR call rag_search multiple times with different types\n"
     "3) Use 'generate_content' to CREATE new leads, tasks, meetings, or notes.\n"
     "   - CRITICAL: Content is sent DIRECTLY to frontend, tool returns only '✅ Content generated' or '❌ Error'.\n"
@@ -412,7 +412,6 @@ class AgentExecutor:
                 tool_call_id=tool_call["id"],
             )
             tool_elapsed_ms = (perf_counter() - tool_start_time) * 1000
-            print(f"Tool '{tool_call['name']}' executed in {tool_elapsed_ms:.2f} ms")
             return tool_message, success
 
     async def connect(self):
@@ -585,8 +584,8 @@ class AgentExecutor:
                             "- If the query is ambiguous or entity/field mapping to Mongo is unclear → prefer rag_search first.\n"
                             "- Question about structured data (counts, filters, group by, breakdown by leadStatus/taskStatus/assignedName/priority/date) → mongo_query.\n"
                             "- Question about content meaning/semantics (find notes, analyze patterns, content search, descriptions) → rag_search.\n"
-                            "- Request to CREATE/GENERATE content → generate_content.\n"
-                            "- Question needs both structured + semantic analysis → use BOTH tools together.\n\n"
+                            "- Request to CREATE/GENERATE content → generate_content\n"
+                            "- Question needs both structured + semantic analysis → use BOTH tools together\n\n"
                             "PATTERN ANALYSIS (EXPLICIT PATTERN QUERIES ONLY):\n"
                             "- ONLY when queries EXPLICITLY ask about patterns, frequency, or causation with keywords like 'most common', 'frequent', 'patterns', 'influence', 'factors', 'why', 'what causes' → use BOTH tools:\n"
                             "  1. mongo_query: For structured frequency analysis, grouping, counts by category\n"
@@ -659,9 +658,6 @@ class AgentExecutor:
                                 invoke_messages,
                                 config={"callbacks": [callback_handler] if should_stream else []},
                             )
-                            main_llm_elapsed_ms = (perf_counter() - main_llm_start_time) * 1000
-                            log_msg_type = "Final Synthesis" if is_finalizing else "Tool Planning"
-                            print(f"Main Agent LLM call ({log_msg_type}) took {main_llm_elapsed_ms:.2f} ms")
                             # Cache response for non-streaming calls (tool planning)
                             if not should_stream:
                                 _llm_response_cache.set(cache_key, response)

@@ -167,7 +167,6 @@ class Orchestrator:
                     if step and step.provides:
                         context[step.provides] = result
         elapsed_ms = (perf_counter() - orchestrator_start_time) * 1000
-        print(f"Orchestrator.run completed {len(steps)} steps in {elapsed_ms:.2f} ms")
         return context
 
 

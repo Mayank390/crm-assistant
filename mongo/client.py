@@ -134,28 +134,9 @@ class DirectMongoClient:
                 db = self.client[database]
                 coll = db[collection]
                 
-                # Print MongoDB query details
-                print(f"\n{'='*80}")
-                print(f"MONGO QUERY EXECUTION")
-                print(f"{'='*80}")
-                print(f"Database: {database}")
-                print(f"Collection: {collection}")
-                print(f"Pipeline: {pipeline}")
-                # COMMENTED OUT: Business/member filtering disabled - injected_stages will always be empty
-                # if injected_stages:
-                #     print(f"Injected business filter stages: {injected_stages}")
-                print(f"{'='*80}\n")
-                
                 effective_pipeline = (injected_stages + pipeline) if injected_stages else pipeline
                 cursor = coll.aggregate(effective_pipeline)
                 results = await cursor.to_list(length=None)
-                
-                # Print MongoDB query results
-                print(f"\n{'='*80}")
-                print(f"MONGO QUERY RESULTS ({len(results)} document(s))")
-                print(f"{'='*80}")
-                print(json.dumps(results, indent=2, default=str))
-                print(f"{'='*80}\n")
                 
                 pass
                 

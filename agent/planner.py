@@ -242,7 +242,6 @@ class Planner:
             pipeline: List[Dict[str, Any]] = ctx["pipeline"]  # type: ignore[assignment]
             result = ctx.get("result")
             elapsed_ms = (perf_counter() - planner_start_time) * 1000
-            print(f"Planner.plan_and_execute for '{query[:50]}...' took {elapsed_ms:.2f} ms")
             return {
                 "success": True,
                 "intent": intent.__dict__,
@@ -253,7 +252,6 @@ class Planner:
             }
         except Exception as e:
             elapsed_ms = (perf_counter() - planner_start_time) * 1000
-            print(f"Planner.plan_and_execute for '{query[:50]}...' failed in {elapsed_ms:.2f} ms: {e}")
             pass
             return {
                 "success": False,

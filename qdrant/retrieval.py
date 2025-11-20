@@ -115,10 +115,19 @@ class ChunkAwareRetriever:
         from qdrant_client.models import Filter, FieldCondition, MatchValue
         
         # Step 1: Initial vector search (retrieve more chunks to cover more docs)
-        vectors = self.embedding_client.encode([query])
+        try:
+            vectors = self.embedding_client.encode([query])
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            raise
+        
         if vectors is None or len(vectors) == 0:
-            raise RuntimeError("Embedding service returned empty vector")
-        query_embedding = vectors[0]
+            error_msg = "Embedding service returned empty vector"
+            raise RuntimeError(error_msg)
+        
+        # Handle both numpy arrays (SentenceTransformer) and lists (EmbeddingServiceClient)
+        query_embedding = vectors[0].tolist() if hasattr(vectors[0], 'tolist') else vectors[0]
         
         # Build filter with optional content_type and global business scoping
         must_conditions = []
@@ -231,7 +240,10 @@ class ChunkAwareRetriever:
                 limit=initial_limit,
             ).points
         except Exception as e:
-            logger.error(f"Hybrid search failed: {e}")
+            error_msg = f"Hybrid search failed: {e}"
+            logger.error(error_msg)
+            import traceback
+            traceback.print_exc()
             return []
         
 
@@ -240,9 +252,12 @@ class ChunkAwareRetriever:
         
         # Step 2: Group chunks by parent document
         doc_chunks: Dict[str, List[ChunkResult]] = defaultdict(list)
-        
+
         # Pre-tokenize query for lightweight overlap checks
         query_terms = self._tokenize(query)
+
+        kept_chunks = 0
+        filtered_chunks = 0
 
         for result in search_results:
             payload = result.payload or {}
@@ -251,13 +266,16 @@ class ChunkAwareRetriever:
             content_text = payload.get("content") or payload.get("full_text") or payload.get("title", "")
 
             # Quality gates to prune irrelevant/low-signal chunks early
-            if not self._should_keep_chunk(
+            should_keep = self._should_keep_chunk(
                 content_text=content_text,
                 query_terms=query_terms,
                 min_content_chars=min_content_chars,
                 min_keyword_overlap=min_keyword_overlap,
-            ):
+            )
+            if not should_keep:
+                filtered_chunks += 1
                 continue
+            kept_chunks += 1
 
             chunk = ChunkResult(
                 id=str(result.id),
@@ -278,9 +296,10 @@ class ChunkAwareRetriever:
             doc_chunks[parent_id].append(chunk)
         
         # Step 3: Fetch adjacent chunks for better context (if enabled)
+
         if include_adjacent:
             await self._fetch_adjacent_chunks(doc_chunks, collection_name, content_type)
-        
+
         # Step 4: Reconstruct documents from chunks
         reconstructed_docs = self._reconstruct_documents(
             doc_chunks, 
@@ -376,6 +395,9 @@ class ChunkAwareRetriever:
             return
         
         # ✅ OPTIMIZED: Batch fetch all chunks in a single query using $or filter
+        # COMMENTED OUT: Business filtering disabled
+        # business_uuid = BUSINESS_UUID()
+        
         # Build batch filter conditions
         should_conditions = []
         for parent_id, chunk_idx in all_chunks_to_fetch:
@@ -386,6 +408,11 @@ class ChunkAwareRetriever:
             
             if content_type:
                 conditions.append(FieldCondition(key="content_type", match=MatchValue(value=content_type)))
+            
+            # COMMENTED OUT: Business filtering disabled
+            # if business_uuid:
+            #     normalized_business_id = self._normalize_business_id(business_uuid)
+            #     conditions.append(FieldCondition(key="business_id", match=MatchValue(value=normalized_business_id)))
             
             should_conditions.append(Filter(must=conditions))
         
@@ -447,6 +474,11 @@ class ChunkAwareRetriever:
                     ]
                     if content_type:
                         filter_conditions.append(FieldCondition(key="content_type", match=MatchValue(value=content_type)))
+                    
+                    # COMMENTED OUT: Business filtering disabled
+                    # if business_uuid:
+                    #     normalized_business_id = self._normalize_business_id(business_uuid)
+                    #     filter_conditions.append(FieldCondition(key="business_id", match=MatchValue(value=normalized_business_id)))
                     
                     scroll_result = self.qdrant_client.scroll(
                         collection_name=collection_name,
