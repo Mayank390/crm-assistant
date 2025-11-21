@@ -5,6 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { SuggestedPrompts } from "./SuggestedPrompts";
 import { Input } from "./ui/input";
+import { VoiceRecorder } from "./VoiceRecorder";
 
 interface ChatInputProps {
   onSendMessage: (message: string) => void;
@@ -14,6 +15,7 @@ interface ChatInputProps {
 
 export const ChatInput = ({ onSendMessage, isLoading = false, showSuggestedPrompts = true }: ChatInputProps) => {
   const [message, setMessage] = useState("");
+  const [isRecording, setIsRecording] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,17 +36,30 @@ export const ChatInput = ({ onSendMessage, isLoading = false, showSuggestedPromp
     setMessage(prompt);
   };
 
+  const handleTranscription = (transcribedText: string) => {
+    // Append transcribed text to existing message or replace if empty
+    const newMessage = message.trim()
+      ? `${message} ${transcribedText}`
+      : transcribedText;
+    setMessage(newMessage);
+  };
+
   return (
     <div className="space-y-4">
       <form onSubmit={handleSubmit}>
         <div
           className={cn(
-            "relative flex items-center gap-2 rounded-full border border-input bg-card py-2 px-3",
+            "relative flex items-center rounded-full border border-input bg-card py-2 px-3",
             "shadow-lg transition-all duration-200",
             "focus-within:border-primary focus-within:shadow-[0_0_20px_rgba(255,160,100,0.2)]",
             "w-[75%] m-auto",
           )}
         >
+          <VoiceRecorder
+            onTranscription={handleTranscription}
+            disabled={isLoading}
+            className="h-7 w-7 shrink-0 mr-2"
+          />
           <Input
             value={message}
             onChange={(e) => setMessage(e.target.value)}
@@ -58,7 +73,7 @@ export const ChatInput = ({ onSendMessage, isLoading = false, showSuggestedPromp
             size="icon"
             disabled={!message.trim() || isLoading}
             className={cn(
-              "h-7 w-7 shrink-0 rounded-full",
+              "h-7 w-7 shrink-0 rounded-full ml-2",
               "bg-gradient-to-r from-primary to-accent",
               "hover:shadow-[0_0_20px_rgba(255,160,100,0.4)]",
               "transition-all duration-200",

@@ -388,6 +388,13 @@ class AgentExecutor:
                 if not isinstance(args, dict):
                     raise ValueError(f"Tool arguments must be a dictionary, got {type(args)}")
                 
+                tool_name = tool_call.get("name", "unknown")
+                print(f"\n{'='*80}")
+                print(f"🔧 [TOOL EXECUTION] {tool_name}")
+                print(f"   Tool Call ID: {tool_call.get('id', 'N/A')}")
+                print(f"   Arguments: {json.dumps(args, indent=2, default=str)}")
+                print(f"{'='*80}")
+                
                 result = await actual_tool.ainvoke(args)
                 
                 # Validate result is not None
@@ -396,6 +403,17 @@ class AgentExecutor:
                     success = False
                 else:
                     success = True
+                
+                # Print tool output summary
+                result_preview = str(result)[:500] if result else "None"
+                if len(str(result)) > 500:
+                    result_preview += "... [truncated]"
+                print(f"\n{'='*80}")
+                print(f"✓ [TOOL RESULT] {tool_name}")
+                print(f"   Success: {success}")
+                print(f"   Output Preview: {result_preview}")
+                print(f"   Full Output Length: {len(str(result))} characters")
+                print(f"{'='*80}\n")
             except ValueError as ve:
                 result = f"Invalid tool arguments: {ve}"
                 success = False
@@ -403,9 +421,14 @@ class AgentExecutor:
                 result = f"Missing required tool argument: {ke}"
                 success = False
             except Exception as tool_exc:
-                logger.error(f"Tool execution error for {tool_call.get('name', 'unknown')}: {tool_exc}", exc_info=True)
+                tool_name = tool_call.get("name", "unknown")
+                logger.error(f"Tool execution error for {tool_name}: {tool_exc}", exc_info=True)
                 result = f"Tool execution error: {str(tool_exc)}"
                 success = False
+                print(f"\n{'='*80}")
+                print(f"❌ [TOOL ERROR] {tool_name}")
+                print(f"   Error: {str(tool_exc)}")
+                print(f"{'='*80}\n")
 
             tool_message = ToolMessage(
                 content=str(result),
@@ -658,6 +681,8 @@ class AgentExecutor:
                                 invoke_messages,
                                 config={"callbacks": [callback_handler] if should_stream else []},
                             )
+                            main_llm_elapsed_ms = (perf_counter() - main_llm_start_time) * 1000
+                            log_msg_type = "Final Synthesis" if is_finalizing else "Tool Planning"
                             # Cache response for non-streaming calls (tool planning)
                             if not should_stream:
                                 _llm_response_cache.set(cache_key, response)

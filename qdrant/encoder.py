@@ -80,7 +80,10 @@ class SpladeEncoder:
         Returns:
             {"indices": List[int], "values": List[float]}
         """
+        print(f"      [SPLADE] encode_text() called: text='{text[:50]}{'...' if len(text) > 50 else ''}', max_terms={max_terms}")
+        
         if not text or not text.strip():
+            print(f"      [SPLADE] ⚠ Empty text, returning empty vector")
             return {"indices": [], "values": []}
 
         torch = self.torch
@@ -111,6 +114,8 @@ class SpladeEncoder:
         indices_list = [int(i) for i in indices.tolist()]
         values_list = [float(v) for v in values.tolist()]
 
+        print(f"      [SPLADE] ✓ encode_text() completed: {len(indices_list)} terms, max_value={max(values_list) if values_list else 0:.3f}")
+        
         return {"indices": indices_list, "values": values_list}
 
 

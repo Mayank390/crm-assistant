@@ -398,14 +398,14 @@ CONTENT_TYPE_INCLUDE_ADJACENT: Dict[str, bool] = {
 }
 
 CONTENT_TYPE_MIN_SCORE: Dict[str, float] = {
-    "lead": 0.1,
-    "task": 0.1,
-    "activity": 0.1,
-    "meeting": 0.1,
-    "notes": 0.1,
-    "callLog": 0.1,
-    "mailInfo": 0.1,
-    "segmentation": 0.1,
+    "lead": 0.5,
+    "task": 0.5,
+    "activity": 0.55,
+    "meeting": 0.55,
+    "notes": 0.55,
+    "callLog": 0.55,
+    "mailInfo": 0.55,
+    "segmentation": 0.55,
 }
 
 
@@ -1234,35 +1234,32 @@ async def mongo_query(query: str, show_all: bool = False) -> str:
     formatted based on query type: lists, counts, grouped results, or trend/aggregated data.
     """
     tool_start_time = perf_counter()
+    print(f"\n🔧 [TOOL] mongo_query() EXECUTING")
+    print(f"   Input: query='{query}', show_all={show_all}")
+    
     if not plan_and_execute_query:
-        result_str = "❌ Intelligent query planner not available. Please ensure query_planner.py is properly configured."
-        print(f"MongoDB Tool Output:\n{result_str}")
-        return result_str
+        result = "❌ Intelligent query planner not available. Please ensure query_planner.py is properly configured."
+        print(f"   [RESULT] ❌ {result}")
+        return result
 
     try:
         # Validate query input
         if not query or not isinstance(query, str):
-            result_str = "❌ Invalid query: query must be a non-empty string."
-            print(f"MongoDB Tool Output:\n{result_str}")
-            return result_str
-
+            result = "❌ Invalid query: query must be a non-empty string."
+            print(f"   [RESULT] ❌ {result}")
+            return result
+        
         if len(query.strip()) == 0:
-            result_str = "❌ Invalid query: query cannot be empty."
-            print(f"MongoDB Tool Output:\n{result_str}")
-            return result_str
+            return "❌ Invalid query: query cannot be empty."
         
         result = await plan_and_execute_query(query)
         
         # Validate result structure
         if not isinstance(result, dict):
-            result_str = f"❌ Unexpected result format from query planner: {type(result)}"
-            print(f"MongoDB Tool Output:\n{result_str}")
-            return result_str
-
+            return f"❌ Unexpected result format from query planner: {type(result)}"
+        
         if "success" not in result:
-            result_str = f"❌ Missing 'success' field in query planner result: {result}"
-            print(f"MongoDB Tool Output:\n{result_str}")
-            return result_str
+            return f"❌ Missing 'success' field in query planner result: {result}"
 
         if result["success"]:
             # Simplified response format - focus on data, not metadata
@@ -1271,14 +1268,10 @@ async def mongo_query(query: str, show_all: bool = False) -> str:
             # Get parsed intent
             intent = result.get("intent")
             if not intent:
-                result_str = "❌ Query planner did not return intent information."
-                print(f"MongoDB Tool Output:\n{result_str}")
-                return result_str
-
+                return "❌ Query planner did not return intent information."
+            
             if not isinstance(intent, dict):
-                result_str = f"❌ Invalid intent format: {type(intent)}"
-                print(f"MongoDB Tool Output:\n{result_str}")
-                return result_str
+                return f"❌ Invalid intent format: {type(intent)}"
             
             primary_entity = intent.get('primary_entity', 'Unknown')
 
@@ -1301,7 +1294,6 @@ async def mongo_query(query: str, show_all: bool = False) -> str:
                     count = first_item["total"]
                     response += f"📊 RESULT:\n"
                     response += f"Total count: {count}\n\n"
-                    print(f"MongoDB Tool Output:\n{response}")
                     return response
 
             # Handle the specific MongoDB response format
@@ -2011,42 +2003,18 @@ async def mongo_query(query: str, show_all: bool = False) -> str:
                 response += formatted_result
             else:
                 response += "No results found."
-            elapsed_ms = (perf_counter() - tool_start_time) * 1000
-            print(f"MongoDB Tool Output:\n{response}")
-            print(f"mongo_query (including planner) for '{query[:50]}...' took {elapsed_ms:.2f} ms")
+            
+            result_preview = response[:200] + "..." if len(response) > 200 else response
+            print(f"   [RESULT] ✓ mongo_query() completed: {len(response)} chars")
+            print(f"   Output Preview: {result_preview}")
             return response
         else:
-            result_str = f"❌ QUERY FAILED:\nQuery: '{query}'\nError: {result['error']}"
-            print(f"MongoDB Tool Output:\n{result_str}")
-            return result_str
+            error_result = f"❌ QUERY FAILED:\nQuery: '{query}'\nError: {result['error']}"
+            print(f"   [RESULT] ❌ mongo_query() failed: {result.get('error', 'Unknown error')}")
+            return error_result
 
     except KeyError as ke:
-        elapsed_ms = (perf_counter() - tool_start_time) * 1000
-        result_str = f"❌ Missing required field in query result: {ke}"
-        print(f"MongoDB Tool Output:\n{result_str}")
-        print(f"mongo_query for '{query[:50]}...' failed in {elapsed_ms:.2f} ms: {ke}")
-        return result_str
-    except TypeError as te:
-        elapsed_ms = (perf_counter() - tool_start_time) * 1000
-        result_str = f"❌ Type error in query processing: {te}"
-        print(f"MongoDB Tool Output:\n{result_str}")
-        print(f"mongo_query for '{query[:50]}...' failed in {elapsed_ms:.2f} ms: {te}")
-        return result_str
-    except ValueError as ve:
-        elapsed_ms = (perf_counter() - tool_start_time) * 1000
-        result_str = f"❌ Invalid value in query: {ve}"
-        print(f"MongoDB Tool Output:\n{result_str}")
-        print(f"mongo_query for '{query[:50]}...' failed in {elapsed_ms:.2f} ms: {ve}")
-        return result_str
-    except Exception as e:
-        import traceback
-        error_details = traceback.format_exc()
-        logger.error(f"Error executing mongo_query: {e}\n{error_details}")
-        elapsed_ms = (perf_counter() - tool_start_time) * 1000
-        result_str = f"❌ Error executing query: {str(e)}"
-        print(f"MongoDB Tool Output:\n{result_str}")
-        print(f"mongo_query for '{query[:50]}...' failed in {elapsed_ms:.2f} ms: {e}")
-        return result_str
+        return f"❌ Error executing query: {str(e)}"
 
 
 @tool
@@ -2100,6 +2068,9 @@ async def rag_search(
         query="meetings", content_type="meeting", group_by="meetingStatus" → meetings grouped by status
     """
     tool_start_time = perf_counter()
+    print(f"\n🔧 [TOOL] rag_search() EXECUTING")
+    print(f"   Input: query='{query}', content_type={content_type}, limit={limit}, group_by={group_by}, use_chunk_aware={use_chunk_aware}")
+    
     try:
         # Fix: Add project root to sys.path to resolve module imports
         # This makes 'qdrant' and 'mongo' modules importable from any script location.
@@ -2109,9 +2080,12 @@ async def rag_search(
             sys.path.append(project_root)
         from qdrant.retrieval import ChunkAwareRetriever, format_reconstructed_results
     except ImportError as e:
-        return f"❌ RAG dependency error: {e}. Please ensure all modules are in the correct path."
+        return error_msg
     except Exception as e:
-        return f"❌ RAG SEARCH INITIALIZATION ERROR: {str(e)}"
+        error_msg = f"❌ RAG SEARCH INITIALIZATION ERROR: {str(e)}"
+        import traceback
+        traceback.print_exc()
+        return error_msg
     
     try:
         from collections import defaultdict
@@ -2148,21 +2122,25 @@ async def rag_search(
             min_score = CONTENT_TYPE_MIN_SCORE.get(content_type or "", 0.5)
 
             from mongo.constants import RAG_CONTEXT_TOKEN_BUDGET
-            reconstructed_docs = await retriever.search_with_context(
-                query=query,
-                collection_name=QDRANT_COLLECTION_NAME,
-                content_type=content_type,
-                limit=effective_limit,
-                chunks_per_doc=chunks_per_doc,
-                include_adjacent=include_adjacent,
-                min_score=min_score,
-                context_token_budget=RAG_CONTEXT_TOKEN_BUDGET
-            )
+            try:
+                reconstructed_docs = await retriever.search_with_context(
+                    query=query,
+                    collection_name=QDRANT_COLLECTION_NAME,
+                    content_type=content_type,
+                    limit=effective_limit,
+                    chunks_per_doc=chunks_per_doc,
+                    include_adjacent=include_adjacent,
+                    min_score=min_score,
+                    context_token_budget=RAG_CONTEXT_TOKEN_BUDGET
+                )
+            except Exception as e:
+                import traceback
+                traceback.print_exc()
+                raise
             
             if not reconstructed_docs:
-                result = f"❌ No results found for query: '{query}' (content_type: {content_type}, chunk-aware search)"
-                print("DEBUG: Chunk-aware search returned no results")
-                print(f"RAG Tool Output:\n{result}")
+                result = f"❌ No results found for query: '{query}'"
+                print(f"   [RESULT] ❌ rag_search() no results")
                 return result
             
             # Always pass full content chunks to the agent by default for synthesis
@@ -2172,17 +2150,22 @@ async def rag_search(
                 show_full_content=True,
                 show_chunk_details=True
             )
-            print(f"RAG Tool Output:\n{result}")
+            result_preview = result[:200] + "..." if len(result) > 200 else result
+            print(f"   [RESULT] ✓ rag_search() completed: {len(result)} chars, {len(reconstructed_docs)} documents")
+            print(f"   Output Preview: {result_preview}")
             return result
         
         # Fallback to standard retrieval
-        print("DEBUG: Falling back to standard retrieval")
-        results = await rag_tool.search_content(query, content_type=content_type, limit=effective_limit)
-
+        try:
+            results = await rag_tool.search_content(query, content_type=content_type, limit=effective_limit)
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            raise
+        
         if not results:
-            result = f"❌ No results found for query: '{query}' (content_type: {content_type}, standard search)"
-            print("DEBUG: Standard search also returned no results")
-            print(f"RAG Tool Output:\n{result}")
+            result = f"❌ No results found for query: '{query}'"
+            print(f"   [RESULT] ❌ rag_search() no results")
             return result
         
         # Build response header
@@ -2278,14 +2261,21 @@ async def rag_search(
             remaining_items = sum(len(items) for _, items in sorted_groups[20:])
             response += f"... and {len(sorted_groups) - 20} more groups ({remaining_items} items)\n"
         elapsed_ms = (perf_counter() - tool_start_time) * 1000
-        print(f"RAG Tool Output:\n{response}")
-        print(f"rag_search for '{query[:50]}...' (type: {content_type}) took {elapsed_ms:.2f} ms")
+        result_preview = response[:200] + "..." if len(response) > 200 else response
+        print(f"   [RESULT] ✓ rag_search() completed: {len(response)} chars (took {elapsed_ms:.1f}ms)")
+        print(f"   Output Preview: {result_preview}")
         return response
         
-    except ImportError:
-        return "❌ RAG not available. Install: qdrant-client, sentence-transformers"
+    except ImportError as e:
+        error_msg = "❌ RAG not available. Install: qdrant-client, sentence-transformers"
+        print(f"   [RESULT] ❌ rag_search() import error: {error_msg}")
+        return error_msg
     except Exception as e:
-        return f"❌ RAG SEARCH ERROR: {str(e)}"
+        error_msg = f"❌ RAG SEARCH ERROR: {str(e)}"
+        print(f"   [RESULT] ❌ rag_search() error: {error_msg}")
+        import traceback
+        traceback.print_exc()
+        return error_msg
 
 
 # Global websocket registry for content generation
@@ -2351,9 +2341,14 @@ async def generate_content(
     """
     import httpx
     
+    print(f"\n🔧 [TOOL] generate_content() EXECUTING")
+    print(f"   Input: content_type='{content_type}', prompt='{prompt[:100]}{'...' if len(prompt) > 100 else ''}', template_title='{template_title}', has_context={context is not None}")
+    
     try:
         if content_type not in ["lead", "task", "meeting", "note"]:
-            return "❌ Invalid content type"
+            result = "❌ Invalid content type"
+            print(f"   [RESULT] ❌ {result}")
+            return result
         
         # Get API base URL from environment; require explicit configuration to avoid hardcoded defaults
         api_base = os.getenv("API_BASE_URL") or os.getenv("API_HTTP_URL")
@@ -2387,7 +2382,9 @@ async def generate_content(
             except Exception as e:
                 logger.error(f"Failed to persist generated lead to conversation: {e}")
             
-            return "✅ Content generated"
+            result = "✅ Content generated"
+            print(f"   [RESULT] ✓ generate_content() completed: {result}")
+            return result
             
         elif content_type == "task":
             # Call task generation endpoint (if available)
@@ -2415,7 +2412,9 @@ async def generate_content(
             except Exception as e:
                 logger.error(f"Failed to persist generated task to conversation: {e}")
             
-            return "✅ Content generated"
+            result = "✅ Content generated"
+            print(f"   [RESULT] ✓ generate_content() completed: {result}")
+            return result
             
         elif content_type == "meeting":
             # Call meeting generation endpoint (if available)
@@ -2443,7 +2442,9 @@ async def generate_content(
             except Exception as e:
                 logger.error(f"Failed to persist generated meeting to conversation: {e}")
             
-            return "✅ Content generated"
+            result = "✅ Content generated"
+            print(f"   [RESULT] ✓ generate_content() completed: {result}")
+            return result
             
         elif content_type == "leadScoreRule":
             # Call lead score rule generation endpoint (if available)
@@ -2458,7 +2459,9 @@ async def generate_content(
                     })
                 except Exception as e:
                     logger.error(f"Could not send to websocket: {e}")
-            return "✅ Content generated"
+            result = "✅ Content generated"
+            print(f"   [RESULT] ✓ generate_content() completed: {result}")
+            return result
             
         elif content_type == "segmentation":
             # Call segmentation generation endpoint (if available)
@@ -2473,7 +2476,9 @@ async def generate_content(
                     })
                 except Exception as e:
                     logger.error(f"Could not send to websocket: {e}")
-            return "✅ Content generated"
+            result = "✅ Content generated"
+            print(f"   [RESULT] ✓ generate_content() completed: {result}")
+            return result
             
         else:  # content_type == "note"
             # Call note generation endpoint (if available)
@@ -2501,7 +2506,9 @@ async def generate_content(
             except Exception as e:
                 logger.error(f"Failed to persist generated note to conversation: {e}")
             
-            return "✅ Content generated"
+            result = "✅ Content generated"
+            print(f"   [RESULT] ✓ generate_content() completed: {result}")
+            return result
             
     except httpx.HTTPStatusError as e:
         error_msg = f"API error: {e.response.status_code}"
@@ -2517,7 +2524,9 @@ async def generate_content(
                 })
             except Exception:
                 pass
-        return f"❌ {error_msg}"
+        result = f"❌ {error_msg}"
+        print(f"   [RESULT] ❌ generate_content() HTTP error: {result}")
+        return result
     except httpx.RequestError as e:
         error_msg = "Connection error"
         websocket = get_generation_websocket()
@@ -2531,7 +2540,9 @@ async def generate_content(
                 })
             except Exception:
                 pass
-        return f"❌ {error_msg}"
+        result = f"❌ {error_msg}"
+        print(f"   [RESULT] ❌ generate_content() connection error: {result}")
+        return result
     except Exception as e:
         error_msg = "Generation failed"
         websocket = get_generation_websocket()
@@ -2545,7 +2556,9 @@ async def generate_content(
                 })
             except Exception:
                 pass
-        return f"❌ {error_msg}"
+        result = f"❌ {error_msg}"
+        print(f"   [RESULT] ❌ generate_content() error: {result}")
+        return result
 
 
 # Define the tools list - streamlined and powerful

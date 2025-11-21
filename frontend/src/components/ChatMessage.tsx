@@ -53,20 +53,20 @@ interface ChatMessageProps {
   conversationId?: string;
 }
 
-export const ChatMessage = ({ 
-  id, 
-  role, 
-  content, 
-  isStreaming = false, 
-  liked, 
-  onLike, 
-  onDislike, 
-  internalActivity, 
-  lead, 
-  task, 
-  meeting, 
-  note, 
-  conversationId 
+export const ChatMessage = ({
+  id,
+  role,
+  content,
+  isStreaming = false,
+  liked,
+  onLike,
+  onDislike,
+  internalActivity,
+  lead,
+  task,
+  meeting,
+  note,
+  conversationId
 }: ChatMessageProps) => {
   const { settings } = usePersonalization();
   const [displayedContent, setDisplayedContent] = useState("");

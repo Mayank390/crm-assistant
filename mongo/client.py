@@ -18,8 +18,7 @@ from mongo.constants import (
     MONGODB_CONNECTION_STRING,
     uuid_str_to_mongo_binary,
     COLLECTIONS_WITH_DIRECT_BUSINESS,
-    BUSINESS_UUID,
-    MEMBER_UUID,
+    BUSINESS_UUID
 )
 
 
@@ -98,21 +97,18 @@ class DirectMongoClient:
 
                 # Prefer runtime websocket context; fall back to env vars (via helpers)
                 biz_uuid: str | None = BUSINESS_UUID()
-                member_uuid: str | None = MEMBER_UUID()
                 enforce_business: bool = _flag("ENFORCE_BUSINESS_FILTER") or bool(biz_uuid)
-                enforce_member: bool = _flag("ENFORCE_MEMBER_FILTER") or bool(member_uuid)
 
-                # Prepare business and member scoping injections (prepend stages)
                 injected_stages: List[Dict[str, Any]] = []
 
-                # 1) Business scoping
+                # Business scoping
                 if enforce_business and biz_uuid:
                     try:
                         biz_bin = uuid_str_to_mongo_binary(biz_uuid)
                         if collection in COLLECTIONS_WITH_DIRECT_BUSINESS:
                             # Handle different business field formats across collections
-                            if collection in ("segmentation", "leadScoreRule"):
-                                # Segmentation and leadScoreRule use embedded business object
+                            if collection == "segmentation":
+                                # Segmentation uses embedded business object
                                 injected_stages.append({"$match": {"business._id": biz_bin}})
                             else:
                                 # Most collections use direct businessId field
@@ -123,11 +119,6 @@ class DirectMongoClient:
                     except Exception as e:
                         # Other errors - log and skip business filter
                         logger.error(f"Error applying business filter for {collection}: {e}")
-
-                # COMMENTED OUT: Member filtering disabled
-                # # 2) Member-level scoping (if needed in future)
-                # # For now, CRM doesn't have member-level filtering like work-management
-                # # This can be added later if needed
 
                 # Execute aggregation - Motor uses persistent connection pool
                 db = self.client[database]
