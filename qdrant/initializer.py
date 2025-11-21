@@ -73,7 +73,7 @@ class RAGTool:
     #             url=mongo.constants.QDRANT_URL,
     #             api_key=mongo.constants.QDRANT_API_KEY,
     #         )
-    #         self.embedding_client = EmbeddingServiceClient()
+    #         self.embedding_client = EmbeddingServiceClient(os.getenv("EMBEDDING_SERVICE_URL"))
     #         try:
     #             dimension = self.embedding_client.get_dimension()
     #             logger.info(f"Embedding service connected, dimension: {dimension}")
