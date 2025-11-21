@@ -149,16 +149,16 @@ class RAGTool:
                     )
                 )
 
-            # COMMENTED OUT: Business filtering disabled
-            # business_uuid = BUSINESS_UUID()
-            # if business_uuid:
-            #     normalized_business_id = self._normalize_business_id(business_uuid)
-            #     must_conditions.append(
-            #         FieldCondition(
-            #             key="business_id",
-            #             match=MatchValue(value=normalized_business_id)
-            #         )
-            #     )
+            # Business-level scoping
+            business_uuid = BUSINESS_UUID()
+            if business_uuid:
+                normalized_business_id = self._normalize_business_id(business_uuid)
+                must_conditions.append(
+                    FieldCondition(
+                        key="business_id",
+                        match=MatchValue(value=normalized_business_id)
+                    )
+                )
 
             # COMMENTED OUT: Member filtering disabled
             # # Member-level RBAC scoping for CRM

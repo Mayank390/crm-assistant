@@ -12,6 +12,7 @@ load_dotenv()
 logger = logging.getLogger(__name__)
 
 from mongo.registry import REL, ALLOWED_FIELDS, build_lookup_stage
+from mongo.constants import COLLECTIONS_WITH_DIRECT_BUSINESS, BUSINESS_UUID, uuid_str_to_mongo_binary
 from agent.planner import QueryIntent
 
 class PipelineGenerator:
@@ -118,6 +119,25 @@ class PipelineGenerator:
         # Start with the primary collection
         collection = intent.primary_entity
 
+        # Add business scoping for collections that require it
+        if collection in COLLECTIONS_WITH_DIRECT_BUSINESS:
+            business_uuid = BUSINESS_UUID()
+            if business_uuid:
+                try:
+                    biz_bin = uuid_str_to_mongo_binary(business_uuid)
+                    # Handle different business field formats across collections
+                    if collection in ("segmentation", "leadScoreRule"):
+                        # Segmentation and leadScoreRule use embedded business object
+                        business_filter = {"business._id": biz_bin}
+                    else:
+                        # Most collections use direct businessId field
+                        business_filter = {"businessId": biz_bin}
+                    # Add business filter as the first match stage
+                    pipeline.append({"$match": business_filter})
+                except (ValueError, Exception) as e:
+                    # Invalid UUID format or other error - log and skip business filter
+                    logger.warning(f"Error applying business filter for {collection}: {e}")
+
         # Build sanitized filters once
         primary_filters = self._extract_primary_filters(intent.filters, collection) if intent.filters else {}
         secondary_filters = self._extract_secondary_filters(intent.filters, collection) if intent.filters else {}
@@ -126,6 +146,9 @@ class PipelineGenerator:
         if (("count" in intent.aggregations) or intent.wants_count) and not intent.group_by and not intent.wants_details:
             # Combine all filters for optimal count query
             all_filters = {}
+            # Include business scoping if added to pipeline
+            if pipeline and pipeline[0].get("$match"):
+                all_filters.update(pipeline[0]["$match"])
             if primary_filters:
                 all_filters.update(primary_filters)
             if secondary_filters:

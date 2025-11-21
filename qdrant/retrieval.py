@@ -79,7 +79,7 @@ class ChunkAwareRetriever:
         limit: int = 10,
         chunks_per_doc: int = 3,
         include_adjacent: bool = True,
-        min_score: float = 0.5,
+        min_score: float = 0.0,
         text_query: Optional[str] = None,
         *,
         # Quality filters (token cost control)
@@ -122,26 +122,36 @@ class ChunkAwareRetriever:
             traceback.print_exc()
             raise
         
+        print(f"DEBUG RAG: Embedding service returned {len(vectors) if vectors else 0} vectors")
         if vectors is None or len(vectors) == 0:
             error_msg = "Embedding service returned empty vector"
+            print(f"DEBUG RAG: ERROR - {error_msg}")
             raise RuntimeError(error_msg)
         
         # Handle both numpy arrays (SentenceTransformer) and lists (EmbeddingServiceClient)
         query_embedding = vectors[0].tolist() if hasattr(vectors[0], 'tolist') else vectors[0]
+        print(f"DEBUG RAG: Generated embedding with dimension: {len(query_embedding)}")
+        print(f"DEBUG RAG: Embedding sample values: {query_embedding[:5]}")
         
         # Build filter with optional content_type and global business scoping
         must_conditions = []
         if content_type:
             must_conditions.append(FieldCondition(key="content_type", match=MatchValue(value=content_type)))
 
-        # COMMENTED OUT: Business filtering disabled
-        # # Business-level scoping
-        # # Note: business_id in Qdrant is stored as normalized UUID string from MongoDB Binary
-        # # We need to normalize it the same way as insertdocs.py does
-        # business_uuid = BUSINESS_UUID()
-        # if business_uuid:
-        #     normalized_business_id = self._normalize_business_id(business_uuid)
-        #     must_conditions.append(FieldCondition(key="business_id", match=MatchValue(value=normalized_business_id)))
+        # Business-level scoping (optional for CRM - allows searching without business filter)
+        # Note: business_id in Qdrant is stored as normalized UUID string from MongoDB Binary
+        # We need to normalize it the same way as insertdocs.py does
+        business_uuid = BUSINESS_UUID()
+        print(f"DEBUG RAG: business_uuid = '{business_uuid}'")
+        if business_uuid and business_uuid.strip():
+            try:
+                normalized_business_id = self._normalize_business_id(business_uuid)
+                print(f"DEBUG RAG: normalized_business_id = '{normalized_business_id}'")
+                must_conditions.append(FieldCondition(key="business_id", match=MatchValue(value=normalized_business_id)))
+            except Exception as e:
+                print(f"DEBUG RAG: Error normalizing business_id '{business_uuid}': {e}, searching without business filter")
+        else:
+            print("DEBUG RAG: No business_uuid found, searching without business filter (CRM allows this)")
 
         # COMMENTED OUT: Member filtering disabled
         # # Member-level RBAC scoping
@@ -169,6 +179,8 @@ class ChunkAwareRetriever:
         #         logger.error(f"Error getting member projects for '{member_uuid}': {e}")
 
         search_filter = Filter(must=must_conditions) if must_conditions else None
+        print(f"DEBUG RAG: search_filter = {search_filter}")
+        print(f"DEBUG RAG: must_conditions = {must_conditions}")
 
         # Fetch more chunks initially to ensure we have multiple per document
         # ✅ OPTIMIZED: Reduced initial limit to prevent over-fetching
@@ -190,7 +202,8 @@ class ChunkAwareRetriever:
             query=NearestQuery(nearest=query_embedding),
             using="dense",
             limit=initial_limit,
-            score_threshold=min_score,
+            # Temporarily disable score threshold for debugging
+            # score_threshold=min_score,
             filter=search_filter
         )
 
@@ -232,6 +245,11 @@ class ChunkAwareRetriever:
 
         hybrid_query = FusionQuery(fusion=Fusion.RRF)
 
+        print(f"DEBUG RAG: About to search collection '{collection_name}' with query: '{query}'")
+        print(f"DEBUG RAG: content_type filter: {content_type}")
+        print(f"DEBUG RAG: initial_limit: {initial_limit}")
+        print(f"DEBUG RAG: prefetch_list length: {len(prefetch_list)}")
+
         try:
             search_results = self.qdrant_client.query_points(
                 collection_name=collection_name,
@@ -247,7 +265,30 @@ class ChunkAwareRetriever:
             return []
         
 
+        print(f"DEBUG RAG: search_results count = {len(search_results) if search_results else 0}")
+
+        # Debug: Show sample payload from first result if any
+        if search_results and len(search_results) > 0:
+            first_result = search_results[0]
+            payload = first_result.payload or {}
+            print(f"DEBUG RAG: Sample result payload keys: {list(payload.keys())}")
+            print(f"DEBUG RAG: Sample content_type: {payload.get('content_type')}")
+            print(f"DEBUG RAG: Sample business_id: {payload.get('business_id')}")
+            print(f"DEBUG RAG: Sample title: {payload.get('title', '')[:50]}")
+            print(f"DEBUG RAG: Sample score: {first_result.score}")
+
         if not search_results:
+            print("DEBUG RAG: No search results found, returning empty list")
+            # Try a simple scroll to see if there's any data at all
+            try:
+                scroll_result = self.qdrant_client.scroll(collection_name=collection_name, limit=1)
+                scroll_points = scroll_result[0] if scroll_result else []
+                print(f"DEBUG RAG: Collection scroll returned {len(scroll_points)} points")
+                if scroll_points:
+                    payload = scroll_points[0].payload or {}
+                    print(f"DEBUG RAG: Sample collection data - content_type: {payload.get('content_type')}, business_id: {payload.get('business_id')}")
+            except Exception as e:
+                print(f"DEBUG RAG: Error checking collection data: {e}")
             return []
         
         # Step 2: Group chunks by parent document
@@ -395,8 +436,7 @@ class ChunkAwareRetriever:
             return
         
         # ✅ OPTIMIZED: Batch fetch all chunks in a single query using $or filter
-        # COMMENTED OUT: Business filtering disabled
-        # business_uuid = BUSINESS_UUID()
+        business_uuid = BUSINESS_UUID()
         
         # Build batch filter conditions
         should_conditions = []
@@ -409,10 +449,9 @@ class ChunkAwareRetriever:
             if content_type:
                 conditions.append(FieldCondition(key="content_type", match=MatchValue(value=content_type)))
             
-            # COMMENTED OUT: Business filtering disabled
-            # if business_uuid:
-            #     normalized_business_id = self._normalize_business_id(business_uuid)
-            #     conditions.append(FieldCondition(key="business_id", match=MatchValue(value=normalized_business_id)))
+            if business_uuid:
+                normalized_business_id = self._normalize_business_id(business_uuid)
+                conditions.append(FieldCondition(key="business_id", match=MatchValue(value=normalized_business_id)))
             
             should_conditions.append(Filter(must=conditions))
         
@@ -475,10 +514,9 @@ class ChunkAwareRetriever:
                     if content_type:
                         filter_conditions.append(FieldCondition(key="content_type", match=MatchValue(value=content_type)))
                     
-                    # COMMENTED OUT: Business filtering disabled
-                    # if business_uuid:
-                    #     normalized_business_id = self._normalize_business_id(business_uuid)
-                    #     filter_conditions.append(FieldCondition(key="business_id", match=MatchValue(value=normalized_business_id)))
+                    if business_uuid:
+                        normalized_business_id = self._normalize_business_id(business_uuid)
+                        filter_conditions.append(FieldCondition(key="business_id", match=MatchValue(value=normalized_business_id)))
                     
                     scroll_result = self.qdrant_client.scroll(
                         collection_name=collection_name,

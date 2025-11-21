@@ -398,14 +398,14 @@ CONTENT_TYPE_INCLUDE_ADJACENT: Dict[str, bool] = {
 }
 
 CONTENT_TYPE_MIN_SCORE: Dict[str, float] = {
-    "lead": 0.5,
-    "task": 0.5,
-    "activity": 0.55,
-    "meeting": 0.55,
-    "notes": 0.55,
-    "callLog": 0.55,
-    "mailInfo": 0.55,
-    "segmentation": 0.55,
+    "lead": 0.1,
+    "task": 0.1,
+    "activity": 0.1,
+    "meeting": 0.1,
+    "notes": 0.1,
+    "callLog": 0.1,
+    "mailInfo": 0.1,
+    "segmentation": 0.1,
 }
 
 
@@ -1235,24 +1235,34 @@ async def mongo_query(query: str, show_all: bool = False) -> str:
     """
     tool_start_time = perf_counter()
     if not plan_and_execute_query:
-        return "❌ Intelligent query planner not available. Please ensure query_planner.py is properly configured."
+        result_str = "❌ Intelligent query planner not available. Please ensure query_planner.py is properly configured."
+        print(f"MongoDB Tool Output:\n{result_str}")
+        return result_str
 
     try:
         # Validate query input
         if not query or not isinstance(query, str):
-            return "❌ Invalid query: query must be a non-empty string."
-        
+            result_str = "❌ Invalid query: query must be a non-empty string."
+            print(f"MongoDB Tool Output:\n{result_str}")
+            return result_str
+
         if len(query.strip()) == 0:
-            return "❌ Invalid query: query cannot be empty."
+            result_str = "❌ Invalid query: query cannot be empty."
+            print(f"MongoDB Tool Output:\n{result_str}")
+            return result_str
         
         result = await plan_and_execute_query(query)
         
         # Validate result structure
         if not isinstance(result, dict):
-            return f"❌ Unexpected result format from query planner: {type(result)}"
-        
+            result_str = f"❌ Unexpected result format from query planner: {type(result)}"
+            print(f"MongoDB Tool Output:\n{result_str}")
+            return result_str
+
         if "success" not in result:
-            return f"❌ Missing 'success' field in query planner result: {result}"
+            result_str = f"❌ Missing 'success' field in query planner result: {result}"
+            print(f"MongoDB Tool Output:\n{result_str}")
+            return result_str
 
         if result["success"]:
             # Simplified response format - focus on data, not metadata
@@ -1261,10 +1271,14 @@ async def mongo_query(query: str, show_all: bool = False) -> str:
             # Get parsed intent
             intent = result.get("intent")
             if not intent:
-                return "❌ Query planner did not return intent information."
-            
+                result_str = "❌ Query planner did not return intent information."
+                print(f"MongoDB Tool Output:\n{result_str}")
+                return result_str
+
             if not isinstance(intent, dict):
-                return f"❌ Invalid intent format: {type(intent)}"
+                result_str = f"❌ Invalid intent format: {type(intent)}"
+                print(f"MongoDB Tool Output:\n{result_str}")
+                return result_str
             
             primary_entity = intent.get('primary_entity', 'Unknown')
 
@@ -1287,6 +1301,7 @@ async def mongo_query(query: str, show_all: bool = False) -> str:
                     count = first_item["total"]
                     response += f"📊 RESULT:\n"
                     response += f"Total count: {count}\n\n"
+                    print(f"MongoDB Tool Output:\n{response}")
                     return response
 
             # Handle the specific MongoDB response format
@@ -1997,30 +2012,41 @@ async def mongo_query(query: str, show_all: bool = False) -> str:
             else:
                 response += "No results found."
             elapsed_ms = (perf_counter() - tool_start_time) * 1000
+            print(f"MongoDB Tool Output:\n{response}")
             print(f"mongo_query (including planner) for '{query[:50]}...' took {elapsed_ms:.2f} ms")
             return response
         else:
-            return f"❌ QUERY FAILED:\nQuery: '{query}'\nError: {result['error']}"
+            result_str = f"❌ QUERY FAILED:\nQuery: '{query}'\nError: {result['error']}"
+            print(f"MongoDB Tool Output:\n{result_str}")
+            return result_str
 
     except KeyError as ke:
         elapsed_ms = (perf_counter() - tool_start_time) * 1000
+        result_str = f"❌ Missing required field in query result: {ke}"
+        print(f"MongoDB Tool Output:\n{result_str}")
         print(f"mongo_query for '{query[:50]}...' failed in {elapsed_ms:.2f} ms: {ke}")
-        return f"❌ Missing required field in query result: {ke}"
+        return result_str
     except TypeError as te:
         elapsed_ms = (perf_counter() - tool_start_time) * 1000
+        result_str = f"❌ Type error in query processing: {te}"
+        print(f"MongoDB Tool Output:\n{result_str}")
         print(f"mongo_query for '{query[:50]}...' failed in {elapsed_ms:.2f} ms: {te}")
-        return f"❌ Type error in query processing: {te}"
+        return result_str
     except ValueError as ve:
         elapsed_ms = (perf_counter() - tool_start_time) * 1000
+        result_str = f"❌ Invalid value in query: {ve}"
+        print(f"MongoDB Tool Output:\n{result_str}")
         print(f"mongo_query for '{query[:50]}...' failed in {elapsed_ms:.2f} ms: {ve}")
-        return f"❌ Invalid value in query: {ve}"
+        return result_str
     except Exception as e:
         import traceback
         error_details = traceback.format_exc()
         logger.error(f"Error executing mongo_query: {e}\n{error_details}")
         elapsed_ms = (perf_counter() - tool_start_time) * 1000
+        result_str = f"❌ Error executing query: {str(e)}"
+        print(f"MongoDB Tool Output:\n{result_str}")
         print(f"mongo_query for '{query[:50]}...' failed in {elapsed_ms:.2f} ms: {e}")
-        return f"❌ Error executing query: {str(e)}"
+        return result_str
 
 
 @tool
@@ -2134,21 +2160,30 @@ async def rag_search(
             )
             
             if not reconstructed_docs:
-                return f"❌ No results found for query: '{query}'"
+                result = f"❌ No results found for query: '{query}' (content_type: {content_type}, chunk-aware search)"
+                print("DEBUG: Chunk-aware search returned no results")
+                print(f"RAG Tool Output:\n{result}")
+                return result
             
             # Always pass full content chunks to the agent by default for synthesis
             # Force show_full_content=True so downstream LLM has full context
-            return format_reconstructed_results(
+            result = format_reconstructed_results(
                 docs=reconstructed_docs,
                 show_full_content=True,
                 show_chunk_details=True
             )
+            print(f"RAG Tool Output:\n{result}")
+            return result
         
         # Fallback to standard retrieval
+        print("DEBUG: Falling back to standard retrieval")
         results = await rag_tool.search_content(query, content_type=content_type, limit=effective_limit)
-        
+
         if not results:
-            return f"❌ No results found for query: '{query}'"
+            result = f"❌ No results found for query: '{query}' (content_type: {content_type}, standard search)"
+            print("DEBUG: Standard search also returned no results")
+            print(f"RAG Tool Output:\n{result}")
+            return result
         
         # Build response header
         response = f"🔍 RAG SEARCH: '{query}'\n"
@@ -2243,6 +2278,7 @@ async def rag_search(
             remaining_items = sum(len(items) for _, items in sorted_groups[20:])
             response += f"... and {len(sorted_groups) - 20} more groups ({remaining_items} items)\n"
         elapsed_ms = (perf_counter() - tool_start_time) * 1000
+        print(f"RAG Tool Output:\n{response}")
         print(f"rag_search for '{query[:50]}...' (type: {content_type}) took {elapsed_ms:.2f} ms")
         return response
         
