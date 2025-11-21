@@ -333,7 +333,6 @@ async def handle_chat_websocket(websocket: WebSocket, mongodb_agent):
                     from agent.tools import set_generation_websocket
                     set_generation_websocket(None)
             total_elapsed_ms = (perf_counter() - message_start_time) * 1000
-            print(f"Total message handling for conv '{conversation_id}' took {total_elapsed_ms:.2f} ms")
             await websocket.send_json({
                 "type": "complete",
                 "conversation_id": conversation_id,

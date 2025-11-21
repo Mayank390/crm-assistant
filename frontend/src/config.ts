@@ -1,10 +1,12 @@
-//export const API_HTTP_URL = import.meta.env.VITE_API_HTTP_URL || "http://4.213.16.145:8000";
 export const API_HTTP_URL = import.meta.env.VITE_API_HTTP_URL || "http://localhost:8000";
-export const API_WS_URL = import.meta.env.VITE_API_WS_URL || `${API_HTTP_URL.replace(/^http/, "ws")}/ws/chat`;
+//export const API_HTTP_URL = import.meta.env.VITE_API_HTTP_URL || "http://localhost:8000";
+export const API_WS_URL = import.meta.env.VITE_API_WS_URL || `${API_HTTP_URL.replace(/^https?/, (match) => match === "https" ? "wss" : "ws")}/ws/chat`;
 
+// export const GROQ_API_KEY = import.meta.env.VITE_GROQ_API_KEY || "YOUR_API_KEY_HERE";
+export const GROQ_API_KEY = import.meta.env.VITE_GROQ_API_KEY;
 export const getMemberId = () => {
   // HARDCODED FOR TESTING - REMOVE AFTER
-   return '1f07a8c4-e420-66cd-9fa6-653e39dc66b5';
+   return '1f02a411-c793-603b-9438-d7da75fe04e1';
   
   // const stored = localStorage.getItem('staffId');
   // if (!stored) return '';
@@ -21,7 +23,7 @@ export const getMemberId = () => {
 
 export const getBusinessId = () => {
   // HARDCODED FOR TESTING - REMOVE AFTER
-   return '1eedcb26-d23a-688a-bd63-579d19dab229';
+   return '1ef944db-0e37-6f01-943a-214dd19f54e9';
   
   // // First, try the bDetails key (for backward compatibility)
   // const raw = localStorage.getItem('bDetails');

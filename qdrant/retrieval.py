@@ -13,7 +13,7 @@ import re
 import uuid
 import logging
 from bson import ObjectId, Binary
-from mongo.constants import BUSINESS_UUID, MEMBER_UUID
+from mongo.constants import BUSINESS_UUID
 from collections import defaultdict
 from dataclasses import dataclass
 import asyncio
@@ -112,52 +112,40 @@ class ChunkAwareRetriever:
         Returns:
             List of reconstructed documents with full context
         """
+        print(f"\n🔧 [TOOL] ChunkAwareRetriever.search_with_context() EXECUTING")
+        print(f"   Input: query='{query}', content_type={content_type}, limit={limit}, chunks_per_doc={chunks_per_doc}")
+        
         from qdrant_client.models import Filter, FieldCondition, MatchValue
         
         # Step 1: Initial vector search (retrieve more chunks to cover more docs)
-        vectors = self.embedding_client.encode([query])
+        try:
+            print(f"   [STEP 1] Generating embedding for query...")
+            vectors = self.embedding_client.encode([query])
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            raise
+        
         if vectors is None or len(vectors) == 0:
-            raise RuntimeError("Embedding service returned empty vector")
-        query_embedding = vectors[0]
+            error_msg = "Embedding service returned empty vector"
+            raise RuntimeError(error_msg)
+        
+        # Handle both numpy arrays (SentenceTransformer) and lists (EmbeddingServiceClient)
+        query_embedding = vectors[0].tolist() if hasattr(vectors[0], 'tolist') else vectors[0]
+        print(f"   [STEP 1] ✓ Embedding generated (dimension: {len(query_embedding)})")
         
         # Build filter with optional content_type and global business scoping
         must_conditions = []
         if content_type:
             must_conditions.append(FieldCondition(key="content_type", match=MatchValue(value=content_type)))
 
-        # COMMENTED OUT: Business filtering disabled
-        # # Business-level scoping
-        # # Note: business_id in Qdrant is stored as normalized UUID string from MongoDB Binary
-        # # We need to normalize it the same way as insertdocs.py does
-        # business_uuid = BUSINESS_UUID()
-        # if business_uuid:
-        #     normalized_business_id = self._normalize_business_id(business_uuid)
-        #     must_conditions.append(FieldCondition(key="business_id", match=MatchValue(value=normalized_business_id)))
-
-        # COMMENTED OUT: Member filtering disabled
-        # # Member-level RBAC scoping
-        # # ✅ OPTIMIZED: Cache member projects at request start
-        # member_uuid = MEMBER_UUID()
-        # if member_uuid:
-        #     try:
-        #         # Check cache first
-        #         cache_key = f"{member_uuid}:{business_uuid}"
-        #         if cache_key not in self._member_projects_cache:
-        #             self._member_projects_cache[cache_key] = await self._get_member_projects(member_uuid, business_uuid)
-        #         member_projects = self._member_projects_cache[cache_key]
-        #         if member_projects:
-        #             # For CRM, member filtering can be applied based on assignedTo, createdById, or staffId
-        #             # Since CRM doesn't have project-based access like work-management,
-        #             # we can filter by member's assigned items or created items
-        #             # For now, we'll apply member filtering to content types that have assignment fields
-        #             crm_assigned_content_types = {"task", "activity", "meeting"}
-        #             if content_type is None or content_type in crm_assigned_content_types:
-        #                 # Filter by member's assigned items (using mongo_id matching member's assignments)
-        #                 # This is a simplified approach - adapt based on your CRM access control model
-        #                 must_conditions.append(FieldCondition(key="mongo_id", match=MatchAny(any=member_projects)))
-        #     except Exception as e:
-        #         # Error getting member projects - log and skip member filter
-        #         logger.error(f"Error getting member projects for '{member_uuid}': {e}")
+        # Business-level scoping
+        # Note: business_id in Qdrant is stored as normalized UUID string from MongoDB Binary
+        # We need to normalize it the same way as insertdocs.py does
+        business_uuid = BUSINESS_UUID()
+        if business_uuid:
+            normalized_business_id = self._normalize_business_id(business_uuid)
+            must_conditions.append(FieldCondition(key="business_id", match=MatchValue(value=normalized_business_id)))
 
         search_filter = Filter(must=must_conditions) if must_conditions else None
 
@@ -190,10 +178,12 @@ class ChunkAwareRetriever:
         # Try SPLADE for sparse query
         sparse_added = False
         try:
+            print(f"   [STEP 2] Generating SPLADE sparse vector...")
             from qdrant.encoder import get_splade_encoder
             splade = get_splade_encoder()
             splade_vec = splade.encode_text(query)
             if splade_vec.get("indices"):
+                print(f"   [STEP 2] ✓ SPLADE vector generated ({len(splade_vec['indices'])} terms)")
                 sparse_prefetch = Prefetch(
                     query=NearestQuery(
                         nearest=SparseVector(indices=splade_vec["indices"], values=splade_vec["values"]),
@@ -206,8 +196,11 @@ class ChunkAwareRetriever:
                 )
                 prefetch_list.append(sparse_prefetch)
                 sparse_added = True
+            else:
+                print(f"   [STEP 2] ⚠ SPLADE returned empty vector")
         except Exception as e:
             # SPLADE optional; fall back to keyword search
+            print(f"   [STEP 2] ⚠ SPLADE encoding failed: {e}")
             pass
 
         if enable_keyword_fallback and not sparse_added:
@@ -224,25 +217,36 @@ class ChunkAwareRetriever:
         hybrid_query = FusionQuery(fusion=Fusion.RRF)
 
         try:
+            print(f"   [STEP 3] Querying Qdrant (hybrid: dense + {'sparse' if sparse_added else 'none'}, limit={initial_limit})...")
             search_results = self.qdrant_client.query_points(
                 collection_name=collection_name,
                 prefetch=prefetch_list,
                 query=hybrid_query,
                 limit=initial_limit,
             ).points
+            print(f"   [STEP 3] ✓ Qdrant query returned {len(search_results)} chunks")
         except Exception as e:
-            logger.error(f"Hybrid search failed: {e}")
+            error_msg = f"Hybrid search failed: {e}"
+            logger.error(error_msg)
+            print(f"   [STEP 3] ❌ Qdrant query failed: {e}")
+            import traceback
+            traceback.print_exc()
             return []
         
 
         if not search_results:
+            print(f"   [RESULT] No search results found")
             return []
         
         # Step 2: Group chunks by parent document
+        print(f"   [STEP 4] Processing {len(search_results)} chunks, grouping by document...")
         doc_chunks: Dict[str, List[ChunkResult]] = defaultdict(list)
-        
+
         # Pre-tokenize query for lightweight overlap checks
         query_terms = self._tokenize(query)
+
+        kept_chunks = 0
+        filtered_chunks = 0
 
         for result in search_results:
             payload = result.payload or {}
@@ -251,13 +255,17 @@ class ChunkAwareRetriever:
             content_text = payload.get("content") or payload.get("full_text") or payload.get("title", "")
 
             # Quality gates to prune irrelevant/low-signal chunks early
-            if not self._should_keep_chunk(
+            should_keep = self._should_keep_chunk(
                 content_text=content_text,
                 query_terms=query_terms,
                 min_content_chars=min_content_chars,
                 min_keyword_overlap=min_keyword_overlap,
-            ):
+                semantic_score=result.score,
+            )
+            if not should_keep:
+                filtered_chunks += 1
                 continue
+            kept_chunks += 1
 
             chunk = ChunkResult(
                 id=str(result.id),
@@ -278,10 +286,16 @@ class ChunkAwareRetriever:
             doc_chunks[parent_id].append(chunk)
         
         # Step 3: Fetch adjacent chunks for better context (if enabled)
+
         if include_adjacent:
+            print(f"   [STEP 5] Fetching adjacent chunks...")
+            initial_chunk_count = sum(len(chunks) for chunks in doc_chunks.values())
             await self._fetch_adjacent_chunks(doc_chunks, collection_name, content_type)
-        
+            final_chunk_count = sum(len(chunks) for chunks in doc_chunks.values())
+            print(f"   [STEP 5] ✓ Adjacent chunks fetched (+{final_chunk_count - initial_chunk_count} chunks)")
+
         # Step 4: Reconstruct documents from chunks
+        print(f"   [STEP 6] Reconstructing documents from {len(doc_chunks)} document groups...")
         reconstructed_docs = self._reconstruct_documents(
             doc_chunks, 
             max_docs=limit,
@@ -290,8 +304,16 @@ class ChunkAwareRetriever:
 
         # Optionally pack to a token budget by pruning extra context chunks
         if context_token_budget is not None and context_token_budget > 0:
+            print(f"   [STEP 7] Packing to token budget ({context_token_budget} tokens)...")
             reconstructed_docs = self._pack_docs_to_budget(reconstructed_docs, context_token_budget)
+            print(f"   [STEP 7] ✓ Packed to budget")
 
+        print(f"   [RESULT] ✓ search_with_context() completed: {len(reconstructed_docs)} documents reconstructed")
+        for i, doc in enumerate(reconstructed_docs[:3], 1):  # Show first 3 docs
+            print(f"      Doc {i}: {doc.content_type} - {doc.title} (score: {doc.max_score:.3f}, {len(doc.chunks)} chunks)")
+        if len(reconstructed_docs) > 3:
+            print(f"      ... and {len(reconstructed_docs) - 3} more documents")
+        
         return reconstructed_docs
 
     # --- Lightweight quality filters ---
@@ -318,6 +340,7 @@ class ChunkAwareRetriever:
         query_terms: Set[str],
         min_content_chars: int,
         min_keyword_overlap: float,
+        semantic_score: Optional[float] = None,
     ) -> bool:
         if not content_text:
             return False
@@ -325,9 +348,21 @@ class ChunkAwareRetriever:
         if len(text) < min_content_chars:
             # Short snippets (e.g., "Hi") must have stronger lexical signal
             return self._keyword_overlap(query_terms, text) >= max(min_keyword_overlap, 0.2)
-        # For longer content, apply configured overlap threshold if set (>0)
-        if min_keyword_overlap > 0:
-            return self._keyword_overlap(query_terms, text) >= min_keyword_overlap
+
+        # For semantic search results with good similarity scores, be more lenient with keyword overlap
+        if semantic_score is not None and semantic_score > 0.7:
+            # High semantic similarity - reduce keyword requirements significantly
+            required_overlap = min_keyword_overlap * 0.3  # 70% reduction
+        elif semantic_score is not None and semantic_score > 0.5:
+            # Medium semantic similarity - reduce keyword requirements moderately
+            required_overlap = min_keyword_overlap * 0.6  # 40% reduction
+        else:
+            # Low semantic similarity or no score - use full keyword requirements
+            required_overlap = min_keyword_overlap
+
+        # For longer content, apply adjusted overlap threshold if set (>0)
+        if required_overlap > 0:
+            return self._keyword_overlap(query_terms, text) >= required_overlap
         return True
     
     async def _fetch_adjacent_chunks(
@@ -376,6 +411,8 @@ class ChunkAwareRetriever:
             return
         
         # ✅ OPTIMIZED: Batch fetch all chunks in a single query using $or filter
+        business_uuid = BUSINESS_UUID()
+        
         # Build batch filter conditions
         should_conditions = []
         for parent_id, chunk_idx in all_chunks_to_fetch:
@@ -387,6 +424,10 @@ class ChunkAwareRetriever:
             if content_type:
                 conditions.append(FieldCondition(key="content_type", match=MatchValue(value=content_type)))
             
+            if business_uuid:
+                normalized_business_id = self._normalize_business_id(business_uuid)
+                conditions.append(FieldCondition(key="business_id", match=MatchValue(value=normalized_business_id)))
+            
             should_conditions.append(Filter(must=conditions))
         
         if not should_conditions:
@@ -395,6 +436,7 @@ class ChunkAwareRetriever:
         # Single batch query for all adjacent chunks
         try:
             batch_filter = Filter(should=should_conditions)
+            print(f"      [FETCH_ADJACENT] Querying Qdrant for {len(all_chunks_to_fetch)} adjacent chunks...")
             scroll_result = self.qdrant_client.scroll(
                 collection_name=collection_name,
                 scroll_filter=batch_filter,
@@ -404,6 +446,7 @@ class ChunkAwareRetriever:
             )
             
             if scroll_result and scroll_result[0]:
+                print(f"      [FETCH_ADJACENT] ✓ Retrieved {len(scroll_result[0])} adjacent chunks from Qdrant")
                 # Group fetched chunks by parent_id
                 fetched_by_parent: Dict[str, Dict[int, ChunkResult]] = defaultdict(dict)
                 
@@ -438,7 +481,9 @@ class ChunkAwareRetriever:
         
         except Exception as e:
             logger.warning(f"Batch fetch of adjacent chunks failed, falling back to sequential: {e}")
+            print(f"      [FETCH_ADJACENT] ⚠ Batch fetch failed, falling back to sequential: {e}")
             # Fallback to sequential if batch fails
+            business_uuid = BUSINESS_UUID()
             for parent_id, chunk_idx in all_chunks_to_fetch:
                 try:
                     filter_conditions = [
@@ -447,6 +492,10 @@ class ChunkAwareRetriever:
                     ]
                     if content_type:
                         filter_conditions.append(FieldCondition(key="content_type", match=MatchValue(value=content_type)))
+                    
+                    if business_uuid:
+                        normalized_business_id = self._normalize_business_id(business_uuid)
+                        filter_conditions.append(FieldCondition(key="business_id", match=MatchValue(value=normalized_business_id)))
                     
                     scroll_result = self.qdrant_client.scroll(
                         collection_name=collection_name,

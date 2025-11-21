@@ -36,7 +36,7 @@ transformers==4.57.1
 huggingface-hub==0.36.0
 sentencepiece==0.2.0
 safetensors==0.4.5
-# sentence-transformers==5.1.0  # Not needed - backend uses EmbeddingServiceClient microservice
+#sentence-transformers>=2.2.0
 
 # Redis for conversation memory cache
 redis

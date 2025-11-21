@@ -40,7 +40,7 @@ class SpladeEncoder:
                 except TypeError:
                     login(hf_token)
             except Exception as e:
-                print(f"Warning: Hugging Face login failed: {e}")
+                pass
 
         self.tokenizer = AutoTokenizer.from_pretrained(name)
         self.model = AutoModelForMaskedLM.from_pretrained(name)

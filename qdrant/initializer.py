@@ -21,8 +21,6 @@ from qdrant_client.models import (
     SparseVector,
 )
 from embedding.service_client import EmbeddingServiceClient, EmbeddingServiceError
-# sentence_transformers and huggingface_hub are not needed - backend uses EmbeddingServiceClient microservice
-# These imports are only used in commented-out code for local development
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -62,53 +60,91 @@ class RAGTool:
             )
         return cls._instance
 
+    # async def connect(self):
+    #     # This method's internal logic remains the same
+    #     if self.connected:
+    #         return
+    #     try:
+    #         self.qdrant_client = QdrantClient(
+    #             url=mongo.constants.QDRANT_URL,
+    #             api_key=mongo.constants.QDRANT_API_KEY,
+    #         )
+    #         self.embedding_client = EmbeddingServiceClient(os.getenv("EMBEDDING_SERVICE_URL"))
+    #         try:
+    #             dimension = self.embedding_client.get_dimension()
+    #         except EmbeddingServiceError as exc:
+    #             raise RuntimeError(f"Failed to initialize embedding service: {exc}") from exc
+    #         self.connected = True
+    #         # Lightweight verification that sparse vectors are configured and present
+    #         try:
+    #             col = self.qdrant_client.get_collection(mongo.constants.QDRANT_COLLECTION_NAME)
+    #             # If call succeeds, we assume sparse config exists as we create it during indexing
+    #         except Exception as e:
+    #             logger.error(f"Could not verify collection config: {e}")
+    #     except Exception as e:
+    #         logger.error(f"Failed to connect RAGTool components: {e}")
+    #         raise
+
     async def connect(self):
         # This method's internal logic remains the same
         if self.connected:
             return
         try:
-            self.qdrant_client = QdrantClient(
-                url=mongo.constants.QDRANT_URL,
-                api_key=mongo.constants.QDRANT_API_KEY,
+            self.qdrant_client = QdrantClient(url=mongo.constants.QDRANT_URL, api_key=mongo.constants.QDRANT_API_KEY)
+            
+            # Authenticate with HuggingFace if token is available (required for gated models)
+            from huggingface_hub import login
+            hf_token = (
+                os.getenv("HuggingFace_API_KEY")
             )
-            self.embedding_client = EmbeddingServiceClient()
+            if hf_token:
+                try:
+                    login(token=hf_token, add_to_git_credential=False)
+                    print("✓ Authenticated with HuggingFace")
+                except Exception as auth_exc:
+                    logger.warning(f"⚠ HuggingFace authentication failed: {auth_exc}")
+            
+            from sentence_transformers import SentenceTransformer
+            model_name = mongo.constants.EMBEDDING_MODEL
             try:
-                dimension = self.embedding_client.get_dimension()
-                logger.info(f"Embedding service connected, dimension: {dimension}")
-            except EmbeddingServiceError as exc:
-                # Log warning but don't fail startup - embedding will fail later if actually used
-                logger.warning(
-                    f"Embedding service not available during startup: {exc}. "
-                    "The service may not be running. RAG features will not work until the service is available."
-                )
-                # Still mark as connected - the actual embedding calls will fail if service isn't available
-                # This allows the app to start even if embedding service isn't running yet
+                self.embedding_client = SentenceTransformer(mongo.constants.EMBEDDING_MODEL)
+            except Exception as e:
+                print(f"⚠ Failed to load embedding model '{mongo.constants.EMBEDDING_MODEL}': {e}\nFalling back to 'sentence-transformers/all-MiniLM-L6-v2'")
             self.connected = True
+            print(f"Successfully connected to Qdrant at {mongo.constants.QDRANT_URL}")
             # Lightweight verification that sparse vectors are configured and present
             try:
                 col = self.qdrant_client.get_collection(mongo.constants.QDRANT_COLLECTION_NAME)
                 # If call succeeds, we assume sparse config exists as we create it during indexing
+                print(f"ℹ Collection loaded: {getattr(col, 'name', mongo.constants.QDRANT_COLLECTION_NAME)}")
             except Exception as e:
-                logger.error(f"Could not verify collection config: {e}")
+                print(f"⚠ Could not verify collection config: {e}")
         except Exception as e:
-            logger.error(f"Failed to connect RAGTool components: {e}")
+            print(f"Failed to connect RAGTool components: {e}")
             raise
 
 
     # ... all other methods like search_content() and get_content_context() remain unchanged ...
     async def search_content(self, query: str, content_type: str = None, limit: int = 5) -> List[Dict[str, Any]]:
         """Search for relevant content in Qdrant with dense+SPLADE hybrid fusion."""
+        
+        print(f"\n🔧 [TOOL] RAGTool.search_content() EXECUTING")
+        print(f"   Input: query='{query}', content_type={content_type}, limit={limit}")
+        
         if not self.connected:
             await self.connect()
 
         try:
             # Generate embedding for the query
+            print(f"   [STEP 1] Generating embedding for query...")
             query_vectors = self.embedding_client.encode([query])
             if query_vectors is None or len(query_vectors) == 0:
+                print(f"   [STEP 1] ❌ Embedding generation returned empty result")
                 return []
             query_embedding = query_vectors[0]
+            print(f"   [STEP 1] ✓ Embedding generated (dimension: {len(query_embedding)})")
             # Build filter if content_type is specified
-            from mongo.constants import BUSINESS_UUID, MEMBER_UUID
+            from mongo.constants import BUSINESS_UUID
             must_conditions = []
             if content_type:
                 must_conditions.append(
@@ -118,31 +154,17 @@ class RAGTool:
                     )
                 )
 
-            # COMMENTED OUT: Business filtering disabled
-            # business_uuid = BUSINESS_UUID()
-            # if business_uuid:
-            #     normalized_business_id = self._normalize_business_id(business_uuid)
-            #     must_conditions.append(
-            #         FieldCondition(
-            #             key="business_id",
-            #             match=MatchValue(value=normalized_business_id)
-            #         )
-            #     )
+            business_uuid = BUSINESS_UUID()
+            if business_uuid:
+                normalized_business_id = self._normalize_business_id(business_uuid)
+                must_conditions.append(
+                    FieldCondition(
+                        key="business_id",
+                        match=MatchValue(value=normalized_business_id)
+                    )
+                )
 
-            # COMMENTED OUT: Member filtering disabled
-            # # Member-level RBAC scoping for CRM
-            # # Note: CRM collections don't have project-level scoping like work-management
-            # # Member filtering can be applied based on assignedTo, createdById, or staffId fields
-            # member_uuid = MEMBER_UUID()
-            # if member_uuid:
-            #     try:
-            #         # For CRM, we can filter by member access if needed
-            #         # This is a placeholder - adapt based on your CRM access control model
-            #         # For now, we'll skip member-level filtering as CRM doesn't have project-based access
-            #         pass
-            #     except Exception as e:
-            #         # Error getting member access - log and skip member filter
-            #         logger.error(f"Error applying member filter for '{member_uuid}': {e}")
+
             search_filter = Filter(must=must_conditions) if must_conditions else None
 
             # Hybrid fusion: dense + SPLADE sparse (fallback to keyword over full_text)
@@ -161,11 +183,13 @@ class RAGTool:
 
             sparse_added = False
             try:
+                print(f"   [STEP 2] Generating SPLADE sparse vector...")
                 from qdrant.encoder import get_splade_encoder
                 from qdrant.retrieval import extract_keywords
                 splade = get_splade_encoder()
                 splade_vec = splade.encode_text(query)
                 if splade_vec.get("indices"):
+                    print(f"   [STEP 2] ✓ SPLADE vector generated ({len(splade_vec['indices'])} terms)")
                     prefetch_list.append(
                         Prefetch(
                             query=NearestQuery(
@@ -179,7 +203,10 @@ class RAGTool:
                         )
                     )
                     sparse_added = True
-            except Exception:
+                else:
+                    print(f"   [STEP 2] ⚠ SPLADE returned empty vector")
+            except Exception as e:
+                print(f"   [STEP 2] ⚠ SPLADE encoding failed: {e}")
                 pass
 
             ENABLE_KEYWORD_FALLBACK = False
@@ -196,6 +223,7 @@ class RAGTool:
                 )
 
             fusion = FusionQuery(fusion=Fusion.RRF)
+            print(f"   [STEP 3] Querying Qdrant (hybrid: dense + {'sparse' if sparse_added else 'none'}, limit={initial_limit})...")
             response = self.qdrant_client.query_points(
                 collection_name=mongo.constants.QDRANT_COLLECTION_NAME,
                 prefetch=prefetch_list,
@@ -203,6 +231,7 @@ class RAGTool:
                 limit=initial_limit,
             )
             search_results = response.points if response else []
+            print(f"   [STEP 3] ✓ Qdrant query returned {len(search_results)} results")
 
             # Format results - include ALL metadata from payload
             results = []
@@ -230,10 +259,19 @@ class RAGTool:
 
             # Keep top-N by score
             results.sort(key=lambda x: x.get("score", 0), reverse=True)
-            return results[:limit]
+            final_results = results[:limit]
+            
+            print(f"   [RESULT] ✓ search_content() completed: {len(final_results)} results returned")
+            for i, result in enumerate(final_results[:3], 1):  # Show first 3 results
+                print(f"      Result {i}: {result.get('content_type', 'unknown')} - {result.get('title', 'Untitled')} (score: {result.get('score', 0):.3f})")
+            if len(final_results) > 3:
+                print(f"      ... and {len(final_results) - 3} more results")
+            
+            return final_results
 
         except Exception as e:
             logger.error(f"Error searching Qdrant: {e}")
+            print(f"   [RESULT] ❌ search_content() failed: {e}")
             return []
 
     async def get_content_context(self, query: str, content_types: List[str] = None) -> str:
@@ -291,3 +329,4 @@ class RAGTool:
         except Exception as e:
             logger.warning(f"Failed to normalize business_id '{business_uuid}': {e}, using as-is")
             return business_uuid
+    
