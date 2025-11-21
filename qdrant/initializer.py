@@ -20,7 +20,11 @@ from qdrant_client.models import (
     Fusion,
     SparseVector,
 )
-from embedding.service_client import EmbeddingServiceClient, EmbeddingServiceError
+# from embedding.service_client import EmbeddingServiceClient, EmbeddingServiceError
+from sentence_transformers import SentenceTransformer
+
+# sentence_transformers and huggingface_hub are not needed - backend uses EmbeddingServiceClient microservice
+# These imports are only used in commented-out code for local development
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -69,11 +73,18 @@ class RAGTool:
     #             url=mongo.constants.QDRANT_URL,
     #             api_key=mongo.constants.QDRANT_API_KEY,
     #         )
-    #         self.embedding_client = EmbeddingServiceClient(os.getenv("EMBEDDING_SERVICE_URL"))
+    #         self.embedding_client = EmbeddingServiceClient()
     #         try:
     #             dimension = self.embedding_client.get_dimension()
+    #             logger.info(f"Embedding service connected, dimension: {dimension}")
     #         except EmbeddingServiceError as exc:
-    #             raise RuntimeError(f"Failed to initialize embedding service: {exc}") from exc
+    #             # Log warning but don't fail startup - embedding will fail later if actually used
+    #             logger.warning(
+    #                 f"Embedding service not available during startup: {exc}. "
+    #                 "The service may not be running. RAG features will not work until the service is available."
+    #             )
+    #             # Still mark as connected - the actual embedding calls will fail if service isn't available
+    #             # This allows the app to start even if embedding service isn't running yet
     #         self.connected = True
     #         # Lightweight verification that sparse vectors are configured and present
     #         try:
@@ -93,7 +104,6 @@ class RAGTool:
             self.qdrant_client = QdrantClient(url=mongo.constants.QDRANT_URL, api_key=mongo.constants.QDRANT_API_KEY)
             
             # Authenticate with HuggingFace if token is available (required for gated models)
-            from huggingface_hub import login
             hf_token = (
                 os.getenv("HuggingFace_API_KEY")
             )
@@ -104,7 +114,6 @@ class RAGTool:
                 except Exception as auth_exc:
                     logger.warning(f"⚠ HuggingFace authentication failed: {auth_exc}")
             
-            from sentence_transformers import SentenceTransformer
             model_name = mongo.constants.EMBEDDING_MODEL
             try:
                 self.embedding_client = SentenceTransformer(mongo.constants.EMBEDDING_MODEL)
@@ -122,8 +131,6 @@ class RAGTool:
         except Exception as e:
             print(f"Failed to connect RAGTool components: {e}")
             raise
-
-
     # ... all other methods like search_content() and get_content_context() remain unchanged ...
     async def search_content(self, query: str, content_type: str = None, limit: int = 5) -> List[Dict[str, Any]]:
         """Search for relevant content in Qdrant with dense+SPLADE hybrid fusion."""
