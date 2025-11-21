@@ -15,7 +15,7 @@ from qdrant_client.http.models import (
     SparseVectorParams,
     SparseVector,
 )
-from embedding.service_client import EmbeddingServiceClient, EmbeddingServiceError
+# from embedding.service_client import EmbeddingServiceClient, Exception
 from collections import defaultdict
 from typing import List, Dict, Any, Optional
 
@@ -39,6 +39,7 @@ from huggingface_hub import login
 import re
 import html as html_lib
 from qdrant.encoder import get_splade_encoder
+from sentence_transformers import SentenceTransformer
 
 # Load .env file and authenticate HuggingFace
 load_dotenv()
@@ -55,9 +56,9 @@ except Exception as e:
 
 # Load embedding model once, with fallback to a public model
 try:
-    embedder = EmbeddingServiceClient(os.getenv("EMBEDDING_SERVICE_URL"))
-    EMBEDDING_DIMENSION = embedder.get_dimension()
-except (EmbeddingServiceError, ValueError) as exc:
+    embedder = SentenceTransformer(os.getenv("EMBEDDING_MODEL"))
+    EMBEDDING_DIMENSION = 768
+except ( ValueError) as exc:
     raise RuntimeError(f"Failed to initialize embedding service: {exc}") from exc
 
 class ChunkingStats:
@@ -418,7 +419,7 @@ def get_chunks_for_content(text: str, content_type: str):
     Returns:
         List of chunk strings
     """
-    config = CHUNKING_CONFIG.get(content_type, CHUNKING_CONFIG["work_item"])
+    config = CHUNKING_CONFIG.get(content_type, CHUNKING_CONFIG["lead"])
     return chunk_text(
         text,
         max_words=config["max_words"],
@@ -678,7 +679,7 @@ def index_leads_to_qdrant():
             
             vectors = embedder.encode(chunks)
             if len(vectors) != len(chunks):
-                raise EmbeddingServiceError("Embedding service returned unexpected vector count")
+                raise ("Embedding service returned unexpected vector count")
             
             for idx, chunk in enumerate(chunks):
                 vector = vectors[idx]
@@ -789,7 +790,7 @@ def index_tasks_to_qdrant():
             
             vectors = embedder.encode(chunks)
             if len(vectors) != len(chunks):
-                raise EmbeddingServiceError("Embedding service returned unexpected vector count")
+                raise ("Embedding service returned unexpected vector count")
             
             for idx, chunk in enumerate(chunks):
                 vector = vectors[idx]
@@ -903,7 +904,7 @@ def index_activities_to_qdrant():
             
             vectors = embedder.encode(chunks)
             if len(vectors) != len(chunks):
-                raise EmbeddingServiceError("Embedding service returned unexpected vector count")
+                raise ("Embedding service returned unexpected vector count")
             
             for idx, chunk in enumerate(chunks):
                 vector = vectors[idx]
@@ -1014,7 +1015,7 @@ def index_meetings_to_qdrant():
             
             vectors = embedder.encode(chunks)
             if len(vectors) != len(chunks):
-                raise EmbeddingServiceError("Embedding service returned unexpected vector count")
+                raise ("Embedding service returned unexpected vector count")
             
             for idx, chunk in enumerate(chunks):
                 vector = vectors[idx]
@@ -1110,7 +1111,7 @@ def index_notes_to_qdrant():
             
             vectors = embedder.encode(chunks)
             if len(vectors) != len(chunks):
-                raise EmbeddingServiceError("Embedding service returned unexpected vector count")
+                raise ("Embedding service returned unexpected vector count")
             
             for idx, chunk in enumerate(chunks):
                 vector = vectors[idx]
@@ -1216,7 +1217,7 @@ def index_callLogs_to_qdrant():
             
             vectors = embedder.encode(chunks)
             if len(vectors) != len(chunks):
-                raise EmbeddingServiceError("Embedding service returned unexpected vector count")
+                raise ("Embedding service returned unexpected vector count")
             
             for idx, chunk in enumerate(chunks):
                 vector = vectors[idx]
@@ -1318,7 +1319,7 @@ def index_mailInfos_to_qdrant():
             
             vectors = embedder.encode(chunks)
             if len(vectors) != len(chunks):
-                raise EmbeddingServiceError("Embedding service returned unexpected vector count")
+                raise ("Embedding service returned unexpected vector count")
             
             for idx, chunk in enumerate(chunks):
                 vector = vectors[idx]
@@ -1423,7 +1424,7 @@ def index_leadScoreRules_to_qdrant():
             
             vectors = embedder.encode(chunks)
             if len(vectors) != len(chunks):
-                raise EmbeddingServiceError("Embedding service returned unexpected vector count")
+                raise ("Embedding service returned unexpected vector count")
             
             for idx, chunk in enumerate(chunks):
                 vector = vectors[idx]
@@ -1528,7 +1529,7 @@ def index_segmentations_to_qdrant():
             
             vectors = embedder.encode(chunks)
             if len(vectors) != len(chunks):
-                raise EmbeddingServiceError("Embedding service returned unexpected vector count")
+                raise ("Embedding service returned unexpected vector count")
             
             for idx, chunk in enumerate(chunks):
                 vector = vectors[idx]

@@ -953,7 +953,7 @@ class LLMIntentParser:
         # 1) Infer grouping from phrasing: "by X", "group by X", "breakdown by X", "per X"
         inferred_group_by: List[str] = []
         def _maybe_add_group(token: str):
-            if token in {"priority", "assignee", "status", "business"}:
+            if token in {"priority", "assignee", "status", "business","taskStatus","meetingStatus","activityStatus","callStatus"}:
                 if token not in inferred_group_by:
                     inferred_group_by.append(token)
 
@@ -1042,6 +1042,7 @@ class LLMIntentParser:
             "status", "visibility", "business",
             "created_day", "created_week", "created_month",
             "updated_day", "updated_week", "updated_month",
+            "taskStatus","meetingStatus","activityStatus","callStatus",
         }
         group_by = [g for g in (data.get("group_by") or []) if g in allowed_group]
 
