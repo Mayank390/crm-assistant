@@ -2,8 +2,8 @@ export const API_HTTP_URL = import.meta.env.VITE_API_HTTP_URL || "http://localho
 //export const API_HTTP_URL = import.meta.env.VITE_API_HTTP_URL || "http://localhost:8000";
 export const API_WS_URL = import.meta.env.VITE_API_WS_URL || `${API_HTTP_URL.replace(/^https?/, (match) => match === "https" ? "wss" : "ws")}/ws/chat`;
 
-export const GROQ_API_KEY = import.meta.env.VITE_GROQ_API_KEY || "YOUR_API_KEY_HERE";
-
+// export const GROQ_API_KEY = import.meta.env.VITE_GROQ_API_KEY || "YOUR_API_KEY_HERE";
+export const GROQ_API_KEY = import.meta.env.VITE_GROQ_API_KEY;
 export const getMemberId = () => {
   // HARDCODED FOR TESTING - REMOVE AFTER
    return '1f02a411-c793-603b-9438-d7da75fe04e1';
