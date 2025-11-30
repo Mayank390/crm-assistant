@@ -233,8 +233,27 @@ export const useLeadSupportSocket = (): UseLeadSupportSocketReturn => {
         break;
 
       case "status":
-        // Status update - could show as toast or in UI
+        // Status update - show in UI
         console.log("[LeadSupport] Status:", data.message);
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: `status_${Date.now()}`,
+            role: "system",
+            content: data.message,
+            timestamp: data.timestamp,
+          },
+        ]);
+        break;
+      
+      case "tool_complete":
+        // Tool completed - ready for response
+        console.log("[LeadSupport] Tool completed");
+        break;
+      
+      case "thinking":
+        // Agent is thinking/processing
+        console.log("[LeadSupport] Thinking:", data.message);
         break;
 
       default:
