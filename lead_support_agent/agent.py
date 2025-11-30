@@ -68,15 +68,15 @@ class LeadSupportAgent:
         self.temperature = temperature
         self.connected = False
         
-        # Initialize LLM with tools bound
+        # Initialize LLM with streaming enabled
         self.llm = ChatGroq(
             model=self.model_name,
             temperature=self.temperature,
-            max_tokens=int(os.getenv("GROQ_MAX_TOKENS", "2048")),
+            max_tokens=int(os.getenv("GROQ_MAX_TOKENS", "4096")),
             streaming=True,
         )
         
-        # Bind tools to LLM
+        # LLM with tools bound (for tool calling)
         self.llm_with_tools = self.llm.bind_tools(lead_tools)
         
         # Tool lookup
@@ -119,12 +119,22 @@ class LeadSupportAgent:
         messages.append(SystemMessage(content=system_prompt))
         
         # Add lead context if provided
-        if lead_context:
+        if lead_context and "Lead not found" not in lead_context and "Error" not in lead_context:
             context_message = f"""
-## Lead Context (Pre-loaded)
-{lead_context}
+## Lead Context (Pre-loaded Data)
 
-Use this context to answer the user's query. Do not fetch it again unless asked for different data.
+The following lead information has been gathered for you. Use this data to provide your response.
+DO NOT call any tools to fetch this data again - it is already provided below.
+
+---
+{lead_context}
+---
+
+IMPORTANT INSTRUCTIONS:
+1. Use the lead context above to provide a detailed, actionable response
+2. Reference specific details from the lead's profile, history, and activities
+3. DO NOT call the get_lead_context tool - the context is already provided above
+4. Be specific and mention actual names, dates, and details from the context
 """
             messages.append(SystemMessage(content=context_message))
         
@@ -195,6 +205,7 @@ Use this context to answer the user's query. Do not fetch it again unless asked 
         # If lead_id provided but no context, pre-fetch it
         if lead_id and not lead_context:
             try:
+                logger.info(f"Pre-fetching lead context for lead_id: {lead_id}")
                 from lead_support_agent.tools import get_lead_context
                 lead_context = await get_lead_context.ainvoke({
                     "lead_id": lead_id,
@@ -205,6 +216,7 @@ Use this context to answer the user's query. Do not fetch it again unless asked 
                     "include_calls": True,
                     "include_emails": True,
                 })
+                logger.info(f"Pre-fetched lead context: {len(lead_context) if lead_context else 0} chars")
             except Exception as e:
                 logger.warning(f"Could not pre-fetch lead context: {e}")
         
@@ -279,6 +291,7 @@ Use this context to answer the user's query. Do not fetch it again unless asked 
         if lead_id and not lead_context:
             try:
                 await callback_handler.emit_status("Loading lead context...")
+                logger.info(f"Pre-fetching lead context for streaming, lead_id: {lead_id}")
                 from lead_support_agent.tools import get_lead_context
                 lead_context = await get_lead_context.ainvoke({
                     "lead_id": lead_id,
@@ -289,82 +302,106 @@ Use this context to answer the user's query. Do not fetch it again unless asked 
                     "include_calls": True,
                     "include_emails": True,
                 })
+                logger.info(f"Pre-fetched lead context ({len(lead_context) if lead_context else 0} chars)")
+                
+                # Check if lead was found
+                if lead_context and "Lead not found" in lead_context:
+                    await callback_handler.emit_status(f"⚠️ {lead_context}")
+                    # Still continue - the agent can work with limited info
             except Exception as e:
                 logger.warning(f"Could not pre-fetch lead context: {e}")
+                await callback_handler.emit_status(f"Warning: Could not load lead context: {e}")
         
         messages = self._build_messages(query, lead_context, task_type, conversation_history)
         
         steps = 0
-        last_response = None
-        need_synthesis = False
+        accumulated_content = ""
         
         while steps < self.max_steps:
-            # Determine if we should stream
-            should_stream = need_synthesis or steps == 0
+            logger.info(f"Streaming step {steps + 1}/{self.max_steps}")
             
-            if need_synthesis:
-                # Add synthesis instruction
-                synthesis_msg = SystemMessage(content=(
-                    "Synthesize the tool outputs into a clear, actionable response. "
-                    "Format your response using markdown for readability. "
-                    "Focus on providing value to the sales professional."
-                ))
-                invoke_messages = messages + [synthesis_msg]
-            else:
-                invoke_messages = messages
-            
-            # Call LLM
-            response = await self.llm_with_tools.ainvoke(
-                invoke_messages,
-                config={"callbacks": [callback_handler] if should_stream else []}
-            )
-            last_response = response
+            # Call LLM with tools to see if we need tool calls
+            response = await self.llm_with_tools.ainvoke(messages)
             
             # Check if we have tool calls
-            if not getattr(response, "tool_calls", None):
-                # No tool calls, this is the final response
-                yield response.content
-                return
-            
-            # Execute tool calls
-            messages.append(AIMessage(content="", tool_calls=response.tool_calls))
-            
-            # Execute tools (can be parallelized)
-            if len(response.tool_calls) > 1:
-                # Emit actions for all tools first
+            if getattr(response, "tool_calls", None) and response.tool_calls:
+                logger.info(f"Tool calls requested: {[tc.get('name') for tc in response.tool_calls]}")
+                
+                # Execute tool calls
+                messages.append(AIMessage(content=response.content or "", tool_calls=response.tool_calls))
+                
                 for tool_call in response.tool_calls:
+                    # Emit tool action
                     await callback_handler.on_tool_start(
-                        {"name": tool_call["name"]},
+                        {"name": tool_call.get("name", "unknown")},
                         str(tool_call.get("args", {}))
                     )
-                
-                # Execute in parallel
-                tasks = [self._execute_tool(tc) for tc in response.tool_calls]
-                results = await asyncio.gather(*tasks, return_exceptions=True)
-                
-                for result in results:
-                    if isinstance(result, Exception):
-                        messages.append(ToolMessage(
-                            content=f"Error: {result}",
-                            tool_call_id=""
-                        ))
-                    else:
-                        messages.append(result)
-            else:
-                # Single tool execution
-                for tool_call in response.tool_calls:
-                    await callback_handler.on_tool_start(
-                        {"name": tool_call["name"]},
-                        str(tool_call.get("args", {}))
-                    )
+                    
+                    # Execute the tool
                     tool_message = await self._execute_tool(tool_call)
                     messages.append(tool_message)
+                    
+                    await callback_handler.on_tool_end(tool_message.content)
+                
+                steps += 1
+                continue
             
-            need_synthesis = True
-            steps += 1
+            # No tool calls - this is the final response, stream it
+            logger.info("No tool calls - streaming final response")
+            
+            # Add synthesis instruction for better output
+            synthesis_instruction = SystemMessage(content=(
+                "Now provide your final response based on all the information gathered. "
+                "Be comprehensive, specific, and actionable. "
+                "Format your response using markdown:\n"
+                "- Use **bold** for key points\n"
+                "- Use bullet points and numbered lists\n"
+                "- Use headers (##, ###) for sections\n"
+                "- Reference specific details from the lead context"
+            ))
+            
+            final_messages = messages + [synthesis_instruction]
+            
+            # Send llm_start event
+            await callback_handler.on_llm_start()
+            
+            try:
+                # Stream the response
+                logger.info("Starting to stream response...")
+                async for chunk in self.llm.astream(final_messages):
+                    token = chunk.content if hasattr(chunk, 'content') else str(chunk)
+                    if token:
+                        accumulated_content += token
+                        await callback_handler.on_llm_new_token(token)
+                
+                logger.info(f"Streaming complete. Total tokens: {len(accumulated_content)}")
+                
+                # Send llm_end event
+                await callback_handler.on_llm_end()
+                
+                yield accumulated_content
+                return
+                
+            except Exception as e:
+                logger.error(f"Streaming error: {e}", exc_info=True)
+                
+                # Fallback to non-streaming response
+                if response.content:
+                    await callback_handler.on_llm_new_token(response.content)
+                    await callback_handler.on_llm_end()
+                    yield response.content
+                else:
+                    error_msg = f"I encountered an error while generating the response: {str(e)}"
+                    await callback_handler.on_llm_new_token(error_msg)
+                    await callback_handler.on_llm_end()
+                    yield error_msg
+                return
         
         # Max steps reached
-        yield last_response.content if last_response else "Max steps reached."
+        max_steps_msg = "I've reached the maximum number of reasoning steps. Please try a more specific question."
+        await callback_handler.on_llm_new_token(max_steps_msg)
+        await callback_handler.on_llm_end()
+        yield max_steps_msg
 
     async def summarize_lead(
         self,
@@ -373,8 +410,15 @@ Use this context to answer the user's query. Do not fetch it again unless asked 
         business_id: Optional[str] = None
     ) -> AsyncGenerator[str, None]:
         """Convenience method to summarize a specific lead."""
+        query = """Provide a comprehensive summary of this lead including:
+1. Lead profile (name, company, contact info)
+2. Current status and lead score
+3. Recent interactions and engagement
+4. Key opportunities and next steps
+5. Any concerns or blockers to address"""
+        
         async for chunk in self.run_streaming(
-            query="Provide a comprehensive summary of this lead.",
+            query=query,
             lead_id=lead_id,
             task_type="summarize",
             websocket=websocket,
@@ -389,8 +433,14 @@ Use this context to answer the user's query. Do not fetch it again unless asked 
         business_id: Optional[str] = None
     ) -> AsyncGenerator[str, None]:
         """Convenience method to get next best steps for a lead."""
+        query = """Based on this lead's current status, history, and engagement patterns, provide:
+1. Immediate actions (next 24 hours)
+2. Short-term actions (this week)
+3. Follow-up strategy (next 2-4 weeks)
+Prioritize by urgency and potential impact."""
+        
         async for chunk in self.run_streaming(
-            query="What are the recommended next best steps for this lead?",
+            query=query,
             lead_id=lead_id,
             task_type="next_steps",
             websocket=websocket,
@@ -405,7 +455,12 @@ Use this context to answer the user's query. Do not fetch it again unless asked 
         business_id: Optional[str] = None
     ) -> AsyncGenerator[str, None]:
         """Convenience method to compare multiple leads."""
-        query = f"Compare these leads and recommend which to prioritize: {', '.join(lead_ids)}"
+        query = f"""Compare these leads side-by-side and provide:
+1. A comparison table with key metrics
+2. Analysis of strengths and weaknesses for each
+3. Clear prioritization recommendation
+Lead IDs to compare: {', '.join(lead_ids)}"""
+        
         async for chunk in self.run_streaming(
             query=query,
             task_type="compare",
@@ -423,14 +478,19 @@ Use this context to answer the user's query. Do not fetch it again unless asked 
         business_id: Optional[str] = None
     ) -> AsyncGenerator[str, None]:
         """Convenience method to draft a message for a lead."""
-        query = f"Draft a {message_type} for this lead"
+        query = f"""Draft a professional {message_type} for this lead that:
+1. Opens with a personalized hook based on their profile
+2. Provides clear value proposition
+3. Includes a specific call-to-action
+4. Maintains appropriate tone"""
+        
         if context:
-            query += f". Context: {context}"
+            query += f"\n\nAdditional context: {context}"
         
         async for chunk in self.run_streaming(
             query=query,
             lead_id=lead_id,
-            task_type="draft_message" if message_type != "email" else "email_compose",
+            task_type="email_compose" if message_type == "email" else "draft_message",
             websocket=websocket,
             business_id=business_id,
         ):
@@ -444,7 +504,17 @@ Use this context to answer the user's query. Do not fetch it again unless asked 
         business_id: Optional[str] = None
     ) -> AsyncGenerator[str, None]:
         """Convenience method to handle a sales objection."""
-        query = f"Help me respond to this objection from the lead: '{objection}'"
+        query = f"""Help me respond to this objection from the lead:
+
+"{objection}"
+
+Provide:
+1. Acknowledgment of their concern
+2. Thoughtful response addressing the objection
+3. Supporting evidence or examples
+4. Way to redirect the conversation positively
+5. Suggested follow-up"""
+        
         async for chunk in self.run_streaming(
             query=query,
             lead_id=lead_id,
@@ -462,9 +532,15 @@ Use this context to answer the user's query. Do not fetch it again unless asked 
         business_id: Optional[str] = None
     ) -> AsyncGenerator[str, None]:
         """Convenience method to prepare for a meeting with a lead."""
-        query = "Prepare me for a meeting with this lead"
+        query = """Prepare me for a meeting with this lead. Include:
+1. Lead context summary
+2. Key talking points
+3. Questions to ask
+4. Anticipated objections and responses
+5. Meeting goals and desired next steps"""
+        
         if meeting_context:
-            query += f". Meeting context: {meeting_context}"
+            query += f"\n\nMeeting context: {meeting_context}"
         
         async for chunk in self.run_streaming(
             query=query,

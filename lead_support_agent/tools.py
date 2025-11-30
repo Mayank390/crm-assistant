@@ -362,19 +362,29 @@ async def search_lead_content(
 ) -> str:
     """
     Search for relevant content related to a lead using semantic search.
-    
+
     Args:
-        query: Search query (what to look for)
-        lead_id: Optional - filter to specific lead
-        content_type: Optional - 'notes', 'task', 'meeting', 'activity', 'callLog', 'mailInfo'
-        limit: Maximum number of results
-    
+        query (str): Search query (what to look for)
+        lead_id (str, optional): Filter to specific lead ID
+        content_type (str, optional): Content type filter - 'notes', 'task', 'meeting', 'activity', 'callLog', 'mailInfo'
+        limit (int): Maximum number of results to return (must be integer between 1-20)
+
     Returns:
-        Relevant content chunks with context
+        str: Relevant content chunks with context and relevance scores
     """
     try:
         from qdrant.initializer import RAGTool
-        
+
+        # Ensure limit is an integer
+        if isinstance(limit, str):
+            try:
+                limit = int(limit)
+            except ValueError:
+                limit = 5
+
+        # Validate limit range
+        limit = max(1, min(20, limit))
+
         rag_tool = RAGTool.get_instance()
         results = await rag_tool.search_content(
             query=query,

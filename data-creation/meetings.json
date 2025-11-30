@@ -1,0 +1,722 @@
+[
+  {
+    "businessId": "1eff7f64-09ef-670e-8c7c-2b9676f8dbb6",
+    "leadId": "9312ec3a-c55e-4890-a2f2-781fab06af79",
+    "leadName": "Neha Chavan",
+    "title": "Car Inspection & Valuation",
+    "meetingType": "PHYSICAL",
+    "meetingLocated": "Surat,Gujarat,India",
+    "meetingLink": "",
+    "startDateTime": "2025-12-05T18:00:00Z",
+    "endDateTime": "2025-12-05T18:00:00Z",
+    "meetingStatus": "NEW",
+    "remainder": 0,
+    "participantsList": [
+      {
+        "leadId": "1eff7f64-08ea-6fdc-99d0-3f7ae8229af5",
+        "leadName": "harshith sai",
+        "leadMail": "harshithsai@example.com",
+        "companyName": "N/A"
+      }
+    ],
+    "emailData": [],
+    "participantsRemainder": 0,
+    "description": "Schedule inspection for Neha Chavan — Interested in loan/finance options for a used car.",
+    "createdById": "1eff7f64-08ea-6fdc-99d0-3f7ae8229af5",
+    "createdByName": "harshith sai",
+    "pipeline": {
+      "id": "1f0c53f7-f7f2-641a-9198-630acc37fedc",
+      "name": "Default Pipeline"
+    },
+    "pipelineStage": {
+      "id": "",
+      "name": ""
+    },
+    "assignedTo": "1eff7f64-08ea-6fdc-99d0-3f7ae8229af5",
+    "assignedName": "harshith sai"
+  },
+  {
+    "businessId": "1eff7f64-09ef-670e-8c7c-2b9676f8dbb6",
+    "leadId": "a1ca5c30-58ac-40bf-a5d3-6f1b8b1c67d1",
+    "leadName": "Anita Patel",
+    "title": "Car Inspection & Valuation",
+    "meetingType": "PHYSICAL",
+    "meetingLocated": "Agra,Uttar Pradesh,India",
+    "meetingLink": "",
+    "startDateTime": "2025-12-04T10:00:00Z",
+    "endDateTime": "2025-12-04T10:00:00Z",
+    "meetingStatus": "NEW",
+    "remainder": 0,
+    "participantsList": [
+      {
+        "leadId": "1eff7f64-08ea-6fdc-99d0-3f7ae8229af5",
+        "leadName": "harshith sai",
+        "leadMail": "harshithsai@example.com",
+        "companyName": "N/A"
+      }
+    ],
+    "emailData": [],
+    "participantsRemainder": 0,
+    "description": "Schedule inspection for Anita Patel — Looking to trade-in old car for an upgrade.",
+    "createdById": "1eff7f64-08ea-6fdc-99d0-3f7ae8229af5",
+    "createdByName": "harshith sai",
+    "pipeline": {
+      "id": "1f0c53f7-f7f2-641a-9198-630acc37fedc",
+      "name": "Default Pipeline"
+    },
+    "pipelineStage": {
+      "id": "",
+      "name": ""
+    },
+    "assignedTo": "1eff7f64-08ea-6fdc-99d0-3f7ae8229af5",
+    "assignedName": "harshith sai"
+  },
+  {
+    "businessId": "1eff7f64-09ef-670e-8c7c-2b9676f8dbb6",
+    "leadId": "18362a3f-7a2d-4b8a-9f55-d561af5c1c77",
+    "leadName": "Karan Reddy",
+    "title": "Car Inspection & Valuation",
+    "meetingType": "PHYSICAL",
+    "meetingLocated": "Visakhapatnam,Andhra Pradesh,India",
+    "meetingLink": "",
+    "startDateTime": "2025-12-07T12:00:00Z",
+    "endDateTime": "2025-12-07T12:00:00Z",
+    "meetingStatus": "NEW",
+    "remainder": 0,
+    "participantsList": [
+      {
+        "leadId": "1eff7f64-08ea-6fdc-99d0-3f7ae8229af5",
+        "leadName": "harshith sai",
+        "leadMail": "harshithsai@example.com",
+        "companyName": "N/A"
+      }
+    ],
+    "emailData": [],
+    "participantsRemainder": 0,
+    "description": "Schedule inspection for Karan Reddy — Seeking corporate resale for a fleet vehicle.",
+    "createdById": "1eff7f64-08ea-6fdc-99d0-3f7ae8229af5",
+    "createdByName": "harshith sai",
+    "pipeline": {
+      "id": "1f0c53f7-f7f2-641a-9198-630acc37fedc",
+      "name": "Default Pipeline"
+    },
+    "pipelineStage": {
+      "id": "",
+      "name": ""
+    },
+    "assignedTo": "1eff7f64-08ea-6fdc-99d0-3f7ae8229af5",
+    "assignedName": "harshith sai"
+  },
+  {
+    "businessId": "1eff7f64-09ef-670e-8c7c-2b9676f8dbb6",
+    "leadId": "74968f5f-532c-4c56-8251-f8f841caa168",
+    "leadName": "Sunita Shah",
+    "title": "Car Inspection & Valuation",
+    "meetingType": "PHYSICAL",
+    "meetingLocated": "Pune,Maharashtra,India",
+    "meetingLink": "",
+    "startDateTime": "2025-12-06T10:00:00Z",
+    "endDateTime": "2025-12-06T10:00:00Z",
+    "meetingStatus": "NEW",
+    "remainder": 0,
+    "participantsList": [
+      {
+        "leadId": "1eff7f64-08ea-6fdc-99d0-3f7ae8229af5",
+        "leadName": "harshith sai",
+        "leadMail": "harshithsai@example.com",
+        "companyName": "N/A"
+      }
+    ],
+    "emailData": [],
+    "participantsRemainder": 0,
+    "description": "Schedule inspection for Sunita Shah — Needs automatic transmission city car under ₹7 Lakh.",
+    "createdById": "1eff7f64-08ea-6fdc-99d0-3f7ae8229af5",
+    "createdByName": "harshith sai",
+    "pipeline": {
+      "id": "1f0c53f7-f7f2-641a-9198-630acc37fedc",
+      "name": "Default Pipeline"
+    },
+    "pipelineStage": {
+      "id": "",
+      "name": ""
+    },
+    "assignedTo": "1eff7f64-08ea-6fdc-99d0-3f7ae8229af5",
+    "assignedName": "harshith sai"
+  },
+  {
+    "businessId": "1eff7f64-09ef-670e-8c7c-2b9676f8dbb6",
+    "leadId": "e0e87a65-ad4d-45af-b280-2f7afd5f4ac7",
+    "leadName": "Neha Sharma",
+    "title": "Car Inspection & Valuation",
+    "meetingType": "PHYSICAL",
+    "meetingLocated": "Agra,Uttar Pradesh,India",
+    "meetingLink": "",
+    "startDateTime": "2025-12-03T16:00:00Z",
+    "endDateTime": "2025-12-03T16:00:00Z",
+    "meetingStatus": "NEW",
+    "remainder": 0,
+    "participantsList": [
+      {
+        "leadId": "1eff7f64-08ea-6fdc-99d0-3f7ae8229af5",
+        "leadName": "harshith sai",
+        "leadMail": "harshithsai@example.com",
+        "companyName": "N/A"
+      }
+    ],
+    "emailData": [],
+    "participantsRemainder": 0,
+    "description": "Schedule inspection for Neha Sharma — Needs automatic transmission city car under ₹7 Lakh.",
+    "createdById": "1eff7f64-08ea-6fdc-99d0-3f7ae8229af5",
+    "createdByName": "harshith sai",
+    "pipeline": {
+      "id": "1f0c53f7-f7f2-641a-9198-630acc37fedc",
+      "name": "Default Pipeline"
+    },
+    "pipelineStage": {
+      "id": "",
+      "name": ""
+    },
+    "assignedTo": "1eff7f64-08ea-6fdc-99d0-3f7ae8229af5",
+    "assignedName": "harshith sai"
+  },
+  {
+    "businessId": "1eff7f64-09ef-670e-8c7c-2b9676f8dbb6",
+    "leadId": "cb24d582-4540-4389-8e5f-65a3518daff2",
+    "leadName": "Priya Mehta",
+    "title": "Car Inspection & Valuation",
+    "meetingType": "PHYSICAL",
+    "meetingLocated": "Bengaluru,Karnataka,India",
+    "meetingLink": "",
+    "startDateTime": "2025-12-02T16:00:00Z",
+    "endDateTime": "2025-12-02T16:00:00Z",
+    "meetingStatus": "NEW",
+    "remainder": 0,
+    "participantsList": [
+      {
+        "leadId": "1eff7f64-08ea-6fdc-99d0-3f7ae8229af5",
+        "leadName": "harshith sai",
+        "leadMail": "harshithsai@example.com",
+        "companyName": "N/A"
+      }
+    ],
+    "emailData": [],
+    "participantsRemainder": 0,
+    "description": "Schedule inspection for Priya Mehta — Budget ₹3-4 Lakh; prefers Maruti or Hyundai.",
+    "createdById": "1eff7f64-08ea-6fdc-99d0-3f7ae8229af5",
+    "createdByName": "harshith sai",
+    "pipeline": {
+      "id": "1f0c53f7-f7f2-641a-9198-630acc37fedc",
+      "name": "Default Pipeline"
+    },
+    "pipelineStage": {
+      "id": "",
+      "name": ""
+    },
+    "assignedTo": "1eff7f64-08ea-6fdc-99d0-3f7ae8229af5",
+    "assignedName": "harshith sai"
+  },
+  {
+    "businessId": "1eff7f64-09ef-670e-8c7c-2b9676f8dbb6",
+    "leadId": "da1de232-f2a7-4589-8b7d-9c0b060091e8",
+    "leadName": "Karan Kumar",
+    "title": "Car Inspection & Valuation",
+    "meetingType": "PHYSICAL",
+    "meetingLocated": "Chennai,Tamil Nadu,India",
+    "meetingLink": "",
+    "startDateTime": "2025-12-07T15:00:00Z",
+    "endDateTime": "2025-12-07T15:00:00Z",
+    "meetingStatus": "NEW",
+    "remainder": 0,
+    "participantsList": [
+      {
+        "leadId": "1eff7f64-08ea-6fdc-99d0-3f7ae8229af5",
+        "leadName": "harshith sai",
+        "leadMail": "harshithsai@example.com",
+        "companyName": "N/A"
+      }
+    ],
+    "emailData": [],
+    "participantsRemainder": 0,
+    "description": "Schedule inspection for Karan Kumar — Looking for a 2016-2019 hatchback, budget ₹4-6 Lakh. Petrol preferred.",
+    "createdById": "1eff7f64-08ea-6fdc-99d0-3f7ae8229af5",
+    "createdByName": "harshith sai",
+    "pipeline": {
+      "id": "1f0c53f7-f7f2-641a-9198-630acc37fedc",
+      "name": "Default Pipeline"
+    },
+    "pipelineStage": {
+      "id": "",
+      "name": ""
+    },
+    "assignedTo": "1eff7f64-08ea-6fdc-99d0-3f7ae8229af5",
+    "assignedName": "harshith sai"
+  },
+  {
+    "businessId": "1eff7f64-09ef-670e-8c7c-2b9676f8dbb6",
+    "leadId": "d3317c9f-c08d-428d-ae72-7f97089bbfcb",
+    "leadName": "Manish Iyer",
+    "title": "Car Inspection & Valuation",
+    "meetingType": "PHYSICAL",
+    "meetingLocated": "Coimbatore,Tamil Nadu,India",
+    "meetingLink": "",
+    "startDateTime": "2025-12-08T10:00:00Z",
+    "endDateTime": "2025-12-08T10:00:00Z",
+    "meetingStatus": "NEW",
+    "remainder": 0,
+    "participantsList": [
+      {
+        "leadId": "1eff7f64-08ea-6fdc-99d0-3f7ae8229af5",
+        "leadName": "harshith sai",
+        "leadMail": "harshithsai@example.com",
+        "companyName": "N/A"
+      }
+    ],
+    "emailData": [],
+    "participantsRemainder": 0,
+    "description": "Schedule inspection for Manish Iyer — Looking for a 2016-2019 hatchback, budget ₹4-6 Lakh. Petrol preferred.",
+    "createdById": "1eff7f64-08ea-6fdc-99d0-3f7ae8229af5",
+    "createdByName": "harshith sai",
+    "pipeline": {
+      "id": "1f0c53f7-f7f2-641a-9198-630acc37fedc",
+      "name": "Default Pipeline"
+    },
+    "pipelineStage": {
+      "id": "",
+      "name": ""
+    },
+    "assignedTo": "1eff7f64-08ea-6fdc-99d0-3f7ae8229af5",
+    "assignedName": "harshith sai"
+  },
+  {
+    "businessId": "1eff7f64-09ef-670e-8c7c-2b9676f8dbb6",
+    "leadId": "115ff407-abf6-4ccf-ac55-8ca8880d6bf3",
+    "leadName": "Meena Bajaj",
+    "title": "Car Inspection & Valuation",
+    "meetingType": "PHYSICAL",
+    "meetingLocated": "Bhopal,Madhya Pradesh,India",
+    "meetingLink": "",
+    "startDateTime": "2025-12-05T12:00:00Z",
+    "endDateTime": "2025-12-05T12:00:00Z",
+    "meetingStatus": "NEW",
+    "remainder": 0,
+    "participantsList": [
+      {
+        "leadId": "1eff7f64-08ea-6fdc-99d0-3f7ae8229af5",
+        "leadName": "harshith sai",
+        "leadMail": "harshithsai@example.com",
+        "companyName": "N/A"
+      }
+    ],
+    "emailData": [],
+    "participantsRemainder": 0,
+    "description": "Schedule inspection for Meena Bajaj — Budget ₹3-4 Lakh; prefers Maruti or Hyundai.",
+    "createdById": "1eff7f64-08ea-6fdc-99d0-3f7ae8229af5",
+    "createdByName": "harshith sai",
+    "pipeline": {
+      "id": "1f0c53f7-f7f2-641a-9198-630acc37fedc",
+      "name": "Default Pipeline"
+    },
+    "pipelineStage": {
+      "id": "",
+      "name": ""
+    },
+    "assignedTo": "1eff7f64-08ea-6fdc-99d0-3f7ae8229af5",
+    "assignedName": "harshith sai"
+  },
+  {
+    "businessId": "1eff7f64-09ef-670e-8c7c-2b9676f8dbb6",
+    "leadId": "604e811c-68f8-4d71-b615-bd630cdd7d81",
+    "leadName": "Meena Mehta",
+    "title": "Car Inspection & Valuation",
+    "meetingType": "PHYSICAL",
+    "meetingLocated": "Nagpur,Maharashtra,India",
+    "meetingLink": "",
+    "startDateTime": "2025-12-01T18:00:00Z",
+    "endDateTime": "2025-12-01T18:00:00Z",
+    "meetingStatus": "NEW",
+    "remainder": 0,
+    "participantsList": [
+      {
+        "leadId": "1eff7f64-08ea-6fdc-99d0-3f7ae8229af5",
+        "leadName": "harshith sai",
+        "leadMail": "harshithsai@example.com",
+        "companyName": "N/A"
+      }
+    ],
+    "emailData": [],
+    "participantsRemainder": 0,
+    "description": "Schedule inspection for Meena Mehta — Interested in a compact SUV, 2017+ model; exchange option possible.",
+    "createdById": "1eff7f64-08ea-6fdc-99d0-3f7ae8229af5",
+    "createdByName": "harshith sai",
+    "pipeline": {
+      "id": "1f0c53f7-f7f2-641a-9198-630acc37fedc",
+      "name": "Default Pipeline"
+    },
+    "pipelineStage": {
+      "id": "",
+      "name": ""
+    },
+    "assignedTo": "1eff7f64-08ea-6fdc-99d0-3f7ae8229af5",
+    "assignedName": "harshith sai"
+  },
+  {
+    "businessId": "1eff7f64-09ef-670e-8c7c-2b9676f8dbb6",
+    "leadId": "067e29f3-400a-4b29-8354-54b0c7e47104",
+    "leadName": "Arun Bose",
+    "title": "Car Inspection & Valuation",
+    "meetingType": "PHYSICAL",
+    "meetingLocated": "Mumbai,Maharashtra,India",
+    "meetingLink": "",
+    "startDateTime": "2025-12-04T18:00:00Z",
+    "endDateTime": "2025-12-04T18:00:00Z",
+    "meetingStatus": "NEW",
+    "remainder": 0,
+    "participantsList": [
+      {
+        "leadId": "1eff7f64-08ea-6fdc-99d0-3f7ae8229af5",
+        "leadName": "harshith sai",
+        "leadMail": "harshithsai@example.com",
+        "companyName": "N/A"
+      }
+    ],
+    "emailData": [],
+    "participantsRemainder": 0,
+    "description": "Schedule inspection for Arun Bose — Urgent purchase within a week; good condition only.",
+    "createdById": "1eff7f64-08ea-6fdc-99d0-3f7ae8229af5",
+    "createdByName": "harshith sai",
+    "pipeline": {
+      "id": "1f0c53f7-f7f2-641a-9198-630acc37fedc",
+      "name": "Default Pipeline"
+    },
+    "pipelineStage": {
+      "id": "",
+      "name": ""
+    },
+    "assignedTo": "1eff7f64-08ea-6fdc-99d0-3f7ae8229af5",
+    "assignedName": "harshith sai"
+  },
+  {
+    "businessId": "1eff7f64-09ef-670e-8c7c-2b9676f8dbb6",
+    "leadId": "bbf8f5f6-034b-4ea7-9c22-4f6774bd1388",
+    "leadName": "Karan Iyer",
+    "title": "Car Inspection & Valuation",
+    "meetingType": "PHYSICAL",
+    "meetingLocated": "Indore,Madhya Pradesh,India",
+    "meetingLink": "",
+    "startDateTime": "2025-12-01T18:00:00Z",
+    "endDateTime": "2025-12-01T18:00:00Z",
+    "meetingStatus": "NEW",
+    "remainder": 0,
+    "participantsList": [
+      {
+        "leadId": "1eff7f64-08ea-6fdc-99d0-3f7ae8229af5",
+        "leadName": "harshith sai",
+        "leadMail": "harshithsai@example.com",
+        "companyName": "N/A"
+      }
+    ],
+    "emailData": [],
+    "participantsRemainder": 0,
+    "description": "Schedule inspection for Karan Iyer — Budget ₹3-4 Lakh; prefers Maruti or Hyundai.",
+    "createdById": "1eff7f64-08ea-6fdc-99d0-3f7ae8229af5",
+    "createdByName": "harshith sai",
+    "pipeline": {
+      "id": "1f0c53f7-f7f2-641a-9198-630acc37fedc",
+      "name": "Default Pipeline"
+    },
+    "pipelineStage": {
+      "id": "",
+      "name": ""
+    },
+    "assignedTo": "1eff7f64-08ea-6fdc-99d0-3f7ae8229af5",
+    "assignedName": "harshith sai"
+  },
+  {
+    "businessId": "1eff7f64-09ef-670e-8c7c-2b9676f8dbb6",
+    "leadId": "4c47294f-b99f-4c71-a950-3080e75859d0",
+    "leadName": "Rekha Nair",
+    "title": "Car Inspection & Valuation",
+    "meetingType": "PHYSICAL",
+    "meetingLocated": "Mumbai,Maharashtra,India",
+    "meetingLink": "",
+    "startDateTime": "2025-12-05T12:00:00Z",
+    "endDateTime": "2025-12-05T12:00:00Z",
+    "meetingStatus": "NEW",
+    "remainder": 0,
+    "participantsList": [
+      {
+        "leadId": "1eff7f64-08ea-6fdc-99d0-3f7ae8229af5",
+        "leadName": "harshith sai",
+        "leadMail": "harshithsai@example.com",
+        "companyName": "N/A"
+      }
+    ],
+    "emailData": [],
+    "participantsRemainder": 0,
+    "description": "Schedule inspection for Rekha Nair — Needs automatic transmission city car under ₹7 Lakh.",
+    "createdById": "1eff7f64-08ea-6fdc-99d0-3f7ae8229af5",
+    "createdByName": "harshith sai",
+    "pipeline": {
+      "id": "1f0c53f7-f7f2-641a-9198-630acc37fedc",
+      "name": "Default Pipeline"
+    },
+    "pipelineStage": {
+      "id": "",
+      "name": ""
+    },
+    "assignedTo": "1eff7f64-08ea-6fdc-99d0-3f7ae8229af5",
+    "assignedName": "harshith sai"
+  },
+  {
+    "businessId": "1eff7f64-09ef-670e-8c7c-2b9676f8dbb6",
+    "leadId": "a74ea942-4be1-4926-93aa-cf5df6c05f5c",
+    "leadName": "Swati Chopra",
+    "title": "Car Inspection & Valuation",
+    "meetingType": "PHYSICAL",
+    "meetingLocated": "Surat,Gujarat,India",
+    "meetingLink": "",
+    "startDateTime": "2025-12-04T11:00:00Z",
+    "endDateTime": "2025-12-04T11:00:00Z",
+    "meetingStatus": "NEW",
+    "remainder": 0,
+    "participantsList": [
+      {
+        "leadId": "1eff7f64-08ea-6fdc-99d0-3f7ae8229af5",
+        "leadName": "harshith sai",
+        "leadMail": "harshithsai@example.com",
+        "companyName": "N/A"
+      }
+    ],
+    "emailData": [],
+    "participantsRemainder": 0,
+    "description": "Schedule inspection for Swati Chopra — Needs automatic transmission city car under ₹7 Lakh.",
+    "createdById": "1eff7f64-08ea-6fdc-99d0-3f7ae8229af5",
+    "createdByName": "harshith sai",
+    "pipeline": {
+      "id": "1f0c53f7-f7f2-641a-9198-630acc37fedc",
+      "name": "Default Pipeline"
+    },
+    "pipelineStage": {
+      "id": "",
+      "name": ""
+    },
+    "assignedTo": "1eff7f64-08ea-6fdc-99d0-3f7ae8229af5",
+    "assignedName": "harshith sai"
+  },
+  {
+    "businessId": "1eff7f64-09ef-670e-8c7c-2b9676f8dbb6",
+    "leadId": "d24ec76a-c9ac-44eb-b469-ef8d3fec146b",
+    "leadName": "Meena Iyer",
+    "title": "Car Inspection & Valuation",
+    "meetingType": "PHYSICAL",
+    "meetingLocated": "Surat,Gujarat,India",
+    "meetingLink": "",
+    "startDateTime": "2025-12-03T18:00:00Z",
+    "endDateTime": "2025-12-03T18:00:00Z",
+    "meetingStatus": "NEW",
+    "remainder": 0,
+    "participantsList": [
+      {
+        "leadId": "1eff7f64-08ea-6fdc-99d0-3f7ae8229af5",
+        "leadName": "harshith sai",
+        "leadMail": "harshithsai@example.com",
+        "companyName": "N/A"
+      }
+    ],
+    "emailData": [],
+    "participantsRemainder": 0,
+    "description": "Schedule inspection for Meena Iyer — Looking for low-km diesel vehicle for long drives.",
+    "createdById": "1eff7f64-08ea-6fdc-99d0-3f7ae8229af5",
+    "createdByName": "harshith sai",
+    "pipeline": {
+      "id": "1f0c53f7-f7f2-641a-9198-630acc37fedc",
+      "name": "Default Pipeline"
+    },
+    "pipelineStage": {
+      "id": "",
+      "name": ""
+    },
+    "assignedTo": "1eff7f64-08ea-6fdc-99d0-3f7ae8229af5",
+    "assignedName": "harshith sai"
+  },
+  {
+    "businessId": "1eff7f64-09ef-670e-8c7c-2b9676f8dbb6",
+    "leadId": "0cb22dcb-75f5-4abb-9679-5f979ecd9036",
+    "leadName": "Arun Gupta",
+    "title": "Car Inspection & Valuation",
+    "meetingType": "PHYSICAL",
+    "meetingLocated": "Pune,Maharashtra,India",
+    "meetingLink": "",
+    "startDateTime": "2025-12-06T11:00:00Z",
+    "endDateTime": "2025-12-06T11:00:00Z",
+    "meetingStatus": "NEW",
+    "remainder": 0,
+    "participantsList": [
+      {
+        "leadId": "1eff7f64-08ea-6fdc-99d0-3f7ae8229af5",
+        "leadName": "harshith sai",
+        "leadMail": "harshithsai@example.com",
+        "companyName": "N/A"
+      }
+    ],
+    "emailData": [],
+    "participantsRemainder": 0,
+    "description": "Schedule inspection for Arun Gupta — Urgent purchase within a week; good condition only.",
+    "createdById": "1eff7f64-08ea-6fdc-99d0-3f7ae8229af5",
+    "createdByName": "harshith sai",
+    "pipeline": {
+      "id": "1f0c53f7-f7f2-641a-9198-630acc37fedc",
+      "name": "Default Pipeline"
+    },
+    "pipelineStage": {
+      "id": "",
+      "name": ""
+    },
+    "assignedTo": "1eff7f64-08ea-6fdc-99d0-3f7ae8229af5",
+    "assignedName": "harshith sai"
+  },
+  {
+    "businessId": "1eff7f64-09ef-670e-8c7c-2b9676f8dbb6",
+    "leadId": "585b1acb-0856-4592-8a8e-ab6c486e642a",
+    "leadName": "Manish Chavan",
+    "title": "Car Inspection & Valuation",
+    "meetingType": "PHYSICAL",
+    "meetingLocated": "Thiruvananthapuram,Kerala,India",
+    "meetingLink": "",
+    "startDateTime": "2025-12-06T17:00:00Z",
+    "endDateTime": "2025-12-06T17:00:00Z",
+    "meetingStatus": "NEW",
+    "remainder": 0,
+    "participantsList": [
+      {
+        "leadId": "1eff7f64-08ea-6fdc-99d0-3f7ae8229af5",
+        "leadName": "harshith sai",
+        "leadMail": "harshithsai@example.com",
+        "companyName": "N/A"
+      }
+    ],
+    "emailData": [],
+    "participantsRemainder": 0,
+    "description": "Schedule inspection for Manish Chavan — Wants to sell a 2013 sedan; needs pickup and valuation.",
+    "createdById": "1eff7f64-08ea-6fdc-99d0-3f7ae8229af5",
+    "createdByName": "harshith sai",
+    "pipeline": {
+      "id": "1f0c53f7-f7f2-641a-9198-630acc37fedc",
+      "name": "Default Pipeline"
+    },
+    "pipelineStage": {
+      "id": "",
+      "name": ""
+    },
+    "assignedTo": "1eff7f64-08ea-6fdc-99d0-3f7ae8229af5",
+    "assignedName": "harshith sai"
+  },
+  {
+    "businessId": "1eff7f64-09ef-670e-8c7c-2b9676f8dbb6",
+    "leadId": "450f31c5-d564-4afa-a6d0-87673ecb5a18",
+    "leadName": "Vikram Verma",
+    "title": "Car Inspection & Valuation",
+    "meetingType": "PHYSICAL",
+    "meetingLocated": "Ahmedabad,Gujarat,India",
+    "meetingLink": "",
+    "startDateTime": "2025-12-02T14:00:00Z",
+    "endDateTime": "2025-12-02T14:00:00Z",
+    "meetingStatus": "NEW",
+    "remainder": 0,
+    "participantsList": [
+      {
+        "leadId": "1eff7f64-08ea-6fdc-99d0-3f7ae8229af5",
+        "leadName": "harshith sai",
+        "leadMail": "harshithsai@example.com",
+        "companyName": "N/A"
+      }
+    ],
+    "emailData": [],
+    "participantsRemainder": 0,
+    "description": "Schedule inspection for Vikram Verma — Urgent purchase within a week; good condition only.",
+    "createdById": "1eff7f64-08ea-6fdc-99d0-3f7ae8229af5",
+    "createdByName": "harshith sai",
+    "pipeline": {
+      "id": "1f0c53f7-f7f2-641a-9198-630acc37fedc",
+      "name": "Default Pipeline"
+    },
+    "pipelineStage": {
+      "id": "",
+      "name": ""
+    },
+    "assignedTo": "1eff7f64-08ea-6fdc-99d0-3f7ae8229af5",
+    "assignedName": "harshith sai"
+  },
+  {
+    "businessId": "1eff7f64-09ef-670e-8c7c-2b9676f8dbb6",
+    "leadId": "7abea9ae-ad4a-407f-8a57-63eea68ba127",
+    "leadName": "Meena Desai",
+    "title": "Car Inspection & Valuation",
+    "meetingType": "PHYSICAL",
+    "meetingLocated": "Nagpur,Maharashtra,India",
+    "meetingLink": "",
+    "startDateTime": "2025-12-02T10:00:00Z",
+    "endDateTime": "2025-12-02T10:00:00Z",
+    "meetingStatus": "NEW",
+    "remainder": 0,
+    "participantsList": [
+      {
+        "leadId": "1eff7f64-08ea-6fdc-99d0-3f7ae8229af5",
+        "leadName": "harshith sai",
+        "leadMail": "harshithsai@example.com",
+        "companyName": "N/A"
+      }
+    ],
+    "emailData": [],
+    "participantsRemainder": 0,
+    "description": "Schedule inspection for Meena Desai — Interested in loan/finance options for a used car.",
+    "createdById": "1eff7f64-08ea-6fdc-99d0-3f7ae8229af5",
+    "createdByName": "harshith sai",
+    "pipeline": {
+      "id": "1f0c53f7-f7f2-641a-9198-630acc37fedc",
+      "name": "Default Pipeline"
+    },
+    "pipelineStage": {
+      "id": "",
+      "name": ""
+    },
+    "assignedTo": "1eff7f64-08ea-6fdc-99d0-3f7ae8229af5",
+    "assignedName": "harshith sai"
+  },
+  {
+    "businessId": "1eff7f64-09ef-670e-8c7c-2b9676f8dbb6",
+    "leadId": "7dbddf6e-3ddb-4a57-a758-21db81c59d1c",
+    "leadName": "Deepak Kumar",
+    "title": "Car Inspection & Valuation",
+    "meetingType": "PHYSICAL",
+    "meetingLocated": "Bhopal,Madhya Pradesh,India",
+    "meetingLink": "",
+    "startDateTime": "2025-12-05T13:00:00Z",
+    "endDateTime": "2025-12-05T13:00:00Z",
+    "meetingStatus": "NEW",
+    "remainder": 0,
+    "participantsList": [
+      {
+        "leadId": "1eff7f64-08ea-6fdc-99d0-3f7ae8229af5",
+        "leadName": "harshith sai",
+        "leadMail": "harshithsai@example.com",
+        "companyName": "N/A"
+      }
+    ],
+    "emailData": [],
+    "participantsRemainder": 0,
+    "description": "Schedule inspection for Deepak Kumar — Seeking corporate resale for a fleet vehicle.",
+    "createdById": "1eff7f64-08ea-6fdc-99d0-3f7ae8229af5",
+    "createdByName": "harshith sai",
+    "pipeline": {
+      "id": "1f0c53f7-f7f2-641a-9198-630acc37fedc",
+      "name": "Default Pipeline"
+    },
+    "pipelineStage": {
+      "id": "",
+      "name": ""
+    },
+    "assignedTo": "1eff7f64-08ea-6fdc-99d0-3f7ae8229af5",
+    "assignedName": "harshith sai"
+  }
+]

@@ -7,6 +7,7 @@ Handles WebSocket connections for lead-specific support functionality.
 import json
 import asyncio
 import logging
+import traceback
 from datetime import datetime
 from typing import Dict, Any, Optional
 
@@ -68,18 +69,23 @@ async def handle_lead_support_websocket(
     
     try:
         await websocket.accept()
+        logger.info("Lead Support WebSocket connection accepted")
         
         # Set handshake timeout (30 seconds)
         async def check_handshake_timeout():
             nonlocal authenticated
             await asyncio.sleep(30)
             if not authenticated:
-                await websocket.send_json({
-                    "type": "error",
-                    "message": "Handshake timeout. Please send member_id and business_id within 30 seconds.",
-                    "timestamp": datetime.now().isoformat()
-                })
-                await websocket.close()
+                logger.warning("Handshake timeout - closing connection")
+                try:
+                    await websocket.send_json({
+                        "type": "error",
+                        "message": "Handshake timeout. Please send member_id and business_id within 30 seconds.",
+                        "timestamp": datetime.now().isoformat()
+                    })
+                    await websocket.close()
+                except Exception:
+                    pass
         
         handshake_timer = asyncio.create_task(check_handshake_timeout())
         
@@ -87,7 +93,9 @@ async def handle_lead_support_websocket(
         while True:
             try:
                 data_str = await websocket.receive_text()
-            except Exception:
+                logger.debug(f"Received message: {data_str[:200]}...")
+            except Exception as e:
+                logger.info(f"WebSocket receive error: {e}")
                 break
             
             try:
@@ -101,6 +109,7 @@ async def handle_lead_support_websocket(
                 continue
             
             msg_type = data.get("type", "query")
+            logger.info(f"Processing message type: {msg_type}")
             
             # Handle ping
             if msg_type == "ping":
@@ -124,11 +133,14 @@ async def handle_lead_support_websocket(
                 await lead_support_ws_manager.connect(websocket, session_id)
                 authenticated = True
                 
+                logger.info(f"Handshake complete: session={session_id}, business={user_context['business_id']}")
+                
                 await websocket.send_json({
                     "type": "handshake_ack",
                     "session_id": session_id,
                     "user_id": user_context["user_id"],
                     "business_id": user_context["business_id"],
+                    "message": "Connected to Lead Support Agent",
                     "timestamp": datetime.now().isoformat()
                 })
                 continue
@@ -137,7 +149,7 @@ async def handle_lead_support_websocket(
             if not authenticated:
                 await websocket.send_json({
                     "type": "error",
-                    "message": "Handshake required. Please send member_id and business_id.",
+                    "message": "Handshake required. Please send member_id and business_id first.",
                     "timestamp": datetime.now().isoformat()
                 })
                 continue
@@ -147,41 +159,38 @@ async def handle_lead_support_websocket(
             query = data.get("query") or data.get("message", "")
             business_id = data.get("business_id") or user_context["business_id"]
             
+            # Validate lead_id for operations that require it
+            if msg_type in ["summarize", "next_steps", "draft_message", "objection", "meeting_prep", "email"]:
+                if not lead_id:
+                    await websocket.send_json({
+                        "type": "error",
+                        "message": f"lead_id is required for {msg_type}",
+                        "timestamp": datetime.now().isoformat()
+                    })
+                    continue
+            
             # Send acknowledgment
             await websocket.send_json({
                 "type": "processing",
                 "message_type": msg_type,
+                "lead_id": lead_id,
                 "timestamp": datetime.now().isoformat()
             })
             
             try:
+                logger.info(f"Processing {msg_type} for lead_id={lead_id}, business_id={business_id}")
+                
                 # Route to appropriate handler based on message type
                 if msg_type == "summarize":
-                    if not lead_id:
-                        await websocket.send_json({
-                            "type": "error",
-                            "message": "lead_id is required for summarize",
-                            "timestamp": datetime.now().isoformat()
-                        })
-                        continue
-                    
-                    async for _ in lead_support_agent.summarize_lead(
+                    async for chunk in lead_support_agent.summarize_lead(
                         lead_id=lead_id,
                         websocket=websocket,
                         business_id=business_id,
                     ):
-                        pass
+                        pass  # Streaming happens inside the generator via callback handler
                 
                 elif msg_type == "next_steps":
-                    if not lead_id:
-                        await websocket.send_json({
-                            "type": "error",
-                            "message": "lead_id is required for next_steps",
-                            "timestamp": datetime.now().isoformat()
-                        })
-                        continue
-                    
-                    async for _ in lead_support_agent.get_next_steps(
+                    async for chunk in lead_support_agent.get_next_steps(
                         lead_id=lead_id,
                         websocket=websocket,
                         business_id=business_id,
@@ -198,7 +207,7 @@ async def handle_lead_support_websocket(
                         })
                         continue
                     
-                    async for _ in lead_support_agent.compare_leads_handler(
+                    async for chunk in lead_support_agent.compare_leads_handler(
                         lead_ids=lead_ids,
                         websocket=websocket,
                         business_id=business_id,
@@ -206,18 +215,10 @@ async def handle_lead_support_websocket(
                         pass
                 
                 elif msg_type == "draft_message":
-                    if not lead_id:
-                        await websocket.send_json({
-                            "type": "error",
-                            "message": "lead_id is required for draft_message",
-                            "timestamp": datetime.now().isoformat()
-                        })
-                        continue
-                    
                     message_type = data.get("message_type", "message")
                     context = data.get("context")
                     
-                    async for _ in lead_support_agent.draft_message(
+                    async for chunk in lead_support_agent.draft_message(
                         lead_id=lead_id,
                         message_type=message_type,
                         context=context,
@@ -227,14 +228,6 @@ async def handle_lead_support_websocket(
                         pass
                 
                 elif msg_type == "objection":
-                    if not lead_id:
-                        await websocket.send_json({
-                            "type": "error",
-                            "message": "lead_id is required for objection handling",
-                            "timestamp": datetime.now().isoformat()
-                        })
-                        continue
-                    
                     objection = data.get("objection", query)
                     if not objection:
                         await websocket.send_json({
@@ -244,7 +237,7 @@ async def handle_lead_support_websocket(
                         })
                         continue
                     
-                    async for _ in lead_support_agent.handle_objection(
+                    async for chunk in lead_support_agent.handle_objection(
                         lead_id=lead_id,
                         objection=objection,
                         websocket=websocket,
@@ -253,17 +246,9 @@ async def handle_lead_support_websocket(
                         pass
                 
                 elif msg_type == "meeting_prep":
-                    if not lead_id:
-                        await websocket.send_json({
-                            "type": "error",
-                            "message": "lead_id is required for meeting_prep",
-                            "timestamp": datetime.now().isoformat()
-                        })
-                        continue
-                    
                     meeting_context = data.get("meeting_context")
                     
-                    async for _ in lead_support_agent.prepare_meeting(
+                    async for chunk in lead_support_agent.prepare_meeting(
                         lead_id=lead_id,
                         meeting_context=meeting_context,
                         websocket=websocket,
@@ -272,17 +257,9 @@ async def handle_lead_support_websocket(
                         pass
                 
                 elif msg_type == "email":
-                    if not lead_id:
-                        await websocket.send_json({
-                            "type": "error",
-                            "message": "lead_id is required for email composition",
-                            "timestamp": datetime.now().isoformat()
-                        })
-                        continue
-                    
                     context = data.get("context")
                     
-                    async for _ in lead_support_agent.draft_message(
+                    async for chunk in lead_support_agent.draft_message(
                         lead_id=lead_id,
                         message_type="email",
                         context=context,
@@ -295,7 +272,15 @@ async def handle_lead_support_websocket(
                     # Default: general query handling
                     task_type = data.get("task_type")
                     
-                    async for _ in lead_support_agent.run_streaming(
+                    if not query:
+                        await websocket.send_json({
+                            "type": "error",
+                            "message": "query or message is required",
+                            "timestamp": datetime.now().isoformat()
+                        })
+                        continue
+                    
+                    async for chunk in lead_support_agent.run_streaming(
                         query=query,
                         websocket=websocket,
                         lead_id=lead_id,
@@ -306,21 +291,25 @@ async def handle_lead_support_websocket(
                         pass
                 
                 # Send completion message
+                logger.info(f"Completed {msg_type} processing")
                 await websocket.send_json({
                     "type": "complete",
+                    "message_type": msg_type,
                     "session_id": session_id,
                     "timestamp": datetime.now().isoformat()
                 })
                 
             except Exception as e:
-                logger.error(f"Error processing lead support request: {e}")
+                logger.error(f"Error processing {msg_type}: {e}")
+                logger.error(traceback.format_exc())
                 await websocket.send_json({
                     "type": "error",
-                    "message": str(e),
+                    "message": f"Error processing request: {str(e)}",
                     "timestamp": datetime.now().isoformat()
                 })
     
     except WebSocketDisconnect:
+        logger.info(f"WebSocket disconnected: session={session_id}")
         if handshake_timer:
             handshake_timer.cancel()
         if session_id:
@@ -328,6 +317,7 @@ async def handle_lead_support_websocket(
     
     except Exception as e:
         logger.error(f"Lead support WebSocket error: {e}")
+        logger.error(traceback.format_exc())
         if handshake_timer:
             handshake_timer.cancel()
         try:

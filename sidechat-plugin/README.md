@@ -1,73 +1,146 @@
-# Welcome to your Lovable project
+# Lead Support Agent Testing Plugin
 
-## Project info
+A React application for testing the Lead Support Agent endpoints and WebSocket integration.
 
-**URL**: https://lovable.dev/projects/63d902c3-2f66-49a1-884a-fbdcefb9459b
+## Features
 
-## How can I edit this code?
+### Left Panel - REST API Plugins
+- **Lead Summary** - Get AI-generated comprehensive lead summary
+- **AI Insights** - Get structured insights including overview, key insights, engagement score, recommended actions, and risk factors
+- **Next Best Steps** - Get AI-recommended prioritized actions
+- **Draft Message** - Create personalized email drafts
+- **Objection Handling** - Get AI-powered responses to sales objections
+- **Meeting Prep** - Generate meeting preparation documents
 
-There are several ways of editing your application.
+### Right Panel - WebSocket Chat
+- Real-time streaming chat with the Lead Support Agent
+- Quick action buttons for common tasks
+- Connection status indicator
+- Message history with copy-to-clipboard functionality
 
-**Use Lovable**
+## Setup
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/63d902c3-2f66-49a1-884a-fbdcefb9459b) and start prompting.
+### 1. Install Dependencies
 
-Changes made via Lovable will be committed automatically to this repo.
+```bash
+npm install
+```
 
-**Use your preferred IDE**
+### 2. Configure Environment
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+Copy the example environment file and update with your actual IDs:
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+```bash
+cp .env.example .env
+```
 
-Follow these steps:
+Edit `.env` and set:
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+```env
+# API Configuration
+VITE_API_BASE_URL=http://localhost:8000
+VITE_WS_BASE_URL=ws://localhost:8000
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+# Required IDs for testing
+VITE_BUSINESS_ID=your-actual-business-uuid
+VITE_LEAD_ID=your-actual-lead-id
+VITE_MEMBER_ID=your-actual-member-uuid
+```
 
-# Step 3: Install the necessary dependencies.
-npm i
+Alternatively, you can directly edit `src/config.ts`:
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+```typescript
+export const config = {
+  api: {
+    baseUrl: "http://localhost:8000",
+    wsUrl: "ws://localhost:8000",
+  },
+  businessId: "your-actual-business-uuid",
+  leadId: "your-actual-lead-id",
+  memberId: "your-actual-member-uuid",
+  // ...
+};
+```
+
+### 3. Start Development Server
+
+```bash
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+The app will be available at `http://localhost:5173` (or another port if 5173 is taken).
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+### 4. Ensure Backend is Running
 
-**Use GitHub Codespaces**
+Make sure the CRM Assistant API is running on `http://localhost:8000` with the Lead Support Agent endpoints available:
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+```bash
+# From the workspace root
+python main.py
+```
 
-## What technologies are used for this project?
+## API Endpoints Tested
 
-This project is built with:
+### REST Endpoints (via Left Panel Plugins)
 
-- Vite
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/lead-support/summary` | POST | Get AI summary of a lead |
+| `/lead-support/insights` | POST | Get structured AI insights |
+| `/lead-support/next-steps` | POST | Get recommended next steps |
+| `/lead-support/draft-message` | POST | Draft personalized messages |
+| `/lead-support/objection` | POST | Handle sales objections |
+| `/lead-support/meeting-prep` | POST | Generate meeting prep docs |
+
+### WebSocket Endpoint (via Right Panel Chat)
+
+| Endpoint | Description |
+|----------|-------------|
+| `/ws/lead-support` | Real-time streaming chat with Lead Support Agent |
+
+#### WebSocket Message Types
+
+- `handshake` - Initialize session
+- `summarize` - Summarize the lead
+- `next_steps` - Get next best steps
+- `draft_message` - Draft a message
+- `objection` - Handle an objection
+- `meeting_prep` - Prepare for meeting
+- `email` - Compose email
+- `query` - General query
+
+## Usage
+
+1. **Configure IDs**: Set your business ID, lead ID, and member ID in the configuration
+2. **Test REST APIs**: Use the left panel plugins to test individual REST endpoints
+3. **Test WebSocket**: Use the right panel chat for real-time interaction
+4. **Quick Actions**: Use the quick action buttons for common tasks
+
+## Tech Stack
+
+- React 18
 - TypeScript
-- React
-- shadcn-ui
+- Vite
 - Tailwind CSS
+- shadcn/ui components
+- React Query
+- React Router
 
-## How can I deploy this project?
+## Troubleshooting
 
-Simply open [Lovable](https://lovable.dev/projects/63d902c3-2f66-49a1-884a-fbdcefb9459b) and click on Share -> Publish.
+### "Not Configured" Warning
 
-## Can I connect a custom domain to my Lovable project?
+If you see a configuration warning, make sure you've set valid IDs in your `.env` file or `src/config.ts`. The placeholder values (`YOUR_BUSINESS_ID_HERE`, etc.) need to be replaced with actual IDs from your database.
 
-Yes, you can!
+### WebSocket Connection Issues
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+1. Check that the backend is running on the correct port
+2. Check browser console for connection errors
+3. Ensure CORS is configured on the backend to allow WebSocket connections
+4. Try the reconnect button in the chat panel
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+### REST API Errors
+
+1. Check the backend logs for error details
+2. Ensure the lead ID exists in the database
+3. Verify the business ID matches your data

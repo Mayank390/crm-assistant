@@ -1,0 +1,2942 @@
+[
+  {
+    "businessId": "1eff7f64-09ef-670e-8c7c-2b9676f8dbb6",
+    "leadId": "9312ec3a-c55e-4890-a2f2-781fab06af79",
+    "personalInfo": {
+      "name": "Neha Chavan",
+      "img": "",
+      "email": "neha.chavan89@example.com",
+      "mobile": "7240368470",
+      "designation": "",
+      "gender": "FEMALE"
+    },
+    "company": {
+      "name": "",
+      "website": "",
+      "companyEmail": "",
+      "companyMobile": "",
+      "industryName": "Automotive",
+      "industryId": ""
+    },
+    "fieldData": [
+      {
+        "fieldId": "d835c427-2647-41ec-a68b-3fd5cc4e5586",
+        "fieldName": "Name",
+        "fieldValue": "Neha Chavan",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": "STUDENT_NAME"
+      },
+      {
+        "fieldId": "46044176-23fe-4c6f-b4c9-2bdaead2abc2",
+        "fieldName": "Mobile Number",
+        "fieldValue": "7240368470",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": "CONTACT_MOBILE"
+      },
+      {
+        "fieldId": "eed727a8-0c7f-44a0-a77f-5b47a0b5b820",
+        "fieldName": "Email",
+        "fieldValue": "neha.chavan89@example.com",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": "CONTACT_EMAIL"
+      },
+      {
+        "fieldId": "3e0716f6-0ac6-4963-be99-729ab3918db4",
+        "fieldName": "Lead Source",
+        "fieldValue": "WALK_IN",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": "ENQUIRY_SOURCE"
+      },
+      {
+        "fieldId": "e163d949-2486-464a-a6be-e9a0f724ca15",
+        "fieldName": "Lead Status",
+        "fieldValue": "QUALIFIED",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": "ENQUIRY_STATUS"
+      },
+      {
+        "fieldId": "2c8e945b-00f2-44d4-990a-cf087e5a9919",
+        "fieldName": "Message",
+        "fieldValue": "Interested in loan/finance options for a used car.",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": null
+      },
+      {
+        "fieldId": "6f11e649-5a7b-4530-83d2-139fe99f7347",
+        "fieldName": "Street",
+        "fieldValue": "65 Main Road",
+        "fieldGroupId": "2",
+        "fieldGroupName": "Address Information",
+        "type": "STREET"
+      },
+      {
+        "fieldId": "ce3c8ccd-51d4-4032-b7d5-eba3d94a8ad4",
+        "fieldName": "State",
+        "fieldValue": "Gujarat",
+        "fieldGroupId": "2",
+        "fieldGroupName": "Address Information",
+        "type": "STATE"
+      },
+      {
+        "fieldId": "33e0d2bc-884f-4074-965b-b2100cf03dc7",
+        "fieldName": "City",
+        "fieldValue": "Surat",
+        "fieldGroupId": "2",
+        "fieldGroupName": "Address Information",
+        "type": "CITY"
+      },
+      {
+        "fieldId": "ad084587-d3c5-42c8-ba43-f05be1cfa47d",
+        "fieldName": "Postal Code",
+        "fieldValue": "395003",
+        "fieldGroupId": "2",
+        "fieldGroupName": "Address Information",
+        "type": "PIN_CODE"
+      },
+      {
+        "fieldId": "93aff9fa-8c4b-4d2d-96d4-74060e23b28a",
+        "fieldName": "Country",
+        "fieldValue": "India",
+        "fieldGroupId": "2",
+        "fieldGroupName": "Address Information",
+        "type": "COUNTRY"
+      }
+    ],
+    "address": {
+      "street": "10 Main Road",
+      "city": "Surat",
+      "state": "Gujarat",
+      "country": {
+        "id": "",
+        "name": "India",
+        "code": "IN"
+      },
+      "zipCode": "395003"
+    },
+    "createdById": "1eff7f64-08ea-6fdc-99d0-3f7ae8229af5",
+    "createdByName": "harshith sai",
+    "gstDetails": {
+      "companyName": "",
+      "gstno": ""
+    },
+    "type": "LEAD",
+    "leadActiveType": "ACTIVE",
+    "customerType": "INDIVIDUAL",
+    "source": "WALK_IN",
+    "leadStatus": "QUALIFIED",
+    "imgUrl": null,
+    "notes": "",
+    "staffId": "1eff7f64-08ea-6fdc-99d0-3f7ae8229af5",
+    "staffName": "harshith sai",
+    "timeLastStatusUpdated": true,
+    "createdTimeStamp": "2025-11-27T02:00:00Z",
+    "updatedTimeStamp": "2025-11-29T10:00:00Z",
+    "pipeline": {
+      "id": "1f0c53f7-f7f2-641a-9198-630acc37fedc",
+      "name": "Default Pipeline"
+    },
+    "pipelineStage": {
+      "id": "",
+      "name": ""
+    }
+  },
+  {
+    "businessId": "1eff7f64-09ef-670e-8c7c-2b9676f8dbb6",
+    "leadId": "a1ca5c30-58ac-40bf-a5d3-6f1b8b1c67d1",
+    "personalInfo": {
+      "name": "Anita Patel",
+      "img": "",
+      "email": "anita.patel98@example.com",
+      "mobile": "6426433633",
+      "designation": "",
+      "gender": "MALE"
+    },
+    "company": {
+      "name": "",
+      "website": "",
+      "companyEmail": "",
+      "companyMobile": "",
+      "industryName": "Automotive",
+      "industryId": ""
+    },
+    "fieldData": [
+      {
+        "fieldId": "ec959132-7a6f-47c6-a0f7-4ad514702b42",
+        "fieldName": "Name",
+        "fieldValue": "Anita Patel",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": "STUDENT_NAME"
+      },
+      {
+        "fieldId": "a0133318-558e-4cd7-a92c-12e9fa04b633",
+        "fieldName": "Mobile Number",
+        "fieldValue": "6426433633",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": "CONTACT_MOBILE"
+      },
+      {
+        "fieldId": "4ad02071-3483-4ee2-9ba8-340380e6cf9d",
+        "fieldName": "Email",
+        "fieldValue": "anita.patel98@example.com",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": "CONTACT_EMAIL"
+      },
+      {
+        "fieldId": "0c76a53a-1939-4659-8bee-24239be18a43",
+        "fieldName": "Lead Source",
+        "fieldValue": "WALK_IN",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": "ENQUIRY_SOURCE"
+      },
+      {
+        "fieldId": "6021e920-72a0-4577-948e-5478d7533cb9",
+        "fieldName": "Lead Status",
+        "fieldValue": "CONTACTED",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": "ENQUIRY_STATUS"
+      },
+      {
+        "fieldId": "de701909-3edc-438b-b51d-2166b8785080",
+        "fieldName": "Message",
+        "fieldValue": "Looking to trade-in old car for an upgrade.",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": null
+      },
+      {
+        "fieldId": "9c6d2120-6064-4612-bec8-9069cae25f63",
+        "fieldName": "Street",
+        "fieldValue": "183 Main Road",
+        "fieldGroupId": "2",
+        "fieldGroupName": "Address Information",
+        "type": "STREET"
+      },
+      {
+        "fieldId": "961db80e-0fd7-4677-aa64-18bc5b827ec0",
+        "fieldName": "State",
+        "fieldValue": "Uttar Pradesh",
+        "fieldGroupId": "2",
+        "fieldGroupName": "Address Information",
+        "type": "STATE"
+      },
+      {
+        "fieldId": "a70098c9-dd51-46c0-a389-fccce007bdb9",
+        "fieldName": "City",
+        "fieldValue": "Agra",
+        "fieldGroupId": "2",
+        "fieldGroupName": "Address Information",
+        "type": "CITY"
+      },
+      {
+        "fieldId": "ceb5919b-aeb8-403f-8c37-716ce3ce4762",
+        "fieldName": "Postal Code",
+        "fieldValue": "282001",
+        "fieldGroupId": "2",
+        "fieldGroupName": "Address Information",
+        "type": "PIN_CODE"
+      },
+      {
+        "fieldId": "3ca2da7b-5a9a-4566-ba3b-e3ba279ad9d9",
+        "fieldName": "Country",
+        "fieldValue": "India",
+        "fieldGroupId": "2",
+        "fieldGroupName": "Address Information",
+        "type": "COUNTRY"
+      }
+    ],
+    "address": {
+      "street": "35 Main Road",
+      "city": "Agra",
+      "state": "Uttar Pradesh",
+      "country": {
+        "id": "",
+        "name": "India",
+        "code": "IN"
+      },
+      "zipCode": "282001"
+    },
+    "createdById": "1eff7f64-08ea-6fdc-99d0-3f7ae8229af5",
+    "createdByName": "harshith sai",
+    "gstDetails": {
+      "companyName": "",
+      "gstno": ""
+    },
+    "type": "LEAD",
+    "leadActiveType": "ACTIVE",
+    "customerType": "INDIVIDUAL",
+    "source": "WALK_IN",
+    "leadStatus": "CONTACTED",
+    "imgUrl": null,
+    "notes": "",
+    "staffId": "1eff7f64-08ea-6fdc-99d0-3f7ae8229af5",
+    "staffName": "harshith sai",
+    "timeLastStatusUpdated": true,
+    "createdTimeStamp": "2025-11-25T06:00:00Z",
+    "updatedTimeStamp": "2025-11-30T11:00:00Z",
+    "pipeline": {
+      "id": "1f0c53f7-f7f2-641a-9198-630acc37fedc",
+      "name": "Default Pipeline"
+    },
+    "pipelineStage": {
+      "id": "",
+      "name": ""
+    }
+  },
+  {
+    "businessId": "1eff7f64-09ef-670e-8c7c-2b9676f8dbb6",
+    "leadId": "18362a3f-7a2d-4b8a-9f55-d561af5c1c77",
+    "personalInfo": {
+      "name": "Karan Reddy",
+      "img": "",
+      "email": "karan.reddy36@example.com",
+      "mobile": "9038765080",
+      "designation": "",
+      "gender": "MALE"
+    },
+    "company": {
+      "name": "",
+      "website": "",
+      "companyEmail": "",
+      "companyMobile": "",
+      "industryName": "Automotive",
+      "industryId": ""
+    },
+    "fieldData": [
+      {
+        "fieldId": "ce716588-d165-4b89-a8c2-ed958907a923",
+        "fieldName": "Name",
+        "fieldValue": "Karan Reddy",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": "STUDENT_NAME"
+      },
+      {
+        "fieldId": "9ef03889-d44b-4cad-863a-bb4e9fc1cd92",
+        "fieldName": "Mobile Number",
+        "fieldValue": "9038765080",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": "CONTACT_MOBILE"
+      },
+      {
+        "fieldId": "0f4d7803-2652-4324-a9e4-e804c76bbc75",
+        "fieldName": "Email",
+        "fieldValue": "karan.reddy36@example.com",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": "CONTACT_EMAIL"
+      },
+      {
+        "fieldId": "77f09c92-a1e4-4b23-9d96-7405d83676f7",
+        "fieldName": "Lead Source",
+        "fieldValue": "WALK_IN",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": "ENQUIRY_SOURCE"
+      },
+      {
+        "fieldId": "821cfc4e-5087-4287-9332-f0ff7a6ad08e",
+        "fieldName": "Lead Status",
+        "fieldValue": "NEW",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": "ENQUIRY_STATUS"
+      },
+      {
+        "fieldId": "572033d2-1c3b-49af-a8b0-b7aa28d64c32",
+        "fieldName": "Message",
+        "fieldValue": "Seeking corporate resale for a fleet vehicle.",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": null
+      },
+      {
+        "fieldId": "663e22ae-96ef-4d88-8d18-e9f6e7116134",
+        "fieldName": "Street",
+        "fieldValue": "70 Main Road",
+        "fieldGroupId": "2",
+        "fieldGroupName": "Address Information",
+        "type": "STREET"
+      },
+      {
+        "fieldId": "acb40599-8a1a-4240-820d-e1ba86a3bb6c",
+        "fieldName": "State",
+        "fieldValue": "Andhra Pradesh",
+        "fieldGroupId": "2",
+        "fieldGroupName": "Address Information",
+        "type": "STATE"
+      },
+      {
+        "fieldId": "ef7d778a-f660-40a5-9b74-8483156e1088",
+        "fieldName": "City",
+        "fieldValue": "Visakhapatnam",
+        "fieldGroupId": "2",
+        "fieldGroupName": "Address Information",
+        "type": "CITY"
+      },
+      {
+        "fieldId": "7157ce19-24a7-40d1-bd6d-facb49980fd2",
+        "fieldName": "Postal Code",
+        "fieldValue": "530017",
+        "fieldGroupId": "2",
+        "fieldGroupName": "Address Information",
+        "type": "PIN_CODE"
+      },
+      {
+        "fieldId": "2c68e9a1-2feb-4d18-93df-faf6e45288ba",
+        "fieldName": "Country",
+        "fieldValue": "India",
+        "fieldGroupId": "2",
+        "fieldGroupName": "Address Information",
+        "type": "COUNTRY"
+      }
+    ],
+    "address": {
+      "street": "170 Main Road",
+      "city": "Visakhapatnam",
+      "state": "Andhra Pradesh",
+      "country": {
+        "id": "",
+        "name": "India",
+        "code": "IN"
+      },
+      "zipCode": "530017"
+    },
+    "createdById": "1eff7f64-08ea-6fdc-99d0-3f7ae8229af5",
+    "createdByName": "harshith sai",
+    "gstDetails": {
+      "companyName": "",
+      "gstno": ""
+    },
+    "type": "LEAD",
+    "leadActiveType": "ACTIVE",
+    "customerType": "INDIVIDUAL",
+    "source": "WALK_IN",
+    "leadStatus": "NEW",
+    "imgUrl": null,
+    "notes": "",
+    "staffId": "1eff7f64-08ea-6fdc-99d0-3f7ae8229af5",
+    "staffName": "harshith sai",
+    "timeLastStatusUpdated": true,
+    "createdTimeStamp": "2025-11-26T06:00:00Z",
+    "updatedTimeStamp": "2025-11-27T04:00:00Z",
+    "pipeline": {
+      "id": "1f0c53f7-f7f2-641a-9198-630acc37fedc",
+      "name": "Default Pipeline"
+    },
+    "pipelineStage": {
+      "id": "",
+      "name": ""
+    }
+  },
+  {
+    "businessId": "1eff7f64-09ef-670e-8c7c-2b9676f8dbb6",
+    "leadId": "74968f5f-532c-4c56-8251-f8f841caa168",
+    "personalInfo": {
+      "name": "Sunita Shah",
+      "img": "",
+      "email": "sunita.shah95@example.com",
+      "mobile": "8214205993",
+      "designation": "",
+      "gender": "MALE"
+    },
+    "company": {
+      "name": "",
+      "website": "",
+      "companyEmail": "",
+      "companyMobile": "",
+      "industryName": "Automotive",
+      "industryId": ""
+    },
+    "fieldData": [
+      {
+        "fieldId": "e71cd352-a12f-46cc-ba1a-3b9d19ea4fda",
+        "fieldName": "Name",
+        "fieldValue": "Sunita Shah",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": "STUDENT_NAME"
+      },
+      {
+        "fieldId": "f323fbb7-43ab-4dcc-a3de-2efd021ce455",
+        "fieldName": "Mobile Number",
+        "fieldValue": "8214205993",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": "CONTACT_MOBILE"
+      },
+      {
+        "fieldId": "ff6a4de5-bf3a-4f03-ad59-220c4c66607c",
+        "fieldName": "Email",
+        "fieldValue": "sunita.shah95@example.com",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": "CONTACT_EMAIL"
+      },
+      {
+        "fieldId": "420b2f2f-50b7-44f9-b883-ec22c825272b",
+        "fieldName": "Lead Source",
+        "fieldValue": "WALK_IN",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": "ENQUIRY_SOURCE"
+      },
+      {
+        "fieldId": "facadee0-94e2-4b71-9d20-5a83bf6524e3",
+        "fieldName": "Lead Status",
+        "fieldValue": "FOLLOW_UP",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": "ENQUIRY_STATUS"
+      },
+      {
+        "fieldId": "9b22ec19-3bb2-492a-84fb-39534f252e79",
+        "fieldName": "Message",
+        "fieldValue": "Needs automatic transmission city car under ₹7 Lakh.",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": null
+      },
+      {
+        "fieldId": "3dfed8e4-16c3-4029-bc0b-5677e0f797bc",
+        "fieldName": "Street",
+        "fieldValue": "150 Main Road",
+        "fieldGroupId": "2",
+        "fieldGroupName": "Address Information",
+        "type": "STREET"
+      },
+      {
+        "fieldId": "7eaa2b41-9426-4d63-9c07-121f027833d4",
+        "fieldName": "State",
+        "fieldValue": "Maharashtra",
+        "fieldGroupId": "2",
+        "fieldGroupName": "Address Information",
+        "type": "STATE"
+      },
+      {
+        "fieldId": "8424788f-a2ec-4c78-9848-54fa0cc7821c",
+        "fieldName": "City",
+        "fieldValue": "Pune",
+        "fieldGroupId": "2",
+        "fieldGroupName": "Address Information",
+        "type": "CITY"
+      },
+      {
+        "fieldId": "ad72a530-c048-452f-a415-c72227d35395",
+        "fieldName": "Postal Code",
+        "fieldValue": "411001",
+        "fieldGroupId": "2",
+        "fieldGroupName": "Address Information",
+        "type": "PIN_CODE"
+      },
+      {
+        "fieldId": "3f022dbf-d61d-4bd4-84f4-ecada176a573",
+        "fieldName": "Country",
+        "fieldValue": "India",
+        "fieldGroupId": "2",
+        "fieldGroupName": "Address Information",
+        "type": "COUNTRY"
+      }
+    ],
+    "address": {
+      "street": "34 Main Road",
+      "city": "Pune",
+      "state": "Maharashtra",
+      "country": {
+        "id": "",
+        "name": "India",
+        "code": "IN"
+      },
+      "zipCode": "411001"
+    },
+    "createdById": "1eff7f64-08ea-6fdc-99d0-3f7ae8229af5",
+    "createdByName": "harshith sai",
+    "gstDetails": {
+      "companyName": "",
+      "gstno": ""
+    },
+    "type": "LEAD",
+    "leadActiveType": "ACTIVE",
+    "customerType": "INDIVIDUAL",
+    "source": "WALK_IN",
+    "leadStatus": "FOLLOW_UP",
+    "imgUrl": null,
+    "notes": "",
+    "staffId": "1eff7f64-08ea-6fdc-99d0-3f7ae8229af5",
+    "staffName": "harshith sai",
+    "timeLastStatusUpdated": true,
+    "createdTimeStamp": "2025-11-27T09:00:00Z",
+    "updatedTimeStamp": "2025-11-28T00:00:00Z",
+    "pipeline": {
+      "id": "1f0c53f7-f7f2-641a-9198-630acc37fedc",
+      "name": "Default Pipeline"
+    },
+    "pipelineStage": {
+      "id": "",
+      "name": ""
+    }
+  },
+  {
+    "businessId": "1eff7f64-09ef-670e-8c7c-2b9676f8dbb6",
+    "leadId": "e0e87a65-ad4d-45af-b280-2f7afd5f4ac7",
+    "personalInfo": {
+      "name": "Neha Sharma",
+      "img": "",
+      "email": "neha.sharma11@example.com",
+      "mobile": "6855494678",
+      "designation": "",
+      "gender": "FEMALE"
+    },
+    "company": {
+      "name": "",
+      "website": "",
+      "companyEmail": "",
+      "companyMobile": "",
+      "industryName": "Automotive",
+      "industryId": ""
+    },
+    "fieldData": [
+      {
+        "fieldId": "fd60728b-3f44-43d8-b4b2-170aeb2a4dbf",
+        "fieldName": "Name",
+        "fieldValue": "Neha Sharma",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": "STUDENT_NAME"
+      },
+      {
+        "fieldId": "b008a751-a51a-49ca-9caf-04d409516435",
+        "fieldName": "Mobile Number",
+        "fieldValue": "6855494678",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": "CONTACT_MOBILE"
+      },
+      {
+        "fieldId": "471221ff-ddbf-48c2-b533-b10c8ef80ba2",
+        "fieldName": "Email",
+        "fieldValue": "neha.sharma11@example.com",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": "CONTACT_EMAIL"
+      },
+      {
+        "fieldId": "a59f21de-6571-46b7-bdfa-fb309673f0ef",
+        "fieldName": "Lead Source",
+        "fieldValue": "WALK_IN",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": "ENQUIRY_SOURCE"
+      },
+      {
+        "fieldId": "b059a4a7-a887-4ab9-94c8-6bda24f74f98",
+        "fieldName": "Lead Status",
+        "fieldValue": "CONTACTED",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": "ENQUIRY_STATUS"
+      },
+      {
+        "fieldId": "05efe45f-c264-4f24-8876-e425aadf78dd",
+        "fieldName": "Message",
+        "fieldValue": "Needs automatic transmission city car under ₹7 Lakh.",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": null
+      },
+      {
+        "fieldId": "76e32d66-5f5f-4994-a72c-44fd995c37e8",
+        "fieldName": "Street",
+        "fieldValue": "86 Main Road",
+        "fieldGroupId": "2",
+        "fieldGroupName": "Address Information",
+        "type": "STREET"
+      },
+      {
+        "fieldId": "fb4ca588-4e4c-4a2d-be4f-dc969ac17ffb",
+        "fieldName": "State",
+        "fieldValue": "Uttar Pradesh",
+        "fieldGroupId": "2",
+        "fieldGroupName": "Address Information",
+        "type": "STATE"
+      },
+      {
+        "fieldId": "b20aeda1-6dba-4327-b00d-b6d995598238",
+        "fieldName": "City",
+        "fieldValue": "Agra",
+        "fieldGroupId": "2",
+        "fieldGroupName": "Address Information",
+        "type": "CITY"
+      },
+      {
+        "fieldId": "1564d664-8c20-43fb-aa1f-5fd21d6447d8",
+        "fieldName": "Postal Code",
+        "fieldValue": "282001",
+        "fieldGroupId": "2",
+        "fieldGroupName": "Address Information",
+        "type": "PIN_CODE"
+      },
+      {
+        "fieldId": "62db8191-fba5-4159-b2e5-2a7df0cf9363",
+        "fieldName": "Country",
+        "fieldValue": "India",
+        "fieldGroupId": "2",
+        "fieldGroupName": "Address Information",
+        "type": "COUNTRY"
+      }
+    ],
+    "address": {
+      "street": "42 Main Road",
+      "city": "Agra",
+      "state": "Uttar Pradesh",
+      "country": {
+        "id": "",
+        "name": "India",
+        "code": "IN"
+      },
+      "zipCode": "282001"
+    },
+    "createdById": "1eff7f64-08ea-6fdc-99d0-3f7ae8229af5",
+    "createdByName": "harshith sai",
+    "gstDetails": {
+      "companyName": "",
+      "gstno": ""
+    },
+    "type": "LEAD",
+    "leadActiveType": "ACTIVE",
+    "customerType": "INDIVIDUAL",
+    "source": "WALK_IN",
+    "leadStatus": "CONTACTED",
+    "imgUrl": null,
+    "notes": "",
+    "staffId": "1eff7f64-08ea-6fdc-99d0-3f7ae8229af5",
+    "staffName": "harshith sai",
+    "timeLastStatusUpdated": true,
+    "createdTimeStamp": "2025-11-25T08:00:00Z",
+    "updatedTimeStamp": "2025-11-28T02:00:00Z",
+    "pipeline": {
+      "id": "1f0c53f7-f7f2-641a-9198-630acc37fedc",
+      "name": "Default Pipeline"
+    },
+    "pipelineStage": {
+      "id": "",
+      "name": ""
+    }
+  },
+  {
+    "businessId": "1eff7f64-09ef-670e-8c7c-2b9676f8dbb6",
+    "leadId": "cb24d582-4540-4389-8e5f-65a3518daff2",
+    "personalInfo": {
+      "name": "Priya Mehta",
+      "img": "",
+      "email": "priya.mehta80@example.com",
+      "mobile": "8200712272",
+      "designation": "",
+      "gender": "MALE"
+    },
+    "company": {
+      "name": "",
+      "website": "",
+      "companyEmail": "",
+      "companyMobile": "",
+      "industryName": "Automotive",
+      "industryId": ""
+    },
+    "fieldData": [
+      {
+        "fieldId": "e5914893-b6f7-4ff2-8cb0-3c36d00a89c3",
+        "fieldName": "Name",
+        "fieldValue": "Priya Mehta",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": "STUDENT_NAME"
+      },
+      {
+        "fieldId": "0966fde7-a0f1-42c9-869b-1e99119d4e29",
+        "fieldName": "Mobile Number",
+        "fieldValue": "8200712272",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": "CONTACT_MOBILE"
+      },
+      {
+        "fieldId": "486ea061-31e3-40dd-9cb7-d0a7db79d529",
+        "fieldName": "Email",
+        "fieldValue": "priya.mehta80@example.com",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": "CONTACT_EMAIL"
+      },
+      {
+        "fieldId": "2554d096-00eb-482a-a565-6bf56de2da1a",
+        "fieldName": "Lead Source",
+        "fieldValue": "REFERRAL",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": "ENQUIRY_SOURCE"
+      },
+      {
+        "fieldId": "8e5d7901-7719-4cb1-94f0-a165c9686406",
+        "fieldName": "Lead Status",
+        "fieldValue": "CONTACTED",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": "ENQUIRY_STATUS"
+      },
+      {
+        "fieldId": "6d5ee7b9-bfcc-4adc-9faa-0f7d7c40f630",
+        "fieldName": "Message",
+        "fieldValue": "Budget ₹3-4 Lakh; prefers Maruti or Hyundai.",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": null
+      },
+      {
+        "fieldId": "5708455f-118f-4638-890b-d520e5d375e7",
+        "fieldName": "Street",
+        "fieldValue": "54 Main Road",
+        "fieldGroupId": "2",
+        "fieldGroupName": "Address Information",
+        "type": "STREET"
+      },
+      {
+        "fieldId": "51b930a0-de96-4952-9112-99b4a3488b7f",
+        "fieldName": "State",
+        "fieldValue": "Karnataka",
+        "fieldGroupId": "2",
+        "fieldGroupName": "Address Information",
+        "type": "STATE"
+      },
+      {
+        "fieldId": "c96b782b-34d8-4a87-a9dd-f09d09c5145d",
+        "fieldName": "City",
+        "fieldValue": "Bengaluru",
+        "fieldGroupId": "2",
+        "fieldGroupName": "Address Information",
+        "type": "CITY"
+      },
+      {
+        "fieldId": "1c1591fc-f931-41e2-bc32-e89626c527a6",
+        "fieldName": "Postal Code",
+        "fieldValue": "560041",
+        "fieldGroupId": "2",
+        "fieldGroupName": "Address Information",
+        "type": "PIN_CODE"
+      },
+      {
+        "fieldId": "12e33c61-dc30-4c01-bf55-d0df590ac7e9",
+        "fieldName": "Country",
+        "fieldValue": "India",
+        "fieldGroupId": "2",
+        "fieldGroupName": "Address Information",
+        "type": "COUNTRY"
+      }
+    ],
+    "address": {
+      "street": "164 Main Road",
+      "city": "Bengaluru",
+      "state": "Karnataka",
+      "country": {
+        "id": "",
+        "name": "India",
+        "code": "IN"
+      },
+      "zipCode": "560041"
+    },
+    "createdById": "1eff7f64-08ea-6fdc-99d0-3f7ae8229af5",
+    "createdByName": "harshith sai",
+    "gstDetails": {
+      "companyName": "",
+      "gstno": ""
+    },
+    "type": "LEAD",
+    "leadActiveType": "ACTIVE",
+    "customerType": "INDIVIDUAL",
+    "source": "REFERRAL",
+    "leadStatus": "CONTACTED",
+    "imgUrl": null,
+    "notes": "",
+    "staffId": "1eff7f64-08ea-6fdc-99d0-3f7ae8229af5",
+    "staffName": "harshith sai",
+    "timeLastStatusUpdated": true,
+    "createdTimeStamp": "2025-11-29T05:00:00Z",
+    "updatedTimeStamp": "2025-11-30T03:00:00Z",
+    "pipeline": {
+      "id": "1f0c53f7-f7f2-641a-9198-630acc37fedc",
+      "name": "Default Pipeline"
+    },
+    "pipelineStage": {
+      "id": "",
+      "name": ""
+    }
+  },
+  {
+    "businessId": "1eff7f64-09ef-670e-8c7c-2b9676f8dbb6",
+    "leadId": "da1de232-f2a7-4589-8b7d-9c0b060091e8",
+    "personalInfo": {
+      "name": "Karan Kumar",
+      "img": "",
+      "email": "karan.kumar63@example.com",
+      "mobile": "8808177404",
+      "designation": "",
+      "gender": "MALE"
+    },
+    "company": {
+      "name": "",
+      "website": "",
+      "companyEmail": "",
+      "companyMobile": "",
+      "industryName": "Automotive",
+      "industryId": ""
+    },
+    "fieldData": [
+      {
+        "fieldId": "85dcfc63-bbd9-4ef9-84ef-f6f79013f5e2",
+        "fieldName": "Name",
+        "fieldValue": "Karan Kumar",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": "STUDENT_NAME"
+      },
+      {
+        "fieldId": "f2c1e93e-f9ae-47c1-b916-a8d0a9d7a5af",
+        "fieldName": "Mobile Number",
+        "fieldValue": "8808177404",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": "CONTACT_MOBILE"
+      },
+      {
+        "fieldId": "dfb8af39-b8a2-45fb-80e6-95c0dcdcfbd2",
+        "fieldName": "Email",
+        "fieldValue": "karan.kumar63@example.com",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": "CONTACT_EMAIL"
+      },
+      {
+        "fieldId": "533f5fc6-071b-4b37-8974-5fd14a233ec0",
+        "fieldName": "Lead Source",
+        "fieldValue": "ONLINE_ENQUIRY",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": "ENQUIRY_SOURCE"
+      },
+      {
+        "fieldId": "0f661f1b-d651-4fc3-921a-8ebb8d76637b",
+        "fieldName": "Lead Status",
+        "fieldValue": "QUALIFIED",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": "ENQUIRY_STATUS"
+      },
+      {
+        "fieldId": "5738125b-c16f-4c89-a6a6-e4c2020be57a",
+        "fieldName": "Message",
+        "fieldValue": "Looking for a 2016-2019 hatchback, budget ₹4-6 Lakh. Petrol preferred.",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": null
+      },
+      {
+        "fieldId": "0fdcf5ef-1811-4a95-b84c-6580dceefc4b",
+        "fieldName": "Street",
+        "fieldValue": "67 Main Road",
+        "fieldGroupId": "2",
+        "fieldGroupName": "Address Information",
+        "type": "STREET"
+      },
+      {
+        "fieldId": "1c8e0ec5-2212-4a21-98e2-a5d127ba71c6",
+        "fieldName": "State",
+        "fieldValue": "Tamil Nadu",
+        "fieldGroupId": "2",
+        "fieldGroupName": "Address Information",
+        "type": "STATE"
+      },
+      {
+        "fieldId": "b292b2f4-e719-4f93-b367-67e13f4354ec",
+        "fieldName": "City",
+        "fieldValue": "Chennai",
+        "fieldGroupId": "2",
+        "fieldGroupName": "Address Information",
+        "type": "CITY"
+      },
+      {
+        "fieldId": "db1063c1-159f-47f5-b31f-0754da880772",
+        "fieldName": "Postal Code",
+        "fieldValue": "600018",
+        "fieldGroupId": "2",
+        "fieldGroupName": "Address Information",
+        "type": "PIN_CODE"
+      },
+      {
+        "fieldId": "f1671315-eff4-4560-9c26-05eed8d7a05c",
+        "fieldName": "Country",
+        "fieldValue": "India",
+        "fieldGroupId": "2",
+        "fieldGroupName": "Address Information",
+        "type": "COUNTRY"
+      }
+    ],
+    "address": {
+      "street": "195 Main Road",
+      "city": "Chennai",
+      "state": "Tamil Nadu",
+      "country": {
+        "id": "",
+        "name": "India",
+        "code": "IN"
+      },
+      "zipCode": "600018"
+    },
+    "createdById": "1eff7f64-08ea-6fdc-99d0-3f7ae8229af5",
+    "createdByName": "harshith sai",
+    "gstDetails": {
+      "companyName": "",
+      "gstno": ""
+    },
+    "type": "LEAD",
+    "leadActiveType": "ACTIVE",
+    "customerType": "INDIVIDUAL",
+    "source": "ONLINE_ENQUIRY",
+    "leadStatus": "QUALIFIED",
+    "imgUrl": null,
+    "notes": "",
+    "staffId": "1eff7f64-08ea-6fdc-99d0-3f7ae8229af5",
+    "staffName": "harshith sai",
+    "timeLastStatusUpdated": true,
+    "createdTimeStamp": "2025-11-28T08:00:00Z",
+    "updatedTimeStamp": "2025-11-29T05:00:00Z",
+    "pipeline": {
+      "id": "1f0c53f7-f7f2-641a-9198-630acc37fedc",
+      "name": "Default Pipeline"
+    },
+    "pipelineStage": {
+      "id": "",
+      "name": ""
+    }
+  },
+  {
+    "businessId": "1eff7f64-09ef-670e-8c7c-2b9676f8dbb6",
+    "leadId": "d3317c9f-c08d-428d-ae72-7f97089bbfcb",
+    "personalInfo": {
+      "name": "Manish Iyer",
+      "img": "",
+      "email": "manish.iyer85@example.com",
+      "mobile": "8237546222",
+      "designation": "",
+      "gender": "FEMALE"
+    },
+    "company": {
+      "name": "",
+      "website": "",
+      "companyEmail": "",
+      "companyMobile": "",
+      "industryName": "Automotive",
+      "industryId": ""
+    },
+    "fieldData": [
+      {
+        "fieldId": "c2ec57fc-4502-4bb0-8150-7da75167693f",
+        "fieldName": "Name",
+        "fieldValue": "Manish Iyer",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": "STUDENT_NAME"
+      },
+      {
+        "fieldId": "fdccf0f5-0ce7-4b43-8563-53b7c29d865f",
+        "fieldName": "Mobile Number",
+        "fieldValue": "8237546222",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": "CONTACT_MOBILE"
+      },
+      {
+        "fieldId": "a4ed2129-e351-487c-bb41-f36f6e7534db",
+        "fieldName": "Email",
+        "fieldValue": "manish.iyer85@example.com",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": "CONTACT_EMAIL"
+      },
+      {
+        "fieldId": "2b7143db-7517-441a-88f4-7a557f00a65b",
+        "fieldName": "Lead Source",
+        "fieldValue": "REFERRAL",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": "ENQUIRY_SOURCE"
+      },
+      {
+        "fieldId": "0b9447ed-cd2a-47d1-ae2e-9c85d2aefec0",
+        "fieldName": "Lead Status",
+        "fieldValue": "FOLLOW_UP",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": "ENQUIRY_STATUS"
+      },
+      {
+        "fieldId": "b0ceaba9-8ee9-4bc8-b077-be5b1765bd8e",
+        "fieldName": "Message",
+        "fieldValue": "Looking for a 2016-2019 hatchback, budget ₹4-6 Lakh. Petrol preferred.",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": null
+      },
+      {
+        "fieldId": "877d078b-3952-46e1-b13c-26a6c068115f",
+        "fieldName": "Street",
+        "fieldValue": "173 Main Road",
+        "fieldGroupId": "2",
+        "fieldGroupName": "Address Information",
+        "type": "STREET"
+      },
+      {
+        "fieldId": "ab61f488-9538-458f-9aab-d0a251302176",
+        "fieldName": "State",
+        "fieldValue": "Tamil Nadu",
+        "fieldGroupId": "2",
+        "fieldGroupName": "Address Information",
+        "type": "STATE"
+      },
+      {
+        "fieldId": "e8d19901-6a0f-4ec1-8fb5-871bddba3837",
+        "fieldName": "City",
+        "fieldValue": "Coimbatore",
+        "fieldGroupId": "2",
+        "fieldGroupName": "Address Information",
+        "type": "CITY"
+      },
+      {
+        "fieldId": "3f9bba10-c245-432e-945b-3a8ed06fc8d9",
+        "fieldName": "Postal Code",
+        "fieldValue": "641001",
+        "fieldGroupId": "2",
+        "fieldGroupName": "Address Information",
+        "type": "PIN_CODE"
+      },
+      {
+        "fieldId": "f2bfc91b-8967-48d9-a880-fd1c347159fd",
+        "fieldName": "Country",
+        "fieldValue": "India",
+        "fieldGroupId": "2",
+        "fieldGroupName": "Address Information",
+        "type": "COUNTRY"
+      }
+    ],
+    "address": {
+      "street": "42 Main Road",
+      "city": "Coimbatore",
+      "state": "Tamil Nadu",
+      "country": {
+        "id": "",
+        "name": "India",
+        "code": "IN"
+      },
+      "zipCode": "641001"
+    },
+    "createdById": "1eff7f64-08ea-6fdc-99d0-3f7ae8229af5",
+    "createdByName": "harshith sai",
+    "gstDetails": {
+      "companyName": "",
+      "gstno": ""
+    },
+    "type": "LEAD",
+    "leadActiveType": "ACTIVE",
+    "customerType": "INDIVIDUAL",
+    "source": "REFERRAL",
+    "leadStatus": "FOLLOW_UP",
+    "imgUrl": null,
+    "notes": "",
+    "staffId": "1eff7f64-08ea-6fdc-99d0-3f7ae8229af5",
+    "staffName": "harshith sai",
+    "timeLastStatusUpdated": true,
+    "createdTimeStamp": "2025-11-27T06:00:00Z",
+    "updatedTimeStamp": "2025-11-28T04:00:00Z",
+    "pipeline": {
+      "id": "1f0c53f7-f7f2-641a-9198-630acc37fedc",
+      "name": "Default Pipeline"
+    },
+    "pipelineStage": {
+      "id": "",
+      "name": ""
+    }
+  },
+  {
+    "businessId": "1eff7f64-09ef-670e-8c7c-2b9676f8dbb6",
+    "leadId": "115ff407-abf6-4ccf-ac55-8ca8880d6bf3",
+    "personalInfo": {
+      "name": "Meena Bajaj",
+      "img": "",
+      "email": "meena.bajaj46@example.com",
+      "mobile": "6627995301",
+      "designation": "",
+      "gender": "MALE"
+    },
+    "company": {
+      "name": "",
+      "website": "",
+      "companyEmail": "",
+      "companyMobile": "",
+      "industryName": "Automotive",
+      "industryId": ""
+    },
+    "fieldData": [
+      {
+        "fieldId": "0ef97f44-c72f-482d-8eda-0974e213976b",
+        "fieldName": "Name",
+        "fieldValue": "Meena Bajaj",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": "STUDENT_NAME"
+      },
+      {
+        "fieldId": "3fc0578d-8e88-490a-bcff-4d4a1209c990",
+        "fieldName": "Mobile Number",
+        "fieldValue": "6627995301",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": "CONTACT_MOBILE"
+      },
+      {
+        "fieldId": "f51b2a49-5184-44d5-a5c5-5e060bbd1ea6",
+        "fieldName": "Email",
+        "fieldValue": "meena.bajaj46@example.com",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": "CONTACT_EMAIL"
+      },
+      {
+        "fieldId": "862895f4-93f9-4374-8095-5395a3dfaf14",
+        "fieldName": "Lead Source",
+        "fieldValue": "WALK_IN",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": "ENQUIRY_SOURCE"
+      },
+      {
+        "fieldId": "acae61d6-2ccc-442d-8697-1634af403166",
+        "fieldName": "Lead Status",
+        "fieldValue": "NEW",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": "ENQUIRY_STATUS"
+      },
+      {
+        "fieldId": "461a7121-b063-412e-8c78-39b363fb0ae9",
+        "fieldName": "Message",
+        "fieldValue": "Budget ₹3-4 Lakh; prefers Maruti or Hyundai.",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": null
+      },
+      {
+        "fieldId": "c2e3e975-2641-40bd-9b26-b50f76fe5775",
+        "fieldName": "Street",
+        "fieldValue": "155 Main Road",
+        "fieldGroupId": "2",
+        "fieldGroupName": "Address Information",
+        "type": "STREET"
+      },
+      {
+        "fieldId": "471cf013-ee56-4f51-9dbd-b92ba7497d99",
+        "fieldName": "State",
+        "fieldValue": "Madhya Pradesh",
+        "fieldGroupId": "2",
+        "fieldGroupName": "Address Information",
+        "type": "STATE"
+      },
+      {
+        "fieldId": "e2f728dd-61b1-4fdd-9386-6a097713fc3d",
+        "fieldName": "City",
+        "fieldValue": "Bhopal",
+        "fieldGroupId": "2",
+        "fieldGroupName": "Address Information",
+        "type": "CITY"
+      },
+      {
+        "fieldId": "cbc69e45-de5c-4ab5-bf8f-0f55f1a374fc",
+        "fieldName": "Postal Code",
+        "fieldValue": "462016",
+        "fieldGroupId": "2",
+        "fieldGroupName": "Address Information",
+        "type": "PIN_CODE"
+      },
+      {
+        "fieldId": "4a4a47c9-ea74-4030-b99f-565b8c614300",
+        "fieldName": "Country",
+        "fieldValue": "India",
+        "fieldGroupId": "2",
+        "fieldGroupName": "Address Information",
+        "type": "COUNTRY"
+      }
+    ],
+    "address": {
+      "street": "117 Main Road",
+      "city": "Bhopal",
+      "state": "Madhya Pradesh",
+      "country": {
+        "id": "",
+        "name": "India",
+        "code": "IN"
+      },
+      "zipCode": "462016"
+    },
+    "createdById": "1eff7f64-08ea-6fdc-99d0-3f7ae8229af5",
+    "createdByName": "harshith sai",
+    "gstDetails": {
+      "companyName": "",
+      "gstno": ""
+    },
+    "type": "LEAD",
+    "leadActiveType": "ACTIVE",
+    "customerType": "INDIVIDUAL",
+    "source": "WALK_IN",
+    "leadStatus": "NEW",
+    "imgUrl": null,
+    "notes": "",
+    "staffId": "1eff7f64-08ea-6fdc-99d0-3f7ae8229af5",
+    "staffName": "harshith sai",
+    "timeLastStatusUpdated": true,
+    "createdTimeStamp": "2025-11-25T08:00:00Z",
+    "updatedTimeStamp": "2025-11-30T06:00:00Z",
+    "pipeline": {
+      "id": "1f0c53f7-f7f2-641a-9198-630acc37fedc",
+      "name": "Default Pipeline"
+    },
+    "pipelineStage": {
+      "id": "",
+      "name": ""
+    }
+  },
+  {
+    "businessId": "1eff7f64-09ef-670e-8c7c-2b9676f8dbb6",
+    "leadId": "604e811c-68f8-4d71-b615-bd630cdd7d81",
+    "personalInfo": {
+      "name": "Meena Mehta",
+      "img": "",
+      "email": "meena.mehta63@example.com",
+      "mobile": "9316694192",
+      "designation": "",
+      "gender": "FEMALE"
+    },
+    "company": {
+      "name": "",
+      "website": "",
+      "companyEmail": "",
+      "companyMobile": "",
+      "industryName": "Automotive",
+      "industryId": ""
+    },
+    "fieldData": [
+      {
+        "fieldId": "aa1e5929-5bf7-45a7-908a-2af84b40d654",
+        "fieldName": "Name",
+        "fieldValue": "Meena Mehta",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": "STUDENT_NAME"
+      },
+      {
+        "fieldId": "847451a0-ca27-4118-9280-2e863a7a5a99",
+        "fieldName": "Mobile Number",
+        "fieldValue": "9316694192",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": "CONTACT_MOBILE"
+      },
+      {
+        "fieldId": "ef976a5a-a92d-40e8-8e29-c2f6fa1cb3fb",
+        "fieldName": "Email",
+        "fieldValue": "meena.mehta63@example.com",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": "CONTACT_EMAIL"
+      },
+      {
+        "fieldId": "c6be533e-d9f1-477e-bea5-af60571b6eee",
+        "fieldName": "Lead Source",
+        "fieldValue": "REFERRAL",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": "ENQUIRY_SOURCE"
+      },
+      {
+        "fieldId": "77fce083-431b-46fc-aea7-ea0ab33c84b6",
+        "fieldName": "Lead Status",
+        "fieldValue": "CONTACTED",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": "ENQUIRY_STATUS"
+      },
+      {
+        "fieldId": "84cd8320-c609-4463-b796-864e5af8ad31",
+        "fieldName": "Message",
+        "fieldValue": "Interested in a compact SUV, 2017+ model; exchange option possible.",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": null
+      },
+      {
+        "fieldId": "8b3b8cf9-0a46-4159-8e36-b117e356709b",
+        "fieldName": "Street",
+        "fieldValue": "130 Main Road",
+        "fieldGroupId": "2",
+        "fieldGroupName": "Address Information",
+        "type": "STREET"
+      },
+      {
+        "fieldId": "ce085b32-97f5-499a-8baf-2419517eddd3",
+        "fieldName": "State",
+        "fieldValue": "Maharashtra",
+        "fieldGroupId": "2",
+        "fieldGroupName": "Address Information",
+        "type": "STATE"
+      },
+      {
+        "fieldId": "b1a60c0e-3837-4730-9064-d64f11feab85",
+        "fieldName": "City",
+        "fieldValue": "Nagpur",
+        "fieldGroupId": "2",
+        "fieldGroupName": "Address Information",
+        "type": "CITY"
+      },
+      {
+        "fieldId": "d6c9b360-48f3-4d1b-a9ce-8030d5853bcc",
+        "fieldName": "Postal Code",
+        "fieldValue": "440001",
+        "fieldGroupId": "2",
+        "fieldGroupName": "Address Information",
+        "type": "PIN_CODE"
+      },
+      {
+        "fieldId": "13434dc9-f5fc-429e-8d84-fcac56225a16",
+        "fieldName": "Country",
+        "fieldValue": "India",
+        "fieldGroupId": "2",
+        "fieldGroupName": "Address Information",
+        "type": "COUNTRY"
+      }
+    ],
+    "address": {
+      "street": "91 Main Road",
+      "city": "Nagpur",
+      "state": "Maharashtra",
+      "country": {
+        "id": "",
+        "name": "India",
+        "code": "IN"
+      },
+      "zipCode": "440001"
+    },
+    "createdById": "1eff7f64-08ea-6fdc-99d0-3f7ae8229af5",
+    "createdByName": "harshith sai",
+    "gstDetails": {
+      "companyName": "",
+      "gstno": ""
+    },
+    "type": "LEAD",
+    "leadActiveType": "ACTIVE",
+    "customerType": "INDIVIDUAL",
+    "source": "REFERRAL",
+    "leadStatus": "CONTACTED",
+    "imgUrl": null,
+    "notes": "",
+    "staffId": "1eff7f64-08ea-6fdc-99d0-3f7ae8229af5",
+    "staffName": "harshith sai",
+    "timeLastStatusUpdated": true,
+    "createdTimeStamp": "2025-11-28T08:00:00Z",
+    "updatedTimeStamp": "2025-11-30T12:00:00Z",
+    "pipeline": {
+      "id": "1f0c53f7-f7f2-641a-9198-630acc37fedc",
+      "name": "Default Pipeline"
+    },
+    "pipelineStage": {
+      "id": "",
+      "name": ""
+    }
+  },
+  {
+    "businessId": "1eff7f64-09ef-670e-8c7c-2b9676f8dbb6",
+    "leadId": "067e29f3-400a-4b29-8354-54b0c7e47104",
+    "personalInfo": {
+      "name": "Arun Bose",
+      "img": "",
+      "email": "arun.bose58@example.com",
+      "mobile": "8885084969",
+      "designation": "",
+      "gender": "FEMALE"
+    },
+    "company": {
+      "name": "",
+      "website": "",
+      "companyEmail": "",
+      "companyMobile": "",
+      "industryName": "Automotive",
+      "industryId": ""
+    },
+    "fieldData": [
+      {
+        "fieldId": "71b029c9-873c-4711-9168-35c2f484e87e",
+        "fieldName": "Name",
+        "fieldValue": "Arun Bose",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": "STUDENT_NAME"
+      },
+      {
+        "fieldId": "08b3a86e-4edb-4785-89eb-7fadf37251d5",
+        "fieldName": "Mobile Number",
+        "fieldValue": "8885084969",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": "CONTACT_MOBILE"
+      },
+      {
+        "fieldId": "ce4a6c8f-bc70-410c-a490-7d78701455f0",
+        "fieldName": "Email",
+        "fieldValue": "arun.bose58@example.com",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": "CONTACT_EMAIL"
+      },
+      {
+        "fieldId": "1ad4a437-bdfe-43c6-b2d1-c478d7b64d15",
+        "fieldName": "Lead Source",
+        "fieldValue": "ONLINE_ENQUIRY",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": "ENQUIRY_SOURCE"
+      },
+      {
+        "fieldId": "d1a110ef-d8e4-4b59-a9a3-23389c23e15d",
+        "fieldName": "Lead Status",
+        "fieldValue": "NEW",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": "ENQUIRY_STATUS"
+      },
+      {
+        "fieldId": "365c7614-fa24-49b7-a519-23d00aef3b4d",
+        "fieldName": "Message",
+        "fieldValue": "Urgent purchase within a week; good condition only.",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": null
+      },
+      {
+        "fieldId": "93a32d36-4d0a-4dd4-b5fc-f732a51b60c6",
+        "fieldName": "Street",
+        "fieldValue": "196 Main Road",
+        "fieldGroupId": "2",
+        "fieldGroupName": "Address Information",
+        "type": "STREET"
+      },
+      {
+        "fieldId": "82cbb7f8-9515-4c82-b111-8a5fa4f10e08",
+        "fieldName": "State",
+        "fieldValue": "Maharashtra",
+        "fieldGroupId": "2",
+        "fieldGroupName": "Address Information",
+        "type": "STATE"
+      },
+      {
+        "fieldId": "a8cc2c4d-da20-4881-a8c4-71db5d8b734f",
+        "fieldName": "City",
+        "fieldValue": "Mumbai",
+        "fieldGroupId": "2",
+        "fieldGroupName": "Address Information",
+        "type": "CITY"
+      },
+      {
+        "fieldId": "23dd0318-a3de-4651-8426-c9a86cb8e2b8",
+        "fieldName": "Postal Code",
+        "fieldValue": "400049",
+        "fieldGroupId": "2",
+        "fieldGroupName": "Address Information",
+        "type": "PIN_CODE"
+      },
+      {
+        "fieldId": "ad7b810c-a0da-4454-b56c-f957d9ccf978",
+        "fieldName": "Country",
+        "fieldValue": "India",
+        "fieldGroupId": "2",
+        "fieldGroupName": "Address Information",
+        "type": "COUNTRY"
+      }
+    ],
+    "address": {
+      "street": "175 Main Road",
+      "city": "Mumbai",
+      "state": "Maharashtra",
+      "country": {
+        "id": "",
+        "name": "India",
+        "code": "IN"
+      },
+      "zipCode": "400049"
+    },
+    "createdById": "1eff7f64-08ea-6fdc-99d0-3f7ae8229af5",
+    "createdByName": "harshith sai",
+    "gstDetails": {
+      "companyName": "",
+      "gstno": ""
+    },
+    "type": "LEAD",
+    "leadActiveType": "ACTIVE",
+    "customerType": "INDIVIDUAL",
+    "source": "ONLINE_ENQUIRY",
+    "leadStatus": "NEW",
+    "imgUrl": null,
+    "notes": "",
+    "staffId": "1eff7f64-08ea-6fdc-99d0-3f7ae8229af5",
+    "staffName": "harshith sai",
+    "timeLastStatusUpdated": true,
+    "createdTimeStamp": "2025-11-28T10:00:00Z",
+    "updatedTimeStamp": "2025-11-29T06:00:00Z",
+    "pipeline": {
+      "id": "1f0c53f7-f7f2-641a-9198-630acc37fedc",
+      "name": "Default Pipeline"
+    },
+    "pipelineStage": {
+      "id": "",
+      "name": ""
+    }
+  },
+  {
+    "businessId": "1eff7f64-09ef-670e-8c7c-2b9676f8dbb6",
+    "leadId": "bbf8f5f6-034b-4ea7-9c22-4f6774bd1388",
+    "personalInfo": {
+      "name": "Karan Iyer",
+      "img": "",
+      "email": "karan.iyer84@example.com",
+      "mobile": "6120390363",
+      "designation": "",
+      "gender": "MALE"
+    },
+    "company": {
+      "name": "",
+      "website": "",
+      "companyEmail": "",
+      "companyMobile": "",
+      "industryName": "Automotive",
+      "industryId": ""
+    },
+    "fieldData": [
+      {
+        "fieldId": "0fdba99b-557f-4901-9c5c-cfc5c85e1e88",
+        "fieldName": "Name",
+        "fieldValue": "Karan Iyer",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": "STUDENT_NAME"
+      },
+      {
+        "fieldId": "52fe9ae4-2e16-4159-a4ce-6667dbca76ee",
+        "fieldName": "Mobile Number",
+        "fieldValue": "6120390363",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": "CONTACT_MOBILE"
+      },
+      {
+        "fieldId": "7bacfada-1822-4afc-b173-274651ef8e3f",
+        "fieldName": "Email",
+        "fieldValue": "karan.iyer84@example.com",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": "CONTACT_EMAIL"
+      },
+      {
+        "fieldId": "b113d63e-77dc-4d64-b3cd-15ee13470264",
+        "fieldName": "Lead Source",
+        "fieldValue": "COLD_CALL",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": "ENQUIRY_SOURCE"
+      },
+      {
+        "fieldId": "b57d4733-834c-4fc3-8a86-02ff35e70998",
+        "fieldName": "Lead Status",
+        "fieldValue": "NEW",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": "ENQUIRY_STATUS"
+      },
+      {
+        "fieldId": "cf660e2d-5665-48e6-9823-687f4f2281a8",
+        "fieldName": "Message",
+        "fieldValue": "Budget ₹3-4 Lakh; prefers Maruti or Hyundai.",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": null
+      },
+      {
+        "fieldId": "dd479357-d1d6-4828-b7ce-51e5f76064c5",
+        "fieldName": "Street",
+        "fieldValue": "123 Main Road",
+        "fieldGroupId": "2",
+        "fieldGroupName": "Address Information",
+        "type": "STREET"
+      },
+      {
+        "fieldId": "32131f38-7e0f-4949-9a8d-026586f63cfc",
+        "fieldName": "State",
+        "fieldValue": "Madhya Pradesh",
+        "fieldGroupId": "2",
+        "fieldGroupName": "Address Information",
+        "type": "STATE"
+      },
+      {
+        "fieldId": "39d8e713-fa07-4815-a8e3-d00802d5d115",
+        "fieldName": "City",
+        "fieldValue": "Indore",
+        "fieldGroupId": "2",
+        "fieldGroupName": "Address Information",
+        "type": "CITY"
+      },
+      {
+        "fieldId": "c5bb5073-bbcd-41d7-9b16-812b6aed1776",
+        "fieldName": "Postal Code",
+        "fieldValue": "452001",
+        "fieldGroupId": "2",
+        "fieldGroupName": "Address Information",
+        "type": "PIN_CODE"
+      },
+      {
+        "fieldId": "0a130a6b-d85f-4ac5-a4e7-05cb43ae22f2",
+        "fieldName": "Country",
+        "fieldValue": "India",
+        "fieldGroupId": "2",
+        "fieldGroupName": "Address Information",
+        "type": "COUNTRY"
+      }
+    ],
+    "address": {
+      "street": "19 Main Road",
+      "city": "Indore",
+      "state": "Madhya Pradesh",
+      "country": {
+        "id": "",
+        "name": "India",
+        "code": "IN"
+      },
+      "zipCode": "452001"
+    },
+    "createdById": "1eff7f64-08ea-6fdc-99d0-3f7ae8229af5",
+    "createdByName": "harshith sai",
+    "gstDetails": {
+      "companyName": "",
+      "gstno": ""
+    },
+    "type": "LEAD",
+    "leadActiveType": "ACTIVE",
+    "customerType": "INDIVIDUAL",
+    "source": "COLD_CALL",
+    "leadStatus": "NEW",
+    "imgUrl": null,
+    "notes": "",
+    "staffId": "1eff7f64-08ea-6fdc-99d0-3f7ae8229af5",
+    "staffName": "harshith sai",
+    "timeLastStatusUpdated": true,
+    "createdTimeStamp": "2025-11-25T07:00:00Z",
+    "updatedTimeStamp": "2025-11-28T09:00:00Z",
+    "pipeline": {
+      "id": "1f0c53f7-f7f2-641a-9198-630acc37fedc",
+      "name": "Default Pipeline"
+    },
+    "pipelineStage": {
+      "id": "",
+      "name": ""
+    }
+  },
+  {
+    "businessId": "1eff7f64-09ef-670e-8c7c-2b9676f8dbb6",
+    "leadId": "4c47294f-b99f-4c71-a950-3080e75859d0",
+    "personalInfo": {
+      "name": "Rekha Nair",
+      "img": "",
+      "email": "rekha.nair14@example.com",
+      "mobile": "8732895342",
+      "designation": "",
+      "gender": "FEMALE"
+    },
+    "company": {
+      "name": "",
+      "website": "",
+      "companyEmail": "",
+      "companyMobile": "",
+      "industryName": "Automotive",
+      "industryId": ""
+    },
+    "fieldData": [
+      {
+        "fieldId": "e0c49878-c014-4899-9073-dda43632cb71",
+        "fieldName": "Name",
+        "fieldValue": "Rekha Nair",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": "STUDENT_NAME"
+      },
+      {
+        "fieldId": "d852e8b0-f216-4d86-9431-b20221b03de0",
+        "fieldName": "Mobile Number",
+        "fieldValue": "8732895342",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": "CONTACT_MOBILE"
+      },
+      {
+        "fieldId": "b9e6fb9c-6f05-4db3-bbe6-445c450b34df",
+        "fieldName": "Email",
+        "fieldValue": "rekha.nair14@example.com",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": "CONTACT_EMAIL"
+      },
+      {
+        "fieldId": "16c992d2-d1dd-45af-b8cb-316b748b9b0e",
+        "fieldName": "Lead Source",
+        "fieldValue": "COLD_CALL",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": "ENQUIRY_SOURCE"
+      },
+      {
+        "fieldId": "8fe4e002-c658-4464-b1d9-128862020ac2",
+        "fieldName": "Lead Status",
+        "fieldValue": "FOLLOW_UP",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": "ENQUIRY_STATUS"
+      },
+      {
+        "fieldId": "0ca07147-f5ad-4584-ab95-4e6b138ec76f",
+        "fieldName": "Message",
+        "fieldValue": "Needs automatic transmission city car under ₹7 Lakh.",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": null
+      },
+      {
+        "fieldId": "1fb0e99f-03e8-48d0-bd29-1615a6eb94c6",
+        "fieldName": "Street",
+        "fieldValue": "197 Main Road",
+        "fieldGroupId": "2",
+        "fieldGroupName": "Address Information",
+        "type": "STREET"
+      },
+      {
+        "fieldId": "f2a9200c-114b-4f35-82ea-0e28e0ebe834",
+        "fieldName": "State",
+        "fieldValue": "Maharashtra",
+        "fieldGroupId": "2",
+        "fieldGroupName": "Address Information",
+        "type": "STATE"
+      },
+      {
+        "fieldId": "6143f9f6-13c0-4f8a-96a1-a8bdebe4083b",
+        "fieldName": "City",
+        "fieldValue": "Mumbai",
+        "fieldGroupId": "2",
+        "fieldGroupName": "Address Information",
+        "type": "CITY"
+      },
+      {
+        "fieldId": "a7e611fd-c667-4f15-9f1e-9b6e806d7620",
+        "fieldName": "Postal Code",
+        "fieldValue": "400049",
+        "fieldGroupId": "2",
+        "fieldGroupName": "Address Information",
+        "type": "PIN_CODE"
+      },
+      {
+        "fieldId": "b97ff88a-14a7-4a56-bb21-2976b348b36a",
+        "fieldName": "Country",
+        "fieldValue": "India",
+        "fieldGroupId": "2",
+        "fieldGroupName": "Address Information",
+        "type": "COUNTRY"
+      }
+    ],
+    "address": {
+      "street": "103 Main Road",
+      "city": "Mumbai",
+      "state": "Maharashtra",
+      "country": {
+        "id": "",
+        "name": "India",
+        "code": "IN"
+      },
+      "zipCode": "400049"
+    },
+    "createdById": "1eff7f64-08ea-6fdc-99d0-3f7ae8229af5",
+    "createdByName": "harshith sai",
+    "gstDetails": {
+      "companyName": "",
+      "gstno": ""
+    },
+    "type": "LEAD",
+    "leadActiveType": "ACTIVE",
+    "customerType": "INDIVIDUAL",
+    "source": "COLD_CALL",
+    "leadStatus": "FOLLOW_UP",
+    "imgUrl": null,
+    "notes": "",
+    "staffId": "1eff7f64-08ea-6fdc-99d0-3f7ae8229af5",
+    "staffName": "harshith sai",
+    "timeLastStatusUpdated": true,
+    "createdTimeStamp": "2025-11-25T12:00:00Z",
+    "updatedTimeStamp": "2025-11-27T12:00:00Z",
+    "pipeline": {
+      "id": "1f0c53f7-f7f2-641a-9198-630acc37fedc",
+      "name": "Default Pipeline"
+    },
+    "pipelineStage": {
+      "id": "",
+      "name": ""
+    }
+  },
+  {
+    "businessId": "1eff7f64-09ef-670e-8c7c-2b9676f8dbb6",
+    "leadId": "a74ea942-4be1-4926-93aa-cf5df6c05f5c",
+    "personalInfo": {
+      "name": "Swati Chopra",
+      "img": "",
+      "email": "swati.chopra65@example.com",
+      "mobile": "9755809896",
+      "designation": "",
+      "gender": "FEMALE"
+    },
+    "company": {
+      "name": "",
+      "website": "",
+      "companyEmail": "",
+      "companyMobile": "",
+      "industryName": "Automotive",
+      "industryId": ""
+    },
+    "fieldData": [
+      {
+        "fieldId": "b93b270d-f0fd-420f-b56d-a967c9c935d2",
+        "fieldName": "Name",
+        "fieldValue": "Swati Chopra",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": "STUDENT_NAME"
+      },
+      {
+        "fieldId": "907d970a-6aac-48a6-a2bb-3157c4d441ec",
+        "fieldName": "Mobile Number",
+        "fieldValue": "9755809896",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": "CONTACT_MOBILE"
+      },
+      {
+        "fieldId": "51699873-17f3-48cb-b942-ba02d05e7187",
+        "fieldName": "Email",
+        "fieldValue": "swati.chopra65@example.com",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": "CONTACT_EMAIL"
+      },
+      {
+        "fieldId": "56c8dcd5-c926-47b2-ab23-65004d07e50c",
+        "fieldName": "Lead Source",
+        "fieldValue": "WALK_IN",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": "ENQUIRY_SOURCE"
+      },
+      {
+        "fieldId": "e3570e53-93f8-4a18-8eb7-1c08f720e860",
+        "fieldName": "Lead Status",
+        "fieldValue": "QUALIFIED",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": "ENQUIRY_STATUS"
+      },
+      {
+        "fieldId": "99364a6e-fe9f-488a-959d-2d42e0c13fc8",
+        "fieldName": "Message",
+        "fieldValue": "Needs automatic transmission city car under ₹7 Lakh.",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": null
+      },
+      {
+        "fieldId": "50cb6a1d-cc66-4263-8e0c-7629afbb9f43",
+        "fieldName": "Street",
+        "fieldValue": "189 Main Road",
+        "fieldGroupId": "2",
+        "fieldGroupName": "Address Information",
+        "type": "STREET"
+      },
+      {
+        "fieldId": "23f4edb6-ce29-4359-a527-4af3d1b58467",
+        "fieldName": "State",
+        "fieldValue": "Gujarat",
+        "fieldGroupId": "2",
+        "fieldGroupName": "Address Information",
+        "type": "STATE"
+      },
+      {
+        "fieldId": "b7317909-1e89-432e-91d6-4dd740f075ff",
+        "fieldName": "City",
+        "fieldValue": "Surat",
+        "fieldGroupId": "2",
+        "fieldGroupName": "Address Information",
+        "type": "CITY"
+      },
+      {
+        "fieldId": "a9c37249-92ba-4d31-bf5c-d22cdb02607b",
+        "fieldName": "Postal Code",
+        "fieldValue": "395003",
+        "fieldGroupId": "2",
+        "fieldGroupName": "Address Information",
+        "type": "PIN_CODE"
+      },
+      {
+        "fieldId": "de358c94-4187-4a9f-9551-1623f7ccb8a0",
+        "fieldName": "Country",
+        "fieldValue": "India",
+        "fieldGroupId": "2",
+        "fieldGroupName": "Address Information",
+        "type": "COUNTRY"
+      }
+    ],
+    "address": {
+      "street": "90 Main Road",
+      "city": "Surat",
+      "state": "Gujarat",
+      "country": {
+        "id": "",
+        "name": "India",
+        "code": "IN"
+      },
+      "zipCode": "395003"
+    },
+    "createdById": "1eff7f64-08ea-6fdc-99d0-3f7ae8229af5",
+    "createdByName": "harshith sai",
+    "gstDetails": {
+      "companyName": "",
+      "gstno": ""
+    },
+    "type": "LEAD",
+    "leadActiveType": "ACTIVE",
+    "customerType": "INDIVIDUAL",
+    "source": "WALK_IN",
+    "leadStatus": "QUALIFIED",
+    "imgUrl": null,
+    "notes": "",
+    "staffId": "1eff7f64-08ea-6fdc-99d0-3f7ae8229af5",
+    "staffName": "harshith sai",
+    "timeLastStatusUpdated": true,
+    "createdTimeStamp": "2025-11-30T10:00:00Z",
+    "updatedTimeStamp": "2025-11-29T07:00:00Z",
+    "pipeline": {
+      "id": "1f0c53f7-f7f2-641a-9198-630acc37fedc",
+      "name": "Default Pipeline"
+    },
+    "pipelineStage": {
+      "id": "",
+      "name": ""
+    }
+  },
+  {
+    "businessId": "1eff7f64-09ef-670e-8c7c-2b9676f8dbb6",
+    "leadId": "d24ec76a-c9ac-44eb-b469-ef8d3fec146b",
+    "personalInfo": {
+      "name": "Meena Iyer",
+      "img": "",
+      "email": "meena.iyer43@example.com",
+      "mobile": "8246221298",
+      "designation": "",
+      "gender": "MALE"
+    },
+    "company": {
+      "name": "",
+      "website": "",
+      "companyEmail": "",
+      "companyMobile": "",
+      "industryName": "Automotive",
+      "industryId": ""
+    },
+    "fieldData": [
+      {
+        "fieldId": "ef88b689-971f-41c6-975e-e797d6bb05db",
+        "fieldName": "Name",
+        "fieldValue": "Meena Iyer",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": "STUDENT_NAME"
+      },
+      {
+        "fieldId": "77a2f56b-de1e-4659-9439-3bfbefd96bed",
+        "fieldName": "Mobile Number",
+        "fieldValue": "8246221298",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": "CONTACT_MOBILE"
+      },
+      {
+        "fieldId": "3c1d80a7-1ca6-4939-8417-99119a495e96",
+        "fieldName": "Email",
+        "fieldValue": "meena.iyer43@example.com",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": "CONTACT_EMAIL"
+      },
+      {
+        "fieldId": "ada44742-88ea-4e02-9249-ec6b951b5e57",
+        "fieldName": "Lead Source",
+        "fieldValue": "COLD_CALL",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": "ENQUIRY_SOURCE"
+      },
+      {
+        "fieldId": "7d3054f8-e248-4821-b857-317efc6b51c8",
+        "fieldName": "Lead Status",
+        "fieldValue": "QUALIFIED",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": "ENQUIRY_STATUS"
+      },
+      {
+        "fieldId": "1e6938f8-f1f0-4e73-ac93-9270e522214a",
+        "fieldName": "Message",
+        "fieldValue": "Looking for low-km diesel vehicle for long drives.",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": null
+      },
+      {
+        "fieldId": "f46819ab-5d38-472e-9878-125e145ff5b1",
+        "fieldName": "Street",
+        "fieldValue": "83 Main Road",
+        "fieldGroupId": "2",
+        "fieldGroupName": "Address Information",
+        "type": "STREET"
+      },
+      {
+        "fieldId": "3b3bc8f7-30ba-499c-9a14-e002a95b5ad3",
+        "fieldName": "State",
+        "fieldValue": "Gujarat",
+        "fieldGroupId": "2",
+        "fieldGroupName": "Address Information",
+        "type": "STATE"
+      },
+      {
+        "fieldId": "562d38ff-7cee-4d0f-8e3e-9e86ef263292",
+        "fieldName": "City",
+        "fieldValue": "Surat",
+        "fieldGroupId": "2",
+        "fieldGroupName": "Address Information",
+        "type": "CITY"
+      },
+      {
+        "fieldId": "c4e2a090-ef18-4e3d-8e7e-945dfd76604f",
+        "fieldName": "Postal Code",
+        "fieldValue": "395003",
+        "fieldGroupId": "2",
+        "fieldGroupName": "Address Information",
+        "type": "PIN_CODE"
+      },
+      {
+        "fieldId": "cc45608e-0c3b-452c-8a73-604d7936810a",
+        "fieldName": "Country",
+        "fieldValue": "India",
+        "fieldGroupId": "2",
+        "fieldGroupName": "Address Information",
+        "type": "COUNTRY"
+      }
+    ],
+    "address": {
+      "street": "93 Main Road",
+      "city": "Surat",
+      "state": "Gujarat",
+      "country": {
+        "id": "",
+        "name": "India",
+        "code": "IN"
+      },
+      "zipCode": "395003"
+    },
+    "createdById": "1eff7f64-08ea-6fdc-99d0-3f7ae8229af5",
+    "createdByName": "harshith sai",
+    "gstDetails": {
+      "companyName": "",
+      "gstno": ""
+    },
+    "type": "LEAD",
+    "leadActiveType": "ACTIVE",
+    "customerType": "INDIVIDUAL",
+    "source": "COLD_CALL",
+    "leadStatus": "QUALIFIED",
+    "imgUrl": null,
+    "notes": "",
+    "staffId": "1eff7f64-08ea-6fdc-99d0-3f7ae8229af5",
+    "staffName": "harshith sai",
+    "timeLastStatusUpdated": true,
+    "createdTimeStamp": "2025-11-25T02:00:00Z",
+    "updatedTimeStamp": "2025-11-30T01:00:00Z",
+    "pipeline": {
+      "id": "1f0c53f7-f7f2-641a-9198-630acc37fedc",
+      "name": "Default Pipeline"
+    },
+    "pipelineStage": {
+      "id": "",
+      "name": ""
+    }
+  },
+  {
+    "businessId": "1eff7f64-09ef-670e-8c7c-2b9676f8dbb6",
+    "leadId": "0cb22dcb-75f5-4abb-9679-5f979ecd9036",
+    "personalInfo": {
+      "name": "Arun Gupta",
+      "img": "",
+      "email": "arun.gupta86@example.com",
+      "mobile": "8071710789",
+      "designation": "",
+      "gender": "MALE"
+    },
+    "company": {
+      "name": "",
+      "website": "",
+      "companyEmail": "",
+      "companyMobile": "",
+      "industryName": "Automotive",
+      "industryId": ""
+    },
+    "fieldData": [
+      {
+        "fieldId": "38f79755-9518-4dd3-9c09-626c81798ee6",
+        "fieldName": "Name",
+        "fieldValue": "Arun Gupta",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": "STUDENT_NAME"
+      },
+      {
+        "fieldId": "f8f5ee67-3b61-4252-94f5-f87b27ef4c84",
+        "fieldName": "Mobile Number",
+        "fieldValue": "8071710789",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": "CONTACT_MOBILE"
+      },
+      {
+        "fieldId": "5f838510-8003-4e6d-85a1-764b34b87a7a",
+        "fieldName": "Email",
+        "fieldValue": "arun.gupta86@example.com",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": "CONTACT_EMAIL"
+      },
+      {
+        "fieldId": "3be7cff7-2ba5-4169-9431-802168550b81",
+        "fieldName": "Lead Source",
+        "fieldValue": "REFERRAL",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": "ENQUIRY_SOURCE"
+      },
+      {
+        "fieldId": "f4b84e7a-6c6a-4349-b11a-899aa4e3f286",
+        "fieldName": "Lead Status",
+        "fieldValue": "FOLLOW_UP",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": "ENQUIRY_STATUS"
+      },
+      {
+        "fieldId": "a367b384-d388-4da7-b1a6-0ec23efffa2a",
+        "fieldName": "Message",
+        "fieldValue": "Urgent purchase within a week; good condition only.",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": null
+      },
+      {
+        "fieldId": "e4a68f28-c492-4a41-9fb2-a223ccd33a88",
+        "fieldName": "Street",
+        "fieldValue": "64 Main Road",
+        "fieldGroupId": "2",
+        "fieldGroupName": "Address Information",
+        "type": "STREET"
+      },
+      {
+        "fieldId": "fd4a7cd7-168e-4163-9989-e2cee008239c",
+        "fieldName": "State",
+        "fieldValue": "Maharashtra",
+        "fieldGroupId": "2",
+        "fieldGroupName": "Address Information",
+        "type": "STATE"
+      },
+      {
+        "fieldId": "8304666c-ddae-4f3a-9c80-589526e875d7",
+        "fieldName": "City",
+        "fieldValue": "Pune",
+        "fieldGroupId": "2",
+        "fieldGroupName": "Address Information",
+        "type": "CITY"
+      },
+      {
+        "fieldId": "c2e306ac-5e10-4a20-a530-a2c4b32d67a2",
+        "fieldName": "Postal Code",
+        "fieldValue": "411001",
+        "fieldGroupId": "2",
+        "fieldGroupName": "Address Information",
+        "type": "PIN_CODE"
+      },
+      {
+        "fieldId": "286de803-0827-488b-b279-46ea4bab4ce0",
+        "fieldName": "Country",
+        "fieldValue": "India",
+        "fieldGroupId": "2",
+        "fieldGroupName": "Address Information",
+        "type": "COUNTRY"
+      }
+    ],
+    "address": {
+      "street": "113 Main Road",
+      "city": "Pune",
+      "state": "Maharashtra",
+      "country": {
+        "id": "",
+        "name": "India",
+        "code": "IN"
+      },
+      "zipCode": "411001"
+    },
+    "createdById": "1eff7f64-08ea-6fdc-99d0-3f7ae8229af5",
+    "createdByName": "harshith sai",
+    "gstDetails": {
+      "companyName": "",
+      "gstno": ""
+    },
+    "type": "LEAD",
+    "leadActiveType": "ACTIVE",
+    "customerType": "INDIVIDUAL",
+    "source": "REFERRAL",
+    "leadStatus": "FOLLOW_UP",
+    "imgUrl": null,
+    "notes": "",
+    "staffId": "1eff7f64-08ea-6fdc-99d0-3f7ae8229af5",
+    "staffName": "harshith sai",
+    "timeLastStatusUpdated": true,
+    "createdTimeStamp": "2025-11-26T08:00:00Z",
+    "updatedTimeStamp": "2025-11-30T02:00:00Z",
+    "pipeline": {
+      "id": "1f0c53f7-f7f2-641a-9198-630acc37fedc",
+      "name": "Default Pipeline"
+    },
+    "pipelineStage": {
+      "id": "",
+      "name": ""
+    }
+  },
+  {
+    "businessId": "1eff7f64-09ef-670e-8c7c-2b9676f8dbb6",
+    "leadId": "585b1acb-0856-4592-8a8e-ab6c486e642a",
+    "personalInfo": {
+      "name": "Manish Chavan",
+      "img": "",
+      "email": "manish.chavan48@example.com",
+      "mobile": "8078088471",
+      "designation": "",
+      "gender": "MALE"
+    },
+    "company": {
+      "name": "",
+      "website": "",
+      "companyEmail": "",
+      "companyMobile": "",
+      "industryName": "Automotive",
+      "industryId": ""
+    },
+    "fieldData": [
+      {
+        "fieldId": "bdbccfdf-71ee-4708-b7ff-16189838b9dd",
+        "fieldName": "Name",
+        "fieldValue": "Manish Chavan",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": "STUDENT_NAME"
+      },
+      {
+        "fieldId": "f0e3242d-1a57-44dd-8f3e-b5b65dd32d9a",
+        "fieldName": "Mobile Number",
+        "fieldValue": "8078088471",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": "CONTACT_MOBILE"
+      },
+      {
+        "fieldId": "115116f5-d3a2-43f9-8701-666feab6bf39",
+        "fieldName": "Email",
+        "fieldValue": "manish.chavan48@example.com",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": "CONTACT_EMAIL"
+      },
+      {
+        "fieldId": "0efaba24-97eb-4a8e-9bda-18225f4719f5",
+        "fieldName": "Lead Source",
+        "fieldValue": "REFERRAL",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": "ENQUIRY_SOURCE"
+      },
+      {
+        "fieldId": "a60b9642-da11-46a6-a978-12e29477a93d",
+        "fieldName": "Lead Status",
+        "fieldValue": "CONTACTED",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": "ENQUIRY_STATUS"
+      },
+      {
+        "fieldId": "e98de5cf-a826-4e99-a18e-250080404aff",
+        "fieldName": "Message",
+        "fieldValue": "Wants to sell a 2013 sedan; needs pickup and valuation.",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": null
+      },
+      {
+        "fieldId": "e183c4db-4066-4372-93c2-ee3550c05801",
+        "fieldName": "Street",
+        "fieldValue": "136 Main Road",
+        "fieldGroupId": "2",
+        "fieldGroupName": "Address Information",
+        "type": "STREET"
+      },
+      {
+        "fieldId": "d12794ad-7000-4185-a80a-79aade55c63b",
+        "fieldName": "State",
+        "fieldValue": "Kerala",
+        "fieldGroupId": "2",
+        "fieldGroupName": "Address Information",
+        "type": "STATE"
+      },
+      {
+        "fieldId": "336d7964-33e0-45c8-882a-62aaccfe911d",
+        "fieldName": "City",
+        "fieldValue": "Thiruvananthapuram",
+        "fieldGroupId": "2",
+        "fieldGroupName": "Address Information",
+        "type": "CITY"
+      },
+      {
+        "fieldId": "4caf83b6-ff4e-4afc-a884-4ec4bfbf96d3",
+        "fieldName": "Postal Code",
+        "fieldValue": "695001",
+        "fieldGroupId": "2",
+        "fieldGroupName": "Address Information",
+        "type": "PIN_CODE"
+      },
+      {
+        "fieldId": "b4110179-f193-46b9-8817-9a9743841b40",
+        "fieldName": "Country",
+        "fieldValue": "India",
+        "fieldGroupId": "2",
+        "fieldGroupName": "Address Information",
+        "type": "COUNTRY"
+      }
+    ],
+    "address": {
+      "street": "127 Main Road",
+      "city": "Thiruvananthapuram",
+      "state": "Kerala",
+      "country": {
+        "id": "",
+        "name": "India",
+        "code": "IN"
+      },
+      "zipCode": "695001"
+    },
+    "createdById": "1eff7f64-08ea-6fdc-99d0-3f7ae8229af5",
+    "createdByName": "harshith sai",
+    "gstDetails": {
+      "companyName": "",
+      "gstno": ""
+    },
+    "type": "LEAD",
+    "leadActiveType": "ACTIVE",
+    "customerType": "INDIVIDUAL",
+    "source": "REFERRAL",
+    "leadStatus": "CONTACTED",
+    "imgUrl": null,
+    "notes": "",
+    "staffId": "1eff7f64-08ea-6fdc-99d0-3f7ae8229af5",
+    "staffName": "harshith sai",
+    "timeLastStatusUpdated": true,
+    "createdTimeStamp": "2025-11-29T08:00:00Z",
+    "updatedTimeStamp": "2025-11-30T10:00:00Z",
+    "pipeline": {
+      "id": "1f0c53f7-f7f2-641a-9198-630acc37fedc",
+      "name": "Default Pipeline"
+    },
+    "pipelineStage": {
+      "id": "",
+      "name": ""
+    }
+  },
+  {
+    "businessId": "1eff7f64-09ef-670e-8c7c-2b9676f8dbb6",
+    "leadId": "450f31c5-d564-4afa-a6d0-87673ecb5a18",
+    "personalInfo": {
+      "name": "Vikram Verma",
+      "img": "",
+      "email": "vikram.verma65@example.com",
+      "mobile": "9790673912",
+      "designation": "",
+      "gender": "FEMALE"
+    },
+    "company": {
+      "name": "",
+      "website": "",
+      "companyEmail": "",
+      "companyMobile": "",
+      "industryName": "Automotive",
+      "industryId": ""
+    },
+    "fieldData": [
+      {
+        "fieldId": "21da3be2-908a-40d0-80e2-78f97fe86b0e",
+        "fieldName": "Name",
+        "fieldValue": "Vikram Verma",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": "STUDENT_NAME"
+      },
+      {
+        "fieldId": "b2eaa0f5-e64b-4bf1-9b68-6ca5925d05da",
+        "fieldName": "Mobile Number",
+        "fieldValue": "9790673912",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": "CONTACT_MOBILE"
+      },
+      {
+        "fieldId": "b8e9c090-311d-4d61-ae86-158d8b46a826",
+        "fieldName": "Email",
+        "fieldValue": "vikram.verma65@example.com",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": "CONTACT_EMAIL"
+      },
+      {
+        "fieldId": "8dde8107-d066-48a6-9596-a4c5e0de55fe",
+        "fieldName": "Lead Source",
+        "fieldValue": "REFERRAL",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": "ENQUIRY_SOURCE"
+      },
+      {
+        "fieldId": "2552609d-7b07-4480-a893-61b1c7655680",
+        "fieldName": "Lead Status",
+        "fieldValue": "CONTACTED",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": "ENQUIRY_STATUS"
+      },
+      {
+        "fieldId": "4f9f67aa-fde3-4e48-a3bc-b757f1851dc7",
+        "fieldName": "Message",
+        "fieldValue": "Urgent purchase within a week; good condition only.",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": null
+      },
+      {
+        "fieldId": "559a9332-046e-4295-86c1-6872ae822c1c",
+        "fieldName": "Street",
+        "fieldValue": "197 Main Road",
+        "fieldGroupId": "2",
+        "fieldGroupName": "Address Information",
+        "type": "STREET"
+      },
+      {
+        "fieldId": "1e6515f4-0688-41e5-8280-3669d7034928",
+        "fieldName": "State",
+        "fieldValue": "Gujarat",
+        "fieldGroupId": "2",
+        "fieldGroupName": "Address Information",
+        "type": "STATE"
+      },
+      {
+        "fieldId": "71e68f61-e3ab-40cb-96a3-4e8471e3e497",
+        "fieldName": "City",
+        "fieldValue": "Ahmedabad",
+        "fieldGroupId": "2",
+        "fieldGroupName": "Address Information",
+        "type": "CITY"
+      },
+      {
+        "fieldId": "74c529ce-37ee-409a-b080-02a302c8b555",
+        "fieldName": "Postal Code",
+        "fieldValue": "380015",
+        "fieldGroupId": "2",
+        "fieldGroupName": "Address Information",
+        "type": "PIN_CODE"
+      },
+      {
+        "fieldId": "1116d0c2-f085-4388-b892-9d75d0d28cc4",
+        "fieldName": "Country",
+        "fieldValue": "India",
+        "fieldGroupId": "2",
+        "fieldGroupName": "Address Information",
+        "type": "COUNTRY"
+      }
+    ],
+    "address": {
+      "street": "50 Main Road",
+      "city": "Ahmedabad",
+      "state": "Gujarat",
+      "country": {
+        "id": "",
+        "name": "India",
+        "code": "IN"
+      },
+      "zipCode": "380015"
+    },
+    "createdById": "1eff7f64-08ea-6fdc-99d0-3f7ae8229af5",
+    "createdByName": "harshith sai",
+    "gstDetails": {
+      "companyName": "",
+      "gstno": ""
+    },
+    "type": "LEAD",
+    "leadActiveType": "ACTIVE",
+    "customerType": "INDIVIDUAL",
+    "source": "REFERRAL",
+    "leadStatus": "CONTACTED",
+    "imgUrl": null,
+    "notes": "",
+    "staffId": "1eff7f64-08ea-6fdc-99d0-3f7ae8229af5",
+    "staffName": "harshith sai",
+    "timeLastStatusUpdated": true,
+    "createdTimeStamp": "2025-11-29T05:00:00Z",
+    "updatedTimeStamp": "2025-11-27T04:00:00Z",
+    "pipeline": {
+      "id": "1f0c53f7-f7f2-641a-9198-630acc37fedc",
+      "name": "Default Pipeline"
+    },
+    "pipelineStage": {
+      "id": "",
+      "name": ""
+    }
+  },
+  {
+    "businessId": "1eff7f64-09ef-670e-8c7c-2b9676f8dbb6",
+    "leadId": "7abea9ae-ad4a-407f-8a57-63eea68ba127",
+    "personalInfo": {
+      "name": "Meena Desai",
+      "img": "",
+      "email": "meena.desai91@example.com",
+      "mobile": "6085117908",
+      "designation": "",
+      "gender": "FEMALE"
+    },
+    "company": {
+      "name": "",
+      "website": "",
+      "companyEmail": "",
+      "companyMobile": "",
+      "industryName": "Automotive",
+      "industryId": ""
+    },
+    "fieldData": [
+      {
+        "fieldId": "fb21140e-aa14-421b-9750-bbacd0809df2",
+        "fieldName": "Name",
+        "fieldValue": "Meena Desai",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": "STUDENT_NAME"
+      },
+      {
+        "fieldId": "ae11881c-82db-49de-bdda-25a8962c0f55",
+        "fieldName": "Mobile Number",
+        "fieldValue": "6085117908",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": "CONTACT_MOBILE"
+      },
+      {
+        "fieldId": "17b1a68b-cd60-4e80-a1b4-80e089a64807",
+        "fieldName": "Email",
+        "fieldValue": "meena.desai91@example.com",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": "CONTACT_EMAIL"
+      },
+      {
+        "fieldId": "a743d3d5-f4a8-4098-b92b-020d5d76ddff",
+        "fieldName": "Lead Source",
+        "fieldValue": "REFERRAL",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": "ENQUIRY_SOURCE"
+      },
+      {
+        "fieldId": "b29e6214-0646-4514-b458-a5aeb719f8a2",
+        "fieldName": "Lead Status",
+        "fieldValue": "FOLLOW_UP",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": "ENQUIRY_STATUS"
+      },
+      {
+        "fieldId": "b6fd54f4-581f-420b-835a-ec0472b9bb54",
+        "fieldName": "Message",
+        "fieldValue": "Interested in loan/finance options for a used car.",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": null
+      },
+      {
+        "fieldId": "545f9c09-7744-4d1c-bfb3-b0c86a825b38",
+        "fieldName": "Street",
+        "fieldValue": "65 Main Road",
+        "fieldGroupId": "2",
+        "fieldGroupName": "Address Information",
+        "type": "STREET"
+      },
+      {
+        "fieldId": "beab54fd-fc17-4bcf-808e-bad8c7f10c96",
+        "fieldName": "State",
+        "fieldValue": "Maharashtra",
+        "fieldGroupId": "2",
+        "fieldGroupName": "Address Information",
+        "type": "STATE"
+      },
+      {
+        "fieldId": "5a6e5e71-3af0-4142-87ce-c42915efbee1",
+        "fieldName": "City",
+        "fieldValue": "Nagpur",
+        "fieldGroupId": "2",
+        "fieldGroupName": "Address Information",
+        "type": "CITY"
+      },
+      {
+        "fieldId": "cad53912-a436-4c94-9ac5-2c14e6546d03",
+        "fieldName": "Postal Code",
+        "fieldValue": "440001",
+        "fieldGroupId": "2",
+        "fieldGroupName": "Address Information",
+        "type": "PIN_CODE"
+      },
+      {
+        "fieldId": "83cfd582-90f1-4989-aeb4-78ad0589ec6f",
+        "fieldName": "Country",
+        "fieldValue": "India",
+        "fieldGroupId": "2",
+        "fieldGroupName": "Address Information",
+        "type": "COUNTRY"
+      }
+    ],
+    "address": {
+      "street": "137 Main Road",
+      "city": "Nagpur",
+      "state": "Maharashtra",
+      "country": {
+        "id": "",
+        "name": "India",
+        "code": "IN"
+      },
+      "zipCode": "440001"
+    },
+    "createdById": "1eff7f64-08ea-6fdc-99d0-3f7ae8229af5",
+    "createdByName": "harshith sai",
+    "gstDetails": {
+      "companyName": "",
+      "gstno": ""
+    },
+    "type": "LEAD",
+    "leadActiveType": "ACTIVE",
+    "customerType": "INDIVIDUAL",
+    "source": "REFERRAL",
+    "leadStatus": "FOLLOW_UP",
+    "imgUrl": null,
+    "notes": "",
+    "staffId": "1eff7f64-08ea-6fdc-99d0-3f7ae8229af5",
+    "staffName": "harshith sai",
+    "timeLastStatusUpdated": true,
+    "createdTimeStamp": "2025-11-25T05:00:00Z",
+    "updatedTimeStamp": "2025-11-30T00:00:00Z",
+    "pipeline": {
+      "id": "1f0c53f7-f7f2-641a-9198-630acc37fedc",
+      "name": "Default Pipeline"
+    },
+    "pipelineStage": {
+      "id": "",
+      "name": ""
+    }
+  },
+  {
+    "businessId": "1eff7f64-09ef-670e-8c7c-2b9676f8dbb6",
+    "leadId": "7dbddf6e-3ddb-4a57-a758-21db81c59d1c",
+    "personalInfo": {
+      "name": "Deepak Kumar",
+      "img": "",
+      "email": "deepak.kumar87@example.com",
+      "mobile": "8800826723",
+      "designation": "",
+      "gender": "FEMALE"
+    },
+    "company": {
+      "name": "",
+      "website": "",
+      "companyEmail": "",
+      "companyMobile": "",
+      "industryName": "Automotive",
+      "industryId": ""
+    },
+    "fieldData": [
+      {
+        "fieldId": "7aeca2c0-a6e8-4e6b-b052-7a61e23b2a7d",
+        "fieldName": "Name",
+        "fieldValue": "Deepak Kumar",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": "STUDENT_NAME"
+      },
+      {
+        "fieldId": "ca670239-5d18-4969-88e6-ec26b6632a1c",
+        "fieldName": "Mobile Number",
+        "fieldValue": "8800826723",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": "CONTACT_MOBILE"
+      },
+      {
+        "fieldId": "a5bbb7b6-8a15-442c-9f1b-93b2b8509281",
+        "fieldName": "Email",
+        "fieldValue": "deepak.kumar87@example.com",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": "CONTACT_EMAIL"
+      },
+      {
+        "fieldId": "863306e7-913c-4cd7-a293-8496aaa17c61",
+        "fieldName": "Lead Source",
+        "fieldValue": "REFERRAL",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": "ENQUIRY_SOURCE"
+      },
+      {
+        "fieldId": "4f4a8129-1e76-4872-9d6e-d72361aedb58",
+        "fieldName": "Lead Status",
+        "fieldValue": "CONTACTED",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": "ENQUIRY_STATUS"
+      },
+      {
+        "fieldId": "96306f0f-43fe-4074-8cdb-f716cc6800c9",
+        "fieldName": "Message",
+        "fieldValue": "Seeking corporate resale for a fleet vehicle.",
+        "fieldGroupId": "1",
+        "fieldGroupName": "Lead Information",
+        "type": null
+      },
+      {
+        "fieldId": "f8eab046-761e-4547-99c0-a21e30c244c2",
+        "fieldName": "Street",
+        "fieldValue": "57 Main Road",
+        "fieldGroupId": "2",
+        "fieldGroupName": "Address Information",
+        "type": "STREET"
+      },
+      {
+        "fieldId": "4df6a66a-ee0b-4f0a-81c6-e717af7bd324",
+        "fieldName": "State",
+        "fieldValue": "Madhya Pradesh",
+        "fieldGroupId": "2",
+        "fieldGroupName": "Address Information",
+        "type": "STATE"
+      },
+      {
+        "fieldId": "a0210da9-6d89-4d9d-913b-11593176bda7",
+        "fieldName": "City",
+        "fieldValue": "Bhopal",
+        "fieldGroupId": "2",
+        "fieldGroupName": "Address Information",
+        "type": "CITY"
+      },
+      {
+        "fieldId": "58a46235-c0fc-45a0-a5d2-deb08ae83094",
+        "fieldName": "Postal Code",
+        "fieldValue": "462016",
+        "fieldGroupId": "2",
+        "fieldGroupName": "Address Information",
+        "type": "PIN_CODE"
+      },
+      {
+        "fieldId": "aad72a81-1e3e-4bf7-a750-cecdcbd5c94c",
+        "fieldName": "Country",
+        "fieldValue": "India",
+        "fieldGroupId": "2",
+        "fieldGroupName": "Address Information",
+        "type": "COUNTRY"
+      }
+    ],
+    "address": {
+      "street": "138 Main Road",
+      "city": "Bhopal",
+      "state": "Madhya Pradesh",
+      "country": {
+        "id": "",
+        "name": "India",
+        "code": "IN"
+      },
+      "zipCode": "462016"
+    },
+    "createdById": "1eff7f64-08ea-6fdc-99d0-3f7ae8229af5",
+    "createdByName": "harshith sai",
+    "gstDetails": {
+      "companyName": "",
+      "gstno": ""
+    },
+    "type": "LEAD",
+    "leadActiveType": "ACTIVE",
+    "customerType": "INDIVIDUAL",
+    "source": "REFERRAL",
+    "leadStatus": "CONTACTED",
+    "imgUrl": null,
+    "notes": "",
+    "staffId": "1eff7f64-08ea-6fdc-99d0-3f7ae8229af5",
+    "staffName": "harshith sai",
+    "timeLastStatusUpdated": true,
+    "createdTimeStamp": "2025-11-25T06:00:00Z",
+    "updatedTimeStamp": "2025-11-28T11:00:00Z",
+    "pipeline": {
+      "id": "1f0c53f7-f7f2-641a-9198-630acc37fedc",
+      "name": "Default Pipeline"
+    },
+    "pipelineStage": {
+      "id": "",
+      "name": ""
+    }
+  }
+]
