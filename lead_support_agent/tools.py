@@ -7,13 +7,236 @@ These tools provide:
 - Content generation for messages and emails
 """
 
-import logging
-from typing import Optional, Dict, List, Any
-from langchain_core.tools import tool
-from datetime import datetime
+import asyncio
+import base64
 import json
+import logging
+from datetime import datetime
+from typing import Optional, Dict, List, Any, Iterable, Tuple
+
+from bson import ObjectId
+from bson.binary import Binary
+from langchain_core.tools import tool
+
+from mongo.constants import (
+    mongodb_tools,
+    DATABASE_NAME,
+    uuid_str_to_mongo_binary,
+    BUSINESS_UUID,
+    mongo_binary_to_uuid_str,
+)
 
 logger = logging.getLogger(__name__)
+
+
+def _coerce_datetime(value: Any) -> Optional[datetime]:
+    """Convert deviant timestamp formats to datetime objects."""
+    if isinstance(value, datetime):
+        return value
+    if isinstance(value, dict) and "$date" in value:
+        raw = value.get("$date")
+        if isinstance(raw, str):
+            try:
+                if raw.endswith("Z"):
+                    raw = raw.replace("Z", "+00:00")
+                return datetime.fromisoformat(raw)
+            except Exception:
+                return None
+    if isinstance(value, str):
+        try:
+            candidate = value
+            if candidate.endswith("Z"):
+                candidate = candidate.replace("Z", "+00:00")
+            return datetime.fromisoformat(candidate)
+        except Exception:
+            return None
+    return None
+
+
+def _format_datetime(value: Any) -> str:
+    dt = _coerce_datetime(value)
+    if not dt:
+        return "N/A"
+    return dt.strftime("%Y-%m-%d %H:%M UTC")
+
+
+def _safe_text(value: Any, default: str = "N/A") -> str:
+    if value in (None, "", [], {}):
+        return default
+    if isinstance(value, datetime):
+        return _format_datetime(value)
+    return str(value)
+
+
+def _try_parse_object_id(value: str) -> Optional[ObjectId]:
+    try:
+        return ObjectId(value)
+    except Exception:
+        return None
+
+
+def _try_parse_uuid_binary(value: str) -> Optional[Binary]:
+    try:
+        return uuid_str_to_mongo_binary(value)
+    except Exception:
+        return None
+
+
+def _try_parse_base64_binary(value: str) -> Optional[Binary]:
+    try:
+        decoded = base64.b64decode(value.strip())
+        if len(decoded) == 16:
+            return Binary(decoded, subtype=3)
+    except Exception:
+        return None
+    return None
+
+
+def _collect_identifier_variants(lead_doc: Dict[str, Any], lead_id: Optional[str]) -> List[Any]:
+    """Collect possible identifier representations to match related items."""
+    candidates: List[Any] = []
+    seen: set[Tuple[str, bytes]] = set()
+
+    if lead_doc:
+        doc_id = lead_doc.get("_id")
+        if doc_id is not None:
+            candidates.append(doc_id)
+            if isinstance(doc_id, Binary):
+                try:
+                    uuid_str = mongo_binary_to_uuid_str(doc_id)
+                    candidates.append(uuid_str)
+                except Exception:
+                    pass
+
+    if lead_id:
+        candidates.append(lead_id)
+        if decoded := _try_parse_base64_binary(lead_id):
+            candidates.append(decoded)
+        if obj_id := _try_parse_object_id(lead_id):
+            candidates.append(obj_id)
+        if uuid_bin := _try_parse_uuid_binary(lead_id):
+            candidates.append(uuid_bin)
+
+    normalized: List[Any] = []
+    for value in candidates:
+        if isinstance(value, Binary):
+            key = ("bin", bytes(value))
+        elif isinstance(value, ObjectId):
+            key = ("obj", value.binary)
+        else:
+            key = ("str", str(value).encode("utf-8"))
+
+        if key not in seen:
+            seen.add(key)
+            normalized.append(value)
+
+    return normalized
+
+
+def _build_related_filter(identifiers: Iterable[Any]) -> Dict[str, Any]:
+    clauses: List[Dict[str, Any]] = []
+    for value in identifiers:
+        clauses.append({"parentId": value})
+        clauses.append({"leadId": value})
+    return {"$or": clauses} if clauses else {}
+
+
+def _merge_filters(primary: Optional[Dict[str, Any]], business_filter: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+    if primary and business_filter:
+        return {"$and": [primary, business_filter]}
+    if business_filter:
+        return business_filter
+    return primary or {}
+
+
+def _format_company_section(lead_doc: Dict[str, Any]) -> List[str]:
+    lines: List[str] = []
+    company = lead_doc.get("company") or {}
+    if isinstance(company, dict):
+        name = company.get("name") or company.get("companyName")
+        industry = company.get("industryName")
+        website = company.get("website")
+        if name:
+            lines.append(f"- **Company**: {name}")
+        if industry:
+            lines.append(f"- **Industry**: {industry}")
+        if website:
+            lines.append(f"- **Website**: {website}")
+    address = lead_doc.get("address") or {}
+    if isinstance(address, dict):
+        parts = [
+            address.get("street"),
+            address.get("city"),
+            address.get("state"),
+            address.get("zipCode"),
+        ]
+        formatted = ", ".join(part for part in parts if part)
+        if formatted:
+            lines.append(f"- **Address**: {formatted}")
+    return lines
+
+
+def _format_field_data(field_data: Any, limit: int = 6) -> List[str]:
+    if not isinstance(field_data, list):
+        return []
+    lines: List[str] = []
+    for entry in field_data[:limit]:
+        if not isinstance(entry, dict):
+            continue
+        key = entry.get("fieldName") or entry.get("fieldId")
+        value = entry.get("fieldValue")
+        if key and value:
+            lines.append(f"- **{key}**: {value}")
+    return lines
+
+
+def _build_snapshot_section(
+    tasks: List[Dict[str, Any]],
+    meetings: List[Dict[str, Any]],
+    notes: List[Dict[str, Any]],
+    activities: List[Dict[str, Any]],
+    calls: List[Dict[str, Any]],
+    emails: List[Dict[str, Any]],
+    latest_event: str,
+) -> str:
+    def _count_open(items: List[Dict[str, Any]], status_key: str, closed_values: Iterable[str]) -> int:
+        closed = {value.upper() for value in closed_values}
+        count = 0
+        for item in items:
+            status = (item.get(status_key) or "").upper()
+            if status and status not in closed:
+                count += 1
+        return count
+
+    open_tasks = _count_open(tasks, "taskStatus", ["COMPLETED", "CANCELLED"])
+    upcoming_meetings = _count_open(meetings, "meetingStatus", ["COMPLETED", "CANCELLED"])
+
+    lines = [
+        "## Engagement Snapshot",
+        f"- **Tasks**: {len(tasks)} total ({open_tasks} open)",
+        f"- **Meetings**: {len(meetings)} total ({upcoming_meetings} upcoming)",
+        f"- **Notes**: {len(notes)} | **Activities**: {len(activities)}",
+        f"- **Calls**: {len(calls)} | **Emails**: {len(emails)}",
+        f"- **Latest Touchpoint**: {latest_event}",
+    ]
+    return "\n".join(lines)
+
+
+async def _fetch_related_documents(
+    db,
+    collection: str,
+    related_filter: Dict[str, Any],
+    business_filter: Optional[Dict[str, Any]],
+    sort_field: str,
+    limit: int,
+) -> List[Dict[str, Any]]:
+    query = _merge_filters(related_filter or {}, business_filter)
+    cursor = db[collection].find(query)
+    if sort_field:
+        cursor = cursor.sort(sort_field, -1)
+    if limit:
+        cursor = cursor.limit(limit)
+    return await cursor.to_list(length=limit)
 
 
 # ============================================================================
@@ -32,187 +255,263 @@ async def get_lead_context(
 ) -> str:
     """
     Gather comprehensive context about a specific lead including all related data.
-    
+
     Args:
-        lead_id: The unique identifier of the lead (MongoDB ObjectId or UUID)
-        include_tasks: Include related tasks
-        include_meetings: Include related meetings
-        include_notes: Include related notes
-        include_activities: Include activity history
-        include_calls: Include call logs
-        include_emails: Include email history
-    
+        lead_id: Lead identifier (UUID/ObjectId/base64 string)
+        include_*: Toggles for related data
+
     Returns:
-        Formatted string containing complete lead context
+        Markdown formatted context block
     """
-    from mongo.constants import mongodb_tools, DATABASE_NAME, uuid_str_to_mongo_binary, BUSINESS_UUID
-    from bson import ObjectId
-    
     try:
         if not mongodb_tools.client:
             await mongodb_tools.connect()
-        
+
         db = mongodb_tools.client[DATABASE_NAME]
-        result_parts = []
-        
-        # Get business filter
+        business_filter: Optional[Dict[str, Any]] = {}
+
         business_uuid = BUSINESS_UUID()
-        business_filter = {}
         if business_uuid:
             try:
-                business_filter["businessId"] = uuid_str_to_mongo_binary(business_uuid)
+                business_filter = {"businessId": uuid_str_to_mongo_binary(business_uuid)}
             except Exception:
-                pass
-        
-        # Parse lead_id (could be ObjectId or UUID string)
-        lead_query = {"$or": []}
-        try:
-            lead_query["$or"].append({"_id": ObjectId(lead_id)})
-        except Exception:
-            pass
-        try:
-            lead_query["$or"].append({"_id": uuid_str_to_mongo_binary(lead_id)})
-        except Exception:
-            pass
-        
-        if not lead_query["$or"]:
-            return f"Invalid lead_id format: {lead_id}"
-        
-        # Add business filter to lead query
-        if business_filter:
-            lead_query = {"$and": [lead_query, business_filter]}
-        
-        # 1. Get Lead Details
+                logger.warning("BUSINESS_UUID is invalid; skipping enforced business filter.")
+                business_filter = {}
+        else:
+            business_filter = {}
+
         lead_coll = db["Lead"]
+
+        lead_query_clauses: List[Dict[str, Any]] = []
+        if obj_id := _try_parse_object_id(lead_id):
+            lead_query_clauses.append({"_id": obj_id})
+        if uuid_bin := _try_parse_uuid_binary(lead_id):
+            lead_query_clauses.append({"_id": uuid_bin})
+        if base64_bin := _try_parse_base64_binary(lead_id):
+            lead_query_clauses.append({"_id": base64_bin})
+        lead_query_clauses.append({"_id": lead_id})
+
+        lead_query = {"$or": lead_query_clauses}
+        lead_query = _merge_filters(lead_query, business_filter)
+
         lead_doc = await lead_coll.find_one(lead_query)
-        
         if not lead_doc:
             return f"Lead not found with ID: {lead_id}"
-        
-        # Format lead information
-        personal_info = lead_doc.get("personalInfo", {})
-        lead_info = f"""
-## Lead Profile
-- **Name**: {personal_info.get('name', 'N/A')}
-- **Email**: {personal_info.get('email', 'N/A')}
-- **Mobile**: {personal_info.get('mobile', 'N/A')}
-- **Company**: {personal_info.get('company', lead_doc.get('company', 'N/A'))}
-- **Status**: {lead_doc.get('leadStatus', 'N/A')}
-- **Source**: {lead_doc.get('source', 'N/A')}
-- **Type**: {lead_doc.get('type', 'N/A')}
-- **Lead Score**: {lead_doc.get('leadScore', 'N/A')}
-- **Created**: {lead_doc.get('createdTimeStamp', 'N/A')}
-- **Last Updated**: {lead_doc.get('updatedTimeStamp', 'N/A')}
-"""
-        
-        # Add custom fields if present
-        custom_fields = lead_doc.get("customFields", {})
-        if custom_fields:
-            lead_info += "\n### Custom Fields\n"
-            for key, value in custom_fields.items():
-                lead_info += f"- **{key}**: {value}\n"
-        
-        result_parts.append(lead_info)
-        
-        # Get lead reference for related queries
-        lead_ref_id = lead_doc.get("_id")
-        
-        # Create parent ID filter for related items
-        parent_filter = {"$or": [{"parentId": lead_ref_id}, {"leadId": lead_ref_id}]}
-        if business_filter:
-            parent_filter = {"$and": [parent_filter, business_filter]}
-        
-        # 2. Get Related Tasks
+
+        if not business_filter and lead_doc.get("businessId"):
+            business_filter = {"businessId": lead_doc["businessId"]}
+
+        identifier_variants = _collect_identifier_variants(lead_doc, lead_id)
+        related_filter = _build_related_filter(identifier_variants)
+
+        fetchers = []
         if include_tasks:
-            try:
-                task_coll = db["task"]
-                tasks = await task_coll.find(parent_filter).sort("createdTimeStamp", -1).limit(10).to_list(length=10)
-                if tasks:
-                    task_info = "\n## Related Tasks\n"
-                    for t in tasks:
-                        task_info += f"- [{t.get('taskStatus', 'N/A')}] **{t.get('name', 'Untitled')}** - Priority: {t.get('priority', 'N/A')}, Due: {t.get('dueDate', 'N/A')}\n"
-                        if t.get('description'):
-                            task_info += f"  {t.get('description', '')[:100]}...\n"
-                    result_parts.append(task_info)
-            except Exception as e:
-                logger.warning(f"Error fetching tasks: {e}")
-        
-        # 3. Get Related Meetings
+            fetchers.append(
+                _fetch_related_documents(db, "task", related_filter, business_filter, "createdTimeStamp", 8)
+            )
+        else:
+            fetchers.append(asyncio.sleep(0, result=[]))
+
         if include_meetings:
-            try:
-                meeting_coll = db["meeting"]
-                meetings = await meeting_coll.find(parent_filter).sort("createdTimeStamp", -1).limit(10).to_list(length=10)
-                if meetings:
-                    meeting_info = "\n## Related Meetings\n"
-                    for m in meetings:
-                        meeting_info += f"- [{m.get('meetingStatus', 'N/A')}] **{m.get('title', 'Untitled')}**\n"
-                        meeting_info += f"  Start: {m.get('startTime', 'N/A')}, Type: {m.get('meetingType', 'N/A')}\n"
-                        if m.get('description'):
-                            meeting_info += f"  {m.get('description', '')[:100]}...\n"
-                    result_parts.append(meeting_info)
-            except Exception as e:
-                logger.warning(f"Error fetching meetings: {e}")
-        
-        # 4. Get Related Notes
+            fetchers.append(
+                _fetch_related_documents(db, "meeting", related_filter, business_filter, "createdTimeStamp", 8)
+            )
+        else:
+            fetchers.append(asyncio.sleep(0, result=[]))
+
         if include_notes:
-            try:
-                notes_coll = db["notes"]
-                notes = await notes_coll.find(parent_filter).sort("createdTimeStamp", -1).limit(10).to_list(length=10)
-                if notes:
-                    notes_info = "\n## Notes\n"
-                    for n in notes:
-                        notes_info += f"- **{n.get('subject', 'Note')}** ({n.get('createdTimeStamp', 'N/A')})\n"
-                        if n.get('description'):
-                            notes_info += f"  {n.get('description', '')[:150]}...\n"
-                    result_parts.append(notes_info)
-            except Exception as e:
-                logger.warning(f"Error fetching notes: {e}")
-        
-        # 5. Get Activity History
+            fetchers.append(
+                _fetch_related_documents(db, "notes", related_filter, business_filter, "createdTimeStamp", 6)
+            )
+        else:
+            fetchers.append(asyncio.sleep(0, result=[]))
+
         if include_activities:
-            try:
-                activity_coll = db["activity"]
-                activities = await activity_coll.find(parent_filter).sort("createdTimeStamp", -1).limit(10).to_list(length=10)
-                if activities:
-                    activity_info = "\n## Activity History\n"
-                    for a in activities:
-                        activity_info += f"- [{a.get('type', 'N/A')}] {a.get('description', 'Activity')} - {a.get('createdTimeStamp', 'N/A')}\n"
-                    result_parts.append(activity_info)
-            except Exception as e:
-                logger.warning(f"Error fetching activities: {e}")
-        
-        # 6. Get Call Logs
+            fetchers.append(
+                _fetch_related_documents(db, "activity", related_filter, business_filter, "createdTimeStamp", 10)
+            )
+        else:
+            fetchers.append(asyncio.sleep(0, result=[]))
+
         if include_calls:
-            try:
-                call_coll = db["callLog"]
-                calls = await call_coll.find(parent_filter).sort("createdTimeStamp", -1).limit(5).to_list(length=5)
-                if calls:
-                    call_info = "\n## Call History\n"
-                    for c in calls:
-                        call_info += f"- **{c.get('callPurpose', 'Call')}** - {c.get('callStatus', 'N/A')}, Duration: {c.get('duration', 'N/A')}\n"
-                        if c.get('callNotes'):
-                            call_info += f"  Notes: {c.get('callNotes', '')[:100]}...\n"
-                    result_parts.append(call_info)
-            except Exception as e:
-                logger.warning(f"Error fetching calls: {e}")
-        
-        # 7. Get Email History
+            fetchers.append(
+                _fetch_related_documents(db, "callLog", related_filter, business_filter, "createdTimeStamp", 5)
+            )
+        else:
+            fetchers.append(asyncio.sleep(0, result=[]))
+
         if include_emails:
-            try:
-                mail_coll = db["mailInfo"]
-                emails = await mail_coll.find(parent_filter).sort("createdTimeStamp", -1).limit(5).to_list(length=5)
-                if emails:
-                    email_info = "\n## Email History\n"
-                    for e in emails:
-                        email_info += f"- **{e.get('subject', 'Email')}** - {e.get('status', 'N/A')}, {e.get('createdTimeStamp', 'N/A')}\n"
-                    result_parts.append(email_info)
-            except Exception as e:
-                logger.warning(f"Error fetching emails: {e}")
-        
-        return "\n".join(result_parts) if result_parts else "No data found for lead."
-        
+            fetchers.append(
+                _fetch_related_documents(db, "mailInfo", related_filter, business_filter, "createdTimeStamp", 5)
+            )
+        else:
+            fetchers.append(asyncio.sleep(0, result=[]))
+
+        tasks, meetings, notes, activities, calls, emails = await asyncio.gather(*fetchers)
+
+        result_parts: List[str] = []
+        personal_info = lead_doc.get("personalInfo", {})
+        profile_lines = [
+            "## Lead Profile",
+            f"- **Name**: {personal_info.get('name', 'N/A')}",
+            f"- **Email**: {personal_info.get('email', 'N/A')}",
+            f"- **Mobile**: {personal_info.get('mobile', 'N/A')}",
+            f"- **Status**: {lead_doc.get('leadStatus', 'N/A')}",
+            f"- **Stage**: {lead_doc.get('status', 'N/A')}",
+            f"- **Source**: {lead_doc.get('source', 'N/A')}",
+            f"- **Type**: {lead_doc.get('type', 'N/A')}",
+            f"- **Lead Score**: {lead_doc.get('leadScore', 'N/A')}",
+            f"- **Created**: {_format_datetime(lead_doc.get('createdTimeStamp'))}",
+            f"- **Last Updated**: {_format_datetime(lead_doc.get('updatedTimeStamp'))}",
+        ]
+
+        company_lines = _format_company_section(lead_doc)
+        if company_lines:
+            profile_lines.append("")
+            profile_lines.append("### Organization")
+            profile_lines.extend(company_lines)
+
+        field_lines = _format_field_data(lead_doc.get("fieldData"))
+        if not field_lines:
+            custom_fields = lead_doc.get("customFields", {})
+            if isinstance(custom_fields, dict):
+                field_lines = [f"- **{k}**: {v}" for k, v in list(custom_fields.items())[:6]]
+
+        if field_lines:
+            profile_lines.append("")
+            profile_lines.append("### Key Fields")
+            profile_lines.extend(field_lines)
+
+        result_parts.append("\n".join(profile_lines))
+
+        timeline_events: List[Tuple[datetime, str, str]] = []
+
+        def _push_event(ts_value: Any, label: str, detail: str) -> None:
+            ts = _coerce_datetime(ts_value)
+            if ts:
+                timeline_events.append((ts, label, detail))
+
+        for task in tasks:
+            _push_event(
+                task.get("createdTimeStamp"),
+                "Task",
+                f"{task.get('name', 'Task')} [{task.get('taskStatus', 'N/A')}] (Due: {_format_datetime(task.get('dueDate'))})",
+            )
+
+        for meeting in meetings:
+            _push_event(
+                meeting.get("startDateTime") or meeting.get("startTime") or meeting.get("createdTimeStamp"),
+                "Meeting",
+                f"{meeting.get('title', 'Meeting')} [{meeting.get('meetingStatus', 'N/A')}]",
+            )
+
+        for note in notes:
+            _push_event(
+                note.get("createdTimeStamp"),
+                "Note",
+                f"{note.get('subject', 'Note')} ({_safe_text(note.get('leadName'), 'Lead')})",
+            )
+
+        for activity in activities:
+            _push_event(
+                activity.get("createdTimeStamp"),
+                activity.get("type", "Activity"),
+                _safe_text(activity.get("description"), "Activity update"),
+            )
+
+        for call in calls:
+            _push_event(
+                call.get("createdTimeStamp"),
+                "Call",
+                f"{call.get('callPurpose', 'Call')} [{call.get('callStatus', 'N/A')}]",
+            )
+
+        for email in emails:
+            _push_event(
+                email.get("createdTimeStamp"),
+                "Email",
+                f"{email.get('subject', 'Email')} [{email.get('status', 'N/A')}]",
+            )
+
+        timeline_events.sort(key=lambda item: item[0], reverse=True)
+        latest_event_str = timeline_events[0][0].strftime("%Y-%m-%d %H:%M UTC") if timeline_events else "No recent activity"
+
+        result_parts.append(
+            _build_snapshot_section(tasks, meetings, notes, activities, calls, emails, latest_event_str)
+        )
+
+        if tasks:
+            task_lines = ["## Related Tasks"]
+            for task in tasks:
+                task_lines.append(
+                    f"- [{task.get('taskStatus', 'N/A')}] **{task.get('name', 'Untitled')}** · Priority: {task.get('priority', 'N/A')} · Due: {_format_datetime(task.get('dueDate'))}"
+                )
+                if task.get("description"):
+                    desc = task.get("description", "")
+                    task_lines.append(f"  {desc[:140]}{'...' if len(desc) > 140 else ''}")
+            result_parts.append("\n".join(task_lines))
+
+        if meetings:
+            meeting_lines = ["## Related Meetings"]
+            for meeting in meetings:
+                meeting_lines.append(
+                    f"- [{meeting.get('meetingStatus', 'N/A')}] **{meeting.get('title', 'Untitled')}** ({meeting.get('meetingType', 'N/A')}) · {_format_datetime(meeting.get('startDateTime') or meeting.get('startTime'))}"
+                )
+                if meeting.get("description"):
+                    desc = meeting.get("description", "")
+                    meeting_lines.append(f"  {desc[:180]}{'...' if len(desc) > 180 else ''}")
+            result_parts.append("\n".join(meeting_lines))
+
+        if notes:
+            note_lines = ["## Notes"]
+            for note in notes:
+                note_lines.append(
+                    f"- **{note.get('subject', 'Note')}** ({_format_datetime(note.get('createdTimeStamp'))})"
+                )
+                if note.get("description"):
+                    desc = note.get("description", "")
+                    note_lines.append(f"  {desc[:200]}{'...' if len(desc) > 200 else ''}")
+            result_parts.append("\n".join(note_lines))
+
+        if activities:
+            activity_lines = ["## Activity History"]
+            for activity in activities:
+                activity_lines.append(
+                    f"- [{activity.get('type', 'N/A')}] {_safe_text(activity.get('description'), 'Activity')} · {_format_datetime(activity.get('createdTimeStamp'))}"
+                )
+            result_parts.append("\n".join(activity_lines))
+
+        if calls:
+            call_lines = ["## Call History"]
+            for call in calls:
+                call_lines.append(
+                    f"- **{call.get('callPurpose', 'Call')}** — {call.get('callStatus', 'N/A')} · Duration: {_safe_text(call.get('duration', 'N/A'))}"
+                )
+                if call.get("callNotes"):
+                    desc = call.get("callNotes", "")
+                    call_lines.append(f"  Notes: {desc[:160]}{'...' if len(desc) > 160 else ''}")
+            result_parts.append("\n".join(call_lines))
+
+        if emails:
+            email_lines = ["## Email History"]
+            for email in emails:
+                email_lines.append(
+                    f"- **{email.get('subject', 'Email')}** — {email.get('status', 'N/A')} · {_format_datetime(email.get('createdTimeStamp'))}"
+                )
+            result_parts.append("\n".join(email_lines))
+
+        if timeline_events:
+            timeline_lines = ["## Recent Timeline"]
+            for event in timeline_events[:8]:
+                timeline_lines.append(
+                    f"- {event[0].strftime('%Y-%m-%d %H:%M UTC')} — **{event[1]}**: {event[2]}"
+                )
+            result_parts.append("\n".join(timeline_lines))
+
+        return "\n\n".join(result_parts) if result_parts else "No data found for lead."
+
     except Exception as e:
-        logger.error(f"Error in get_lead_context: {e}")
+        logger.error(f"Error in get_lead_context: {e}", exc_info=True)
         return f"Error gathering lead context: {str(e)}"
 
 
@@ -224,64 +523,66 @@ async def get_lead_context(
 async def compare_leads(lead_ids: List[str]) -> str:
     """
     Compare multiple leads side-by-side across key dimensions.
-    
+
     Args:
         lead_ids: List of lead IDs to compare (2-5 leads recommended)
-    
+
     Returns:
         Formatted comparison table and analysis
     """
-    from mongo.constants import mongodb_tools, DATABASE_NAME, uuid_str_to_mongo_binary, BUSINESS_UUID
-    from bson import ObjectId
-    
     try:
         if not mongodb_tools.client:
             await mongodb_tools.connect()
-        
+
         db = mongodb_tools.client[DATABASE_NAME]
         lead_coll = db["Lead"]
         task_coll = db["task"]
         meeting_coll = db["meeting"]
         activity_coll = db["activity"]
-        
+
+        business_filter: Optional[Dict[str, Any]] = {}
         business_uuid = BUSINESS_UUID()
-        
+        if business_uuid:
+            try:
+                business_filter = {"businessId": uuid_str_to_mongo_binary(business_uuid)}
+            except Exception:
+                logger.warning("BUSINESS_UUID is invalid; skipping enforced business filter for comparisons.")
+                business_filter = {}
+        else:
+            business_filter = {}
+
         leads_data = []
-        
+
         for lead_id in lead_ids[:5]:  # Limit to 5 leads
-            # Parse lead_id
-            lead_query = {"$or": []}
-            try:
-                lead_query["$or"].append({"_id": ObjectId(lead_id)})
-            except Exception:
-                pass
-            try:
-                lead_query["$or"].append({"_id": uuid_str_to_mongo_binary(lead_id)})
-            except Exception:
-                pass
-            
-            if not lead_query["$or"]:
-                continue
-            
+            lead_query_clauses: List[Dict[str, Any]] = []
+            if obj_id := _try_parse_object_id(lead_id):
+                lead_query_clauses.append({"_id": obj_id})
+            if uuid_bin := _try_parse_uuid_binary(lead_id):
+                lead_query_clauses.append({"_id": uuid_bin})
+            if base64_bin := _try_parse_base64_binary(lead_id):
+                lead_query_clauses.append({"_id": base64_bin})
+            lead_query_clauses.append({"_id": lead_id})
+
+            lead_query = {"$or": lead_query_clauses}
+            lead_query = _merge_filters(lead_query, business_filter)
+
             lead_doc = await lead_coll.find_one(lead_query)
             if not lead_doc:
                 continue
-            
+
             lead_ref_id = lead_doc.get("_id")
-            parent_filter = {"$or": [{"parentId": lead_ref_id}, {"leadId": lead_ref_id}]}
-            
-            # Gather metrics
+            parent_core_filter = {"$or": [{"parentId": lead_ref_id}, {"leadId": lead_ref_id}]}
+            parent_filter = _merge_filters(parent_core_filter, business_filter)
+
             personal_info = lead_doc.get("personalInfo", {})
             task_count = await task_coll.count_documents(parent_filter)
             meeting_count = await meeting_coll.count_documents(parent_filter)
             activity_count = await activity_coll.count_documents(parent_filter)
-            
-            # Get open tasks count
-            open_tasks = await task_coll.count_documents({
-                **parent_filter,
-                "taskStatus": {"$nin": ["COMPLETED", "CANCELLED"]}
-            })
-            
+
+            open_task_filter = {"$and": [parent_core_filter, {"taskStatus": {"$nin": ["COMPLETED", "CANCELLED"]}}]}
+            open_task_filter = _merge_filters(open_task_filter, business_filter)
+            open_tasks = await task_coll.count_documents(open_task_filter)
+
             leads_data.append({
                 "id": str(lead_ref_id),
                 "name": personal_info.get("name", "N/A"),
@@ -295,17 +596,15 @@ async def compare_leads(lead_ids: List[str]) -> str:
                 "meeting_count": meeting_count,
                 "activity_count": activity_count,
             })
-        
+
         if not leads_data:
             return "No valid leads found for comparison."
-        
+
         # Build comparison output
         result = "## Lead Comparison\n\n"
-        
-        # Summary table
         result += "| Metric | " + " | ".join([l["name"][:15] for l in leads_data]) + " |\n"
         result += "|--------|" + "|".join(["--------" for _ in leads_data]) + "|\n"
-        
+
         metrics = [
             ("Company", "company"),
             ("Status", "status"),
@@ -317,33 +616,29 @@ async def compare_leads(lead_ids: List[str]) -> str:
             ("Meetings", "meeting_count"),
             ("Activities", "activity_count"),
         ]
-        
+
         for metric_name, metric_key in metrics:
-            result += f"| {metric_name} | " + " | ".join([str(l.get(metric_key, "N/A")) for l in leads_data]) + " |\n"
-        
+            result += f"| {metric_name} | " + " | ".join([str(l.get(metric_key, 'N/A')) for l in leads_data]) + " |\n"
+
         # Analysis section
         result += "\n## Analysis\n\n"
-        
-        # Find highest engagement
+
         max_activity = max(leads_data, key=lambda x: x["activity_count"])
         result += f"- **Highest Engagement**: {max_activity['name']} ({max_activity['activity_count']} activities)\n"
-        
-        # Find highest score
+
         max_score = max(leads_data, key=lambda x: x.get("score", 0) or 0)
         if max_score.get("score"):
             result += f"- **Highest Lead Score**: {max_score['name']} (Score: {max_score['score']})\n"
-        
-        # Find most meetings
+
         max_meetings = max(leads_data, key=lambda x: x["meeting_count"])
         result += f"- **Most Meetings**: {max_meetings['name']} ({max_meetings['meeting_count']} meetings)\n"
-        
-        # Find pending work
+
         max_open = max(leads_data, key=lambda x: x["open_tasks"])
         if max_open["open_tasks"] > 0:
             result += f"- **Most Pending Tasks**: {max_open['name']} ({max_open['open_tasks']} open tasks)\n"
-        
+
         return result
-        
+
     except Exception as e:
         logger.error(f"Error in compare_leads: {e}")
         return f"Error comparing leads: {str(e)}"
