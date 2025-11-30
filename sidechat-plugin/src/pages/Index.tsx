@@ -1,6 +1,8 @@
 import { ChatSidebar } from "@/components/ChatSidebar";
 import { LeadPlugins } from "@/components/LeadPlugins";
-import { config, isConfigured } from "@/config";
+import { LeadSelector } from "@/components/LeadSelector";
+import { LeadProvider, useLeadContext } from "@/context/LeadContext";
+import { config } from "@/config";
 import { AlertCircle, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,9 +17,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useState } from "react";
 
-const Index = () => {
-  const configured = isConfigured();
-  const [showConfig, setShowConfig] = useState(!configured);
+const IndexContent = () => {
+  const { selectedLead } = useLeadContext();
+  const configured = selectedLead !== null;
+  const [showConfig, setShowConfig] = useState(false);
 
   return (
     <div className="flex h-screen bg-background">
@@ -29,22 +32,23 @@ const Index = () => {
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col">
         {/* Header */}
-        <div className="p-4 border-b flex items-center justify-between bg-muted/30">
-          <div>
-            <h1 className="text-xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-              Lead Support Agent Testing
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              Test the Lead Support Agent endpoints and WebSocket integration
-            </p>
-          </div>
-          <Dialog open={showConfig} onOpenChange={setShowConfig}>
-            <DialogTrigger asChild>
-              <Button variant="outline" size="sm" className="gap-2">
-                <Settings className="h-4 w-4" />
-                Configure
-              </Button>
-            </DialogTrigger>
+        <div className="p-4 border-b flex flex-col gap-3 bg-muted/30">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                Lead Support Agent Testing
+              </h1>
+              <p className="text-sm text-muted-foreground">
+                Test the Lead Support Agent endpoints and WebSocket integration
+              </p>
+            </div>
+            <Dialog open={showConfig} onOpenChange={setShowConfig}>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="sm" className="gap-2">
+                  <Settings className="h-4 w-4" />
+                  Configure
+                </Button>
+              </DialogTrigger>
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>Configuration</DialogTitle>
@@ -110,6 +114,10 @@ const Index = () => {
               </div>
             </DialogContent>
           </Dialog>
+          </div>
+          
+          {/* Lead Selector */}
+          <LeadSelector />
         </div>
 
         {/* Configuration Warning */}
@@ -118,24 +126,11 @@ const Index = () => {
             <AlertCircle className="h-5 w-5 text-destructive flex-shrink-0 mt-0.5" />
             <div>
               <h3 className="font-semibold text-destructive">
-                Configuration Required
+                No Lead Selected
               </h3>
               <p className="text-sm text-muted-foreground mt-1">
-                Please configure your Business ID, Lead ID, and Member ID before
-                testing. You can set these in:
+                Please select a lead from the dropdown above to start testing.
               </p>
-              <ul className="text-sm text-muted-foreground mt-2 list-disc list-inside">
-                <li>
-                  Environment variables:{" "}
-                  <code className="bg-muted px-1 rounded">VITE_BUSINESS_ID</code>,{" "}
-                  <code className="bg-muted px-1 rounded">VITE_LEAD_ID</code>,{" "}
-                  <code className="bg-muted px-1 rounded">VITE_MEMBER_ID</code>
-                </li>
-                <li>
-                  Or directly in{" "}
-                  <code className="bg-muted px-1 rounded">src/config.ts</code>
-                </li>
-              </ul>
             </div>
           </div>
         )}
@@ -261,16 +256,15 @@ const Index = () => {
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Lead ID:</span>
-                  <span
-                    className={
-                      config.leadId === "YOUR_LEAD_ID_HERE"
-                        ? "text-destructive"
-                        : ""
-                    }
-                  >
-                    {config.leadId.slice(0, 20)}
-                    {config.leadId.length > 20 ? "..." : ""}
+                  <span className="text-muted-foreground">Selected Lead:</span>
+                  <span className={!selectedLead ? "text-destructive" : ""}>
+                    {selectedLead ? (
+                      <>
+                        {selectedLead.name} ({selectedLead.leadId.slice(0, 8)}...)
+                      </>
+                    ) : (
+                      "No lead selected"
+                    )}
                   </span>
                 </div>
                 <div className="flex justify-between">
@@ -297,6 +291,14 @@ const Index = () => {
         <ChatSidebar />
       </div>
     </div>
+  );
+};
+
+const Index = () => {
+  return (
+    <LeadProvider>
+      <IndexContent />
+    </LeadProvider>
   );
 };
 

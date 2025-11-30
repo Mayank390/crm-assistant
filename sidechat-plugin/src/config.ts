@@ -17,7 +17,7 @@ export const config = {
   
   // Business ID for filtering data
   // Replace with your actual business UUID
-  businessId: import.meta.env.VITE_BUSINESS_ID || "YOUR_BUSINESS_ID_HERE",
+  businessId: import.meta.env.VITE_BUSINESS_ID || "1eff7f64-09ef-670e-8c7c-2b9676f8dbb6",
   
   // Lead ID to focus on
   // Replace with your actual lead ObjectId or UUID

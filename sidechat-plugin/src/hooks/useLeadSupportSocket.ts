@@ -39,6 +39,10 @@ interface SendMessageOptions {
   task_type?: string;
 }
 
+interface UseLeadSupportSocketOptions {
+  leadId?: string;
+}
+
 interface UseLeadSupportSocketReturn {
   messages: Message[];
   isConnected: boolean;
@@ -57,7 +61,8 @@ interface UseLeadSupportSocketReturn {
   reconnect: () => void;
 }
 
-export const useLeadSupportSocket = (): UseLeadSupportSocketReturn => {
+export const useLeadSupportSocket = (options?: UseLeadSupportSocketOptions): UseLeadSupportSocketReturn => {
+  const currentLeadId = options?.leadId || config.leadId;
   const [messages, setMessages] = useState<Message[]>([]);
   const [isConnected, setIsConnected] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -250,7 +255,7 @@ export const useLeadSupportSocket = (): UseLeadSupportSocketReturn => {
 
     const message: any = {
       type: options.type,
-      lead_id: options.lead_id || config.leadId,
+      lead_id: options.lead_id || currentLeadId,
       business_id: config.businessId,
     };
 
@@ -263,7 +268,7 @@ export const useLeadSupportSocket = (): UseLeadSupportSocketReturn => {
     if (options.task_type) message.task_type = options.task_type;
 
     wsRef.current.send(JSON.stringify(message));
-  }, []);
+  }, [currentLeadId]);
 
   const sendQuery = useCallback((query: string) => {
     // Add user message to UI

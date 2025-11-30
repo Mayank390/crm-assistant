@@ -35,7 +35,7 @@ import {
   ObjectionHandlingResponse,
   MeetingPrepResponse,
 } from "@/api/leadSupportApi";
-import { config, isConfigured } from "@/config";
+import { useLeadContext } from "@/context/LeadContext";
 
 type PluginResult =
   | LeadSummaryResponse
@@ -61,6 +61,7 @@ const initialPluginState: PluginState = {
 };
 
 export const LeadPlugins = () => {
+  const { selectedLead } = useLeadContext();
   const [summaryState, setSummaryState] = useState<PluginState>(initialPluginState);
   const [insightsState, setInsightsState] = useState<PluginState>(initialPluginState);
   const [nextStepsState, setNextStepsState] = useState<PluginState>(initialPluginState);
@@ -73,7 +74,8 @@ export const LeadPlugins = () => {
   const [meetingContext, setMeetingContext] = useState("");
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
-  const configured = isConfigured();
+  const configured = selectedLead !== null;
+  const leadId = selectedLead?.leadId;
 
   const copyToClipboard = async (text: string, id: string) => {
     await navigator.clipboard.writeText(text);
@@ -86,9 +88,10 @@ export const LeadPlugins = () => {
   // ============================================
 
   const handleGetSummary = async () => {
+    if (!leadId) return;
     setSummaryState({ ...summaryState, loading: true, error: null });
     try {
-      const result = await leadSupportApi.getSummary();
+      const result = await leadSupportApi.getSummary(leadId);
       setSummaryState({ loading: false, error: null, result, expanded: true });
     } catch (err: any) {
       setSummaryState({ ...summaryState, loading: false, error: err.message });
@@ -96,9 +99,10 @@ export const LeadPlugins = () => {
   };
 
   const handleGetInsights = async () => {
+    if (!leadId) return;
     setInsightsState({ ...insightsState, loading: true, error: null });
     try {
-      const result = await leadSupportApi.getInsights();
+      const result = await leadSupportApi.getInsights(leadId);
       setInsightsState({ loading: false, error: null, result, expanded: true });
     } catch (err: any) {
       setInsightsState({ ...insightsState, loading: false, error: err.message });
@@ -106,9 +110,10 @@ export const LeadPlugins = () => {
   };
 
   const handleGetNextSteps = async () => {
+    if (!leadId) return;
     setNextStepsState({ ...nextStepsState, loading: true, error: null });
     try {
-      const result = await leadSupportApi.getNextSteps();
+      const result = await leadSupportApi.getNextSteps(leadId);
       setNextStepsState({ loading: false, error: null, result, expanded: true });
     } catch (err: any) {
       setNextStepsState({ ...nextStepsState, loading: false, error: err.message });
@@ -116,9 +121,10 @@ export const LeadPlugins = () => {
   };
 
   const handleDraftMessage = async () => {
+    if (!leadId) return;
     setDraftState({ ...draftState, loading: true, error: null });
     try {
-      const result = await leadSupportApi.draftMessage(undefined, "email", draftContext || undefined);
+      const result = await leadSupportApi.draftMessage(leadId, "email", draftContext || undefined);
       setDraftState({ loading: false, error: null, result, expanded: true });
     } catch (err: any) {
       setDraftState({ ...draftState, loading: false, error: err.message });
@@ -126,10 +132,10 @@ export const LeadPlugins = () => {
   };
 
   const handleObjection = async () => {
-    if (!objectionInput.trim()) return;
+    if (!leadId || !objectionInput.trim()) return;
     setObjectionState({ ...objectionState, loading: true, error: null });
     try {
-      const result = await leadSupportApi.handleObjection(objectionInput);
+      const result = await leadSupportApi.handleObjection(objectionInput, leadId);
       setObjectionState({ loading: false, error: null, result, expanded: true });
     } catch (err: any) {
       setObjectionState({ ...objectionState, loading: false, error: err.message });
@@ -137,9 +143,10 @@ export const LeadPlugins = () => {
   };
 
   const handleMeetingPrep = async () => {
+    if (!leadId) return;
     setMeetingPrepState({ ...meetingPrepState, loading: true, error: null });
     try {
-      const result = await leadSupportApi.prepareMeeting(undefined, meetingContext || undefined);
+      const result = await leadSupportApi.prepareMeeting(leadId, meetingContext || undefined);
       setMeetingPrepState({ loading: false, error: null, result, expanded: true });
     } catch (err: any) {
       setMeetingPrepState({ ...meetingPrepState, loading: false, error: err.message });
@@ -232,11 +239,11 @@ export const LeadPlugins = () => {
         {/* Config Status */}
         <div className="mt-3 flex items-center gap-2">
           <Badge variant={configured ? "default" : "destructive"}>
-            {configured ? "Configured" : "Not Configured"}
+            {configured ? "Lead Selected" : "No Lead Selected"}
           </Badge>
-          {config.features.showDebugInfo && (
+          {selectedLead && (
             <span className="text-xs text-muted-foreground">
-              Lead: {config.leadId.slice(0, 8)}...
+              {selectedLead.name}
             </span>
           )}
         </div>
@@ -428,7 +435,14 @@ export const LeadPlugins = () => {
       {/* Footer */}
       <div className="p-3 border-t bg-muted/30">
         <p className="text-xs text-muted-foreground text-center">
-          Using Lead ID: <code className="bg-muted px-1 rounded">{config.leadId.slice(0, 12)}...</code>
+          {selectedLead ? (
+            <>
+              Using: <span className="font-medium">{selectedLead.name}</span> (
+              <code className="bg-muted px-1 rounded">{selectedLead.leadId.slice(0, 12)}...</code>)
+            </>
+          ) : (
+            "No lead selected"
+          )}
         </p>
       </div>
     </div>

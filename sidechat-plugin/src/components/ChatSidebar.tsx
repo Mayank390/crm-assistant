@@ -21,9 +21,10 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { useLeadSupportSocket, Message } from "@/hooks/useLeadSupportSocket";
-import { config } from "@/config";
+import { useLeadContext } from "@/context/LeadContext";
 
 export const ChatSidebar = () => {
+  const { selectedLead } = useLeadContext();
   const {
     messages,
     isConnected,
@@ -38,7 +39,7 @@ export const ChatSidebar = () => {
     prepareForMeeting,
     clearMessages,
     reconnect,
-  } = useLeadSupportSocket();
+  } = useLeadSupportSocket({ leadId: selectedLead?.leadId });
 
   const [inputValue, setInputValue] = useState("");
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -360,10 +361,9 @@ export const ChatSidebar = () => {
               </div>
 
               {/* Debug Info */}
-              {config.features.showDebugInfo && (
+              {selectedLead && (
                 <p className="text-xs text-muted-foreground mt-2">
-                  Lead: {config.leadId.slice(0, 8)}... | Business:{" "}
-                  {config.businessId.slice(0, 8)}...
+                  Lead: {selectedLead.name} ({selectedLead.leadId.slice(0, 8)}...)
                 </p>
               )}
             </div>

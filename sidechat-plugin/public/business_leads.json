@@ -1,0 +1,122 @@
+[
+  {
+    "leadId": "9312ec3a-c55e-4890-a2f2-781fab06af79",
+    "name": "Neha Chavan",
+    "email": "neha.chavan89@example.com",
+    "status": "QUALIFIED"
+  },
+  {
+    "leadId": "a1ca5c30-58ac-40bf-a5d3-6f1b8b1c67d1",
+    "name": "Anita Patel",
+    "email": "anita.patel98@example.com",
+    "status": "CONTACTED"
+  },
+  {
+    "leadId": "18362a3f-7a2d-4b8a-9f55-d561af5c1c77",
+    "name": "Karan Reddy",
+    "email": "karan.reddy36@example.com",
+    "status": "NEW"
+  },
+  {
+    "leadId": "74968f5f-532c-4c56-8251-f8f841caa168",
+    "name": "Sunita Shah",
+    "email": "sunita.shah95@example.com",
+    "status": "FOLLOW_UP"
+  },
+  {
+    "leadId": "e0e87a65-ad4d-45af-b280-2f7afd5f4ac7",
+    "name": "Neha Sharma",
+    "email": "neha.sharma11@example.com",
+    "status": "CONTACTED"
+  },
+  {
+    "leadId": "cb24d582-4540-4389-8e5f-65a3518daff2",
+    "name": "Priya Mehta",
+    "email": "priya.mehta80@example.com",
+    "status": "CONTACTED"
+  },
+  {
+    "leadId": "da1de232-f2a7-4589-8b7d-9c0b060091e8",
+    "name": "Karan Kumar",
+    "email": "karan.kumar63@example.com",
+    "status": "QUALIFIED"
+  },
+  {
+    "leadId": "d3317c9f-c08d-428d-ae72-7f97089bbfcb",
+    "name": "Manish Iyer",
+    "email": "manish.iyer85@example.com",
+    "status": "FOLLOW_UP"
+  },
+  {
+    "leadId": "115ff407-abf6-4ccf-ac55-8ca8880d6bf3",
+    "name": "Meena Bajaj",
+    "email": "meena.bajaj46@example.com",
+    "status": "NEW"
+  },
+  {
+    "leadId": "604e811c-68f8-4d71-b615-bd630cdd7d81",
+    "name": "Meena Mehta",
+    "email": "meena.mehta63@example.com",
+    "status": "CONTACTED"
+  },
+  {
+    "leadId": "067e29f3-400a-4b29-8354-54b0c7e47104",
+    "name": "Arun Bose",
+    "email": "arun.bose58@example.com",
+    "status": "NEW"
+  },
+  {
+    "leadId": "bbf8f5f6-034b-4ea7-9c22-4f6774bd1388",
+    "name": "Karan Iyer",
+    "email": "karan.iyer84@example.com",
+    "status": "NEW"
+  },
+  {
+    "leadId": "4c47294f-b99f-4c71-a950-3080e75859d0",
+    "name": "Rekha Nair",
+    "email": "rekha.nair14@example.com",
+    "status": "FOLLOW_UP"
+  },
+  {
+    "leadId": "a74ea942-4be1-4926-93aa-cf5df6c05f5c",
+    "name": "Swati Chopra",
+    "email": "swati.chopra65@example.com",
+    "status": "QUALIFIED"
+  },
+  {
+    "leadId": "d24ec76a-c9ac-44eb-b469-ef8d3fec146b",
+    "name": "Meena Iyer",
+    "email": "meena.iyer43@example.com",
+    "status": "QUALIFIED"
+  },
+  {
+    "leadId": "0cb22dcb-75f5-4abb-9679-5f979ecd9036",
+    "name": "Arun Gupta",
+    "email": "arun.gupta86@example.com",
+    "status": "FOLLOW_UP"
+  },
+  {
+    "leadId": "585b1acb-0856-4592-8a8e-ab6c486e642a",
+    "name": "Manish Chavan",
+    "email": "manish.chavan48@example.com",
+    "status": "CONTACTED"
+  },
+  {
+    "leadId": "450f31c5-d564-4afa-a6d0-87673ecb5a18",
+    "name": "Vikram Verma",
+    "email": "vikram.verma65@example.com",
+    "status": "CONTACTED"
+  },
+  {
+    "leadId": "7abea9ae-ad4a-407f-8a57-63eea68ba127",
+    "name": "Meena Desai",
+    "email": "meena.desai91@example.com",
+    "status": "FOLLOW_UP"
+  },
+  {
+    "leadId": "7dbddf6e-3ddb-4a57-a758-21db81c59d1c",
+    "name": "Deepak Kumar",
+    "email": "deepak.kumar87@example.com",
+    "status": "CONTACTED"
+  }
+]
