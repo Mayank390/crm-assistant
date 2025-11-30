@@ -17,7 +17,7 @@ export const config = {
   
   // Business ID for filtering data
   // Replace with your actual business UUID
-  businessId: import.meta.env.VITE_BUSINESS_ID || "YOUR_BUSINESS_ID_HERE",
+  businessId: import.meta.env.VITE_BUSINESS_ID || "1eff7f64-09ef-670e-8c7c-2b9676f8dbb6",
   
   // Lead ID to focus on
   // Replace with your actual lead ObjectId or UUID
@@ -25,7 +25,7 @@ export const config = {
   
   // Member/User ID for authentication
   // Replace with your actual member UUID
-  memberId: import.meta.env.VITE_MEMBER_ID || "YOUR_MEMBER_ID_HERE",
+  memberId: import.meta.env.VITE_MEMBER_ID || "1eff7f64-08ea-6fdc-99d0-3f7ae8229af5",
 
   // ============================================
   // Feature Flags
@@ -41,10 +41,10 @@ export const config = {
 export type Config = typeof config;
 
 // Helper to check if config is properly set
+// Note: leadId is now dynamically selected via LeadContext
 export const isConfigured = (): boolean => {
   return (
     config.businessId !== "YOUR_BUSINESS_ID_HERE" &&
-    config.leadId !== "YOUR_LEAD_ID_HERE" &&
     config.memberId !== "YOUR_MEMBER_ID_HERE"
   );
 };

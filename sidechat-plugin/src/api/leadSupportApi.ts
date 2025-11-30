@@ -4,6 +4,15 @@ import { config, getLeadSupportApiUrl } from "@/config";
 // Response Types
 // ============================================
 
+// Current lead ID - set by the app when a lead is selected
+let currentLeadId: string | null = null;
+
+export const setCurrentLeadId = (leadId: string | null) => {
+  currentLeadId = leadId;
+};
+
+export const getCurrentLeadId = () => currentLeadId;
+
 export interface LeadSummaryResponse {
   lead_id: string;
   summary: string;
@@ -82,11 +91,12 @@ class LeadSupportApiClient {
   /**
    * Get AI-generated summary of a lead
    */
-  async getSummary(leadId?: string): Promise<LeadSummaryResponse> {
+  async getSummary(leadId: string): Promise<LeadSummaryResponse> {
+    if (!leadId) throw new Error("Lead ID is required");
     return this.request<LeadSummaryResponse>("/summary", {
       method: "POST",
       body: JSON.stringify({
-        lead_id: leadId || config.leadId,
+        lead_id: leadId,
         business_id: config.businessId,
       }),
     });
@@ -95,11 +105,12 @@ class LeadSupportApiClient {
   /**
    * Get AI-generated insights about a lead
    */
-  async getInsights(leadId?: string): Promise<LeadInsightsResponse> {
+  async getInsights(leadId: string): Promise<LeadInsightsResponse> {
+    if (!leadId) throw new Error("Lead ID is required");
     return this.request<LeadInsightsResponse>("/insights", {
       method: "POST",
       body: JSON.stringify({
-        lead_id: leadId || config.leadId,
+        lead_id: leadId,
         business_id: config.businessId,
       }),
     });
@@ -108,11 +119,12 @@ class LeadSupportApiClient {
   /**
    * Get AI-recommended next best steps for a lead
    */
-  async getNextSteps(leadId?: string): Promise<LeadNextStepsResponse> {
+  async getNextSteps(leadId: string): Promise<LeadNextStepsResponse> {
+    if (!leadId) throw new Error("Lead ID is required");
     return this.request<LeadNextStepsResponse>("/next-steps", {
       method: "POST",
       body: JSON.stringify({
-        lead_id: leadId || config.leadId,
+        lead_id: leadId,
         business_id: config.businessId,
       }),
     });
@@ -135,14 +147,15 @@ class LeadSupportApiClient {
    * Draft a personalized message for a lead
    */
   async draftMessage(
-    leadId?: string,
+    leadId: string,
     messageType: string = "email",
     context?: string
   ): Promise<DraftMessageResponse> {
+    if (!leadId) throw new Error("Lead ID is required");
     return this.request<DraftMessageResponse>("/draft-message", {
       method: "POST",
       body: JSON.stringify({
-        lead_id: leadId || config.leadId,
+        lead_id: leadId,
         message_type: messageType,
         context,
         business_id: config.businessId,
@@ -155,12 +168,13 @@ class LeadSupportApiClient {
    */
   async handleObjection(
     objection: string,
-    leadId?: string
+    leadId: string
   ): Promise<ObjectionHandlingResponse> {
+    if (!leadId) throw new Error("Lead ID is required");
     return this.request<ObjectionHandlingResponse>("/objection", {
       method: "POST",
       body: JSON.stringify({
-        lead_id: leadId || config.leadId,
+        lead_id: leadId,
         objection,
         business_id: config.businessId,
       }),
@@ -171,13 +185,14 @@ class LeadSupportApiClient {
    * Get AI-generated meeting preparation document
    */
   async prepareMeeting(
-    leadId?: string,
+    leadId: string,
     meetingContext?: string
   ): Promise<MeetingPrepResponse> {
+    if (!leadId) throw new Error("Lead ID is required");
     return this.request<MeetingPrepResponse>("/meeting-prep", {
       method: "POST",
       body: JSON.stringify({
-        lead_id: leadId || config.leadId,
+        lead_id: leadId,
         meeting_context: meetingContext,
         business_id: config.businessId,
       }),
@@ -191,10 +206,10 @@ class LeadSupportApiClient {
   /**
    * Quick GET for lead summary
    */
-  async getSummaryQuick(leadId?: string): Promise<LeadSummaryResponse> {
-    const id = leadId || config.leadId;
+  async getSummaryQuick(leadId: string): Promise<LeadSummaryResponse> {
+    if (!leadId) throw new Error("Lead ID is required");
     const businessParam = config.businessId ? `?business_id=${config.businessId}` : "";
-    return this.request<LeadSummaryResponse>(`/${id}/summary${businessParam}`, {
+    return this.request<LeadSummaryResponse>(`/${leadId}/summary${businessParam}`, {
       method: "GET",
     });
   }
@@ -202,10 +217,10 @@ class LeadSupportApiClient {
   /**
    * Quick GET for lead insights
    */
-  async getInsightsQuick(leadId?: string): Promise<LeadInsightsResponse> {
-    const id = leadId || config.leadId;
+  async getInsightsQuick(leadId: string): Promise<LeadInsightsResponse> {
+    if (!leadId) throw new Error("Lead ID is required");
     const businessParam = config.businessId ? `?business_id=${config.businessId}` : "";
-    return this.request<LeadInsightsResponse>(`/${id}/insights${businessParam}`, {
+    return this.request<LeadInsightsResponse>(`/${leadId}/insights${businessParam}`, {
       method: "GET",
     });
   }
@@ -213,10 +228,10 @@ class LeadSupportApiClient {
   /**
    * Quick GET for lead next steps
    */
-  async getNextStepsQuick(leadId?: string): Promise<LeadNextStepsResponse> {
-    const id = leadId || config.leadId;
+  async getNextStepsQuick(leadId: string): Promise<LeadNextStepsResponse> {
+    if (!leadId) throw new Error("Lead ID is required");
     const businessParam = config.businessId ? `?business_id=${config.businessId}` : "";
-    return this.request<LeadNextStepsResponse>(`/${id}/next-steps${businessParam}`, {
+    return this.request<LeadNextStepsResponse>(`/${leadId}/next-steps${businessParam}`, {
       method: "GET",
     });
   }

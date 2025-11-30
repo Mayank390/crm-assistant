@@ -20,10 +20,12 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
-import { useLeadSupportSocket, Message } from "@/hooks/useLeadSupportSocket";
-import { config } from "@/config";
+import { useLeadSupportSocket } from "@/hooks/useLeadSupportSocket";
+import { useLeadContext } from "@/context/LeadContext";
+import { MessageRenderer } from "@/components/MessageRenderer";
 
 export const ChatSidebar = () => {
+  const { selectedLead } = useLeadContext();
   const {
     messages,
     isConnected,
@@ -38,7 +40,7 @@ export const ChatSidebar = () => {
     prepareForMeeting,
     clearMessages,
     reconnect,
-  } = useLeadSupportSocket();
+  } = useLeadSupportSocket({ leadId: selectedLead?.leadId });
 
   const [inputValue, setInputValue] = useState("");
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -82,86 +84,16 @@ export const ChatSidebar = () => {
   };
 
   const renderMessage = (message: Message) => {
-    const isUser = message.role === "user";
-    const isSystem = message.role === "system";
-
-    if (isSystem) {
-      return (
-        <div key={message.id} className="flex justify-center">
-          <div className="bg-destructive/10 text-destructive text-xs px-3 py-1.5 rounded-full">
-            {message.content}
-          </div>
-        </div>
-      );
-    }
-
     return (
-      <div
+      <MessageRenderer
         key={message.id}
-        className={cn("flex gap-3", isUser && "justify-end")}
-      >
-        {!isUser && (
-          <Avatar className="h-8 w-8 bg-primary/10 flex-shrink-0">
-            <AvatarFallback>
-              <Sparkles className="h-4 w-4 text-primary" />
-            </AvatarFallback>
-          </Avatar>
-        )}
-
-        <div
-          className={cn(
-            "flex flex-col gap-2 max-w-[85%]",
-            isUser && "items-end"
-          )}
-        >
-          <div
-            className={cn(
-              "rounded-2xl px-4 py-3 text-sm whitespace-pre-wrap",
-              isUser
-                ? "bg-gradient-to-r from-primary to-accent text-primary-foreground"
-                : "bg-muted text-foreground",
-              message.isStreaming && "animate-pulse"
-            )}
-          >
-            {message.content}
-            {message.isStreaming && (
-              <span className="inline-block w-1.5 h-4 bg-current ml-1 animate-pulse" />
-            )}
-          </div>
-
-          {!isUser && !message.isStreaming && (
-            <div className="flex gap-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-8 gap-2 text-muted-foreground"
-                onClick={() => copyToClipboard(message.content, message.id)}
-              >
-                {copiedId === message.id ? (
-                  <Check className="h-3 w-3 text-green-500" />
-                ) : (
-                  <Copy className="h-3 w-3" />
-                )}
-                Copy
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-8 gap-2 text-primary"
-              >
-                <Mail className="h-3 w-3" />
-                Insert to Email
-              </Button>
-            </div>
-          )}
-        </div>
-
-        {isUser && (
-          <Avatar className="h-8 w-8 bg-primary/20 flex-shrink-0">
-            <AvatarFallback className="text-primary text-xs">U</AvatarFallback>
-          </Avatar>
-        )}
-      </div>
+        message={message}
+        onCopy={() => copyToClipboard(message.content, message.id)}
+        onInsertToEmail={() => {
+          // TODO: Implement email insertion functionality
+          console.log("Insert to email:", message.content);
+        }}
+      />
     );
   };
 
@@ -208,9 +140,26 @@ export const ChatSidebar = () => {
 
             {/* Agent Action Indicator */}
             {currentAction && (
-              <div className="px-4 py-2 bg-primary/5 border-b flex items-center gap-2">
-                <Loader2 className="h-3 w-3 animate-spin text-primary" />
-                <span className="text-xs text-primary">{currentAction.text}</span>
+              <div className="px-4 py-3 bg-gradient-to-r from-primary/5 to-accent/5 border-b border-primary/10">
+                <div className="flex items-center gap-3">
+                  <div className="flex-shrink-0">
+                    <div className="relative">
+                      <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                      <div className="absolute inset-0 h-4 w-4 rounded-full bg-primary/20 animate-ping" />
+                    </div>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-medium text-primary mb-1">
+                      AI Agent Working
+                    </div>
+                    <div className="text-xs text-primary/80">
+                      {currentAction.text}
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-1">
+                      Step {currentAction.step} • Processing...
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
           </div>
@@ -245,13 +194,24 @@ export const ChatSidebar = () => {
               {messages.map(renderMessage)}
               {isLoading && messages[messages.length - 1]?.role === "user" && (
                 <div className="flex gap-3">
-                  <Avatar className="h-8 w-8 bg-primary/10">
-                    <AvatarFallback>
-                      <Sparkles className="h-4 w-4 text-primary" />
+                  <Avatar className="h-8 w-8 bg-gradient-to-br from-violet-500/20 to-fuchsia-500/20 ring-2 ring-violet-500/20">
+                    <AvatarFallback className="bg-transparent">
+                      <Sparkles className="h-4 w-4 text-violet-500" />
                     </AvatarFallback>
                   </Avatar>
-                  <div className="bg-muted rounded-2xl px-4 py-3">
-                    <Loader2 className="h-4 w-4 animate-spin" />
+                  <div className="flex flex-col gap-2 max-w-[85%]">
+                    <div className="bg-muted/50 rounded-2xl rounded-tl-sm px-4 py-3 border border-primary/20">
+                      <div className="flex items-center gap-2">
+                        <div className="flex gap-1">
+                          <div className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: "0ms" }} />
+                          <div className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: "150ms" }} />
+                          <div className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: "300ms" }} />
+                        </div>
+                        <span className="text-sm text-muted-foreground">
+                          Thinking...
+                        </span>
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}
@@ -332,7 +292,12 @@ export const ChatSidebar = () => {
                     </Badge>
                   )}
                   {error && (
-                    <span className="text-xs text-destructive">{error}</span>
+                    <div className="flex items-center gap-2 text-xs">
+                      <AlertTriangle className="h-3 w-3 text-destructive" />
+                      <span className="text-destructive truncate max-w-32" title={error}>
+                        {error}
+                      </span>
+                    </div>
                   )}
                 </div>
                 <div className="flex gap-1">
@@ -360,10 +325,9 @@ export const ChatSidebar = () => {
               </div>
 
               {/* Debug Info */}
-              {config.features.showDebugInfo && (
+              {selectedLead && (
                 <p className="text-xs text-muted-foreground mt-2">
-                  Lead: {config.leadId.slice(0, 8)}... | Business:{" "}
-                  {config.businessId.slice(0, 8)}...
+                  Lead: {selectedLead.name} ({selectedLead.leadId.slice(0, 8)}...)
                 </p>
               )}
             </div>

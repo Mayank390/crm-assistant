@@ -64,7 +64,7 @@ class LeadSupportAgent:
             temperature: LLM temperature (slightly higher for creative tasks)
         """
         self.max_steps = max_steps
-        self.model_name = model or os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
+        self.model_name = model or os.getenv("GROQ_MODEL", "openai/gpt-oss-120b")
         self.temperature = temperature
         self.connected = False
         
