@@ -53,8 +53,7 @@ const IndexContent = () => {
               <DialogHeader>
                 <DialogTitle>Configuration</DialogTitle>
                 <DialogDescription>
-                  Update these values in your <code>.env</code> file or{" "}
-                  <code>src/config.ts</code>
+                  API settings. Lead is selected from the dropdown above.
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4 py-4">
@@ -68,32 +67,17 @@ const IndexContent = () => {
                 </div>
                 <div className="space-y-2">
                   <Label>Business ID</Label>
-                  <Input
-                    value={config.businessId}
-                    readOnly
-                    className={
-                      config.businessId === "YOUR_BUSINESS_ID_HERE"
-                        ? "border-destructive"
-                        : ""
-                    }
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Set via VITE_BUSINESS_ID env var
-                  </p>
+                  <Input value={config.businessId} readOnly />
                 </div>
                 <div className="space-y-2">
-                  <Label>Lead ID</Label>
-                  <Input
-                    value={config.leadId}
-                    readOnly
-                    className={
-                      config.leadId === "YOUR_LEAD_ID_HERE"
-                        ? "border-destructive"
-                        : ""
-                    }
+                  <Label>Selected Lead</Label>
+                  <Input 
+                    value={selectedLead ? `${selectedLead.name} (${selectedLead.leadId})` : "No lead selected"} 
+                    readOnly 
+                    className={!selectedLead ? "border-destructive" : ""}
                   />
                   <p className="text-xs text-muted-foreground">
-                    Set via VITE_LEAD_ID env var
+                    Select a lead from the dropdown in the header
                   </p>
                 </div>
                 <div className="space-y-2">

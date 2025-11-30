@@ -62,7 +62,7 @@ interface UseLeadSupportSocketReturn {
 }
 
 export const useLeadSupportSocket = (options?: UseLeadSupportSocketOptions): UseLeadSupportSocketReturn => {
-  const currentLeadId = options?.leadId || config.leadId;
+  const currentLeadId = options?.leadId || null;
   const [messages, setMessages] = useState<Message[]>([]);
   const [isConnected, setIsConnected] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -253,9 +253,15 @@ export const useLeadSupportSocket = (options?: UseLeadSupportSocketOptions): Use
       return;
     }
 
+    const leadIdToUse = options.lead_id || currentLeadId;
+    if (!leadIdToUse) {
+      setError("No lead selected");
+      return;
+    }
+
     const message: any = {
       type: options.type,
-      lead_id: options.lead_id || currentLeadId,
+      lead_id: leadIdToUse,
       business_id: config.businessId,
     };
 
