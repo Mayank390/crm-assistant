@@ -14,5 +14,6 @@ It operates as a smaller, focused agent within the larger CRM system.
 """
 
 from lead_support_agent.agent import LeadSupportAgent
+from lead_support_agent.router import router as lead_support_router
 
-__all__ = ["LeadSupportAgent"]
+__all__ = ["LeadSupportAgent", "lead_support_router"]
