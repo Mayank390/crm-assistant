@@ -19,6 +19,8 @@ from agent.agent import AgentExecutor
 import os
 from websocket_handler import handle_chat_websocket, ws_manager, user_id_global, business_id_global
 from qdrant.initializer import RAGTool
+from lead_support_agent.agent import LeadSupportAgent
+from lead_support_agent.websocket_handler import handle_lead_support_websocket
 from mongo.conversations import ensure_conversation_client_connected
 from mongo.conversations import conversation_mongo_client, CONVERSATIONS_DB_NAME, CONVERSATIONS_COLLECTION_NAME, TEMPLATES_COLLECTION_NAME
 from mongo.conversations import update_message_reaction
@@ -120,16 +122,22 @@ class NoteCreateResponse(BaseModel):
 
 # Global agent instances
 mongodb_agent = None
+lead_support_agent = None
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Manage the lifespan of the FastAPI application"""
-    global mongodb_agent
+    global mongodb_agent, lead_support_agent
 
     # Startup
     mongodb_agent = AgentExecutor()
     await mongodb_agent.connect()
     await RAGTool.initialize()
+    
+    # Initialize Lead Support Agent
+    lead_support_agent = LeadSupportAgent()
+    await lead_support_agent.connect()
+    logger.info("Lead Support Agent initialized")
     
     # Ensure conversation DB connection pool is ready
     try:
@@ -140,6 +148,7 @@ async def lifespan(app: FastAPI):
 
     # Shutdown
     await mongodb_agent.disconnect()
+    await lead_support_agent.disconnect()
 
     # Close Redis conversation memory
     from agent.memory import conversation_memory
@@ -610,6 +619,41 @@ async def websocket_chat(websocket: WebSocket):
         await mongodb_agent.connect()
 
     await handle_chat_websocket(websocket, mongodb_agent)
+
+
+@app.websocket("/ws/lead-support")
+async def websocket_lead_support(websocket: WebSocket):
+    """WebSocket endpoint for Lead Support Agent.
+    
+    This is a focused helper agent specifically for lead-related support tasks:
+    - Lead summarization
+    - Next best steps recommendations
+    - Lead comparison
+    - Message drafting
+    - Objection handling
+    - Meeting prep
+    - Email composition
+    
+    Message types:
+    - handshake: Initialize session with member_id and business_id
+    - ping: Keep-alive
+    - summarize: Summarize a specific lead (requires lead_id)
+    - next_steps: Get next best steps for a lead (requires lead_id)
+    - compare: Compare multiple leads (requires lead_ids array)
+    - draft_message: Draft a message (requires lead_id, optional message_type, context)
+    - objection: Handle an objection (requires lead_id, objection text)
+    - meeting_prep: Prepare for meeting (requires lead_id, optional meeting_context)
+    - email: Compose email (requires lead_id, optional context)
+    - query: General lead support query (optional lead_id, task_type)
+    """
+    global lead_support_agent
+
+    # Initialize agent if not already done (for testing/development)
+    if not lead_support_agent:
+        lead_support_agent = LeadSupportAgent()
+        await lead_support_agent.connect()
+
+    await handle_lead_support_websocket(websocket, lead_support_agent)
 
 
 if __name__ == "__main__":
