@@ -15,6 +15,10 @@ from fastapi import WebSocket, WebSocketDisconnect
 
 logger = logging.getLogger(__name__)
 
+# Global variables for business and user context (accessed by mongo constants)
+business_id_global = None
+user_id_global = None
+
 
 class LeadSupportWebSocketManager:
     """Manages WebSocket connections for lead support sessions."""
@@ -124,17 +128,28 @@ async def handle_lead_support_websocket(
                 user_context["user_id"] = data.get("member_id")
                 user_context["business_id"] = data.get("business_id")
                 session_id = data.get("session_id") or f"lead_support_{user_context['user_id']}"
-                
+
+                # Set global business_id and user_id for tools to access
+                # Set in both root-level and LSA websocket handlers for mongo constants to access
+                import websocket_handler as root_ws
+                root_ws.business_id_global = user_context["business_id"]
+                root_ws.user_id_global = user_context["user_id"]
+
+                # Also set in LSA websocket handler
+                import lead_support_agent.websocket_handler as lsa_ws
+                lsa_ws.business_id_global = user_context["business_id"]
+                lsa_ws.user_id_global = user_context["user_id"]
+
                 # Cancel handshake timeout
                 if handshake_timer:
                     handshake_timer.cancel()
-                
+
                 # Connect session
                 await lead_support_ws_manager.connect(websocket, session_id)
                 authenticated = True
-                
+
                 logger.info(f"Handshake complete: session={session_id}, business={user_context['business_id']}")
-                
+
                 await websocket.send_json({
                     "type": "handshake_ack",
                     "session_id": session_id,

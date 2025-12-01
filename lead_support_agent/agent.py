@@ -185,6 +185,7 @@ IMPORTANT INSTRUCTIONS:
         task_type: Optional[str] = None,
         lead_context: Optional[str] = None,
         conversation_history: Optional[List[BaseMessage]] = None,
+        business_id: Optional[str] = None,
     ) -> str:
         """
         Run the lead support agent synchronously (non-streaming).
@@ -201,7 +202,16 @@ IMPORTANT INSTRUCTIONS:
         """
         if not self.connected:
             await self.connect()
-        
+
+        # Set business context if provided
+        if business_id:
+            # Set global for tools to access
+            try:
+                import websocket_handler
+                websocket_handler.business_id_global = business_id
+            except Exception:
+                pass
+
         # If lead_id provided but no context, pre-fetch it
         if lead_id and not lead_context:
             try:
@@ -278,6 +288,7 @@ IMPORTANT INSTRUCTIONS:
         
         # Set business context if provided
         if business_id:
+            # Set global for tools to access
             try:
                 import websocket_handler
                 websocket_handler.business_id_global = business_id

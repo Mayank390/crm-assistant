@@ -23,32 +23,30 @@ const IndexContent = () => {
   const [showConfig, setShowConfig] = useState(false);
 
   return (
-    <div className="flex h-screen bg-background">
-      {/* Left Side - Lead Plugins */}
-      <div className="w-[420px] border-r flex flex-col">
-        <LeadPlugins />
-      </div>
-
-      {/* Main Content Area */}
-      <div className="flex-1 flex flex-col">
-        {/* Header */}
-        <div className="p-4 border-b flex flex-col gap-3 bg-muted/30">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                Lead Support Agent Testing
-              </h1>
-              <p className="text-sm text-muted-foreground">
-                Test the Lead Support Agent endpoints and WebSocket integration
-              </p>
+    <div className="flex h-screen bg-background flex-col">
+      {/* Compact Header */}
+      <div className="p-3 border-b bg-muted/30 flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <h1 className="text-lg font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+            Lead Support Agent
+          </h1>
+          {!configured && (
+            <div className="flex items-center gap-2 text-destructive text-sm">
+              <AlertCircle className="h-4 w-4" />
+              <span>No Lead Selected</span>
             </div>
-            <Dialog open={showConfig} onOpenChange={setShowConfig}>
-              <DialogTrigger asChild>
-                <Button variant="outline" size="sm" className="gap-2">
-                  <Settings className="h-4 w-4" />
-                  Configure
-                </Button>
-              </DialogTrigger>
+          )}
+        </div>
+
+        <div className="flex items-center gap-3">
+          <LeadSelector />
+          <Dialog open={showConfig} onOpenChange={setShowConfig}>
+            <DialogTrigger asChild>
+              <Button variant="outline" size="sm" className="gap-2">
+                <Settings className="h-4 w-4" />
+                Configure
+              </Button>
+            </DialogTrigger>
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>Configuration</DialogTitle>
@@ -71,9 +69,9 @@ const IndexContent = () => {
                 </div>
                 <div className="space-y-2">
                   <Label>Selected Lead</Label>
-                  <Input 
-                    value={selectedLead ? `${selectedLead.name} (${selectedLead.leadId})` : "No lead selected"} 
-                    readOnly 
+                  <Input
+                    value={selectedLead ? `${selectedLead.name} (${selectedLead.leadId})` : "No lead selected"}
+                    readOnly
                     className={!selectedLead ? "border-destructive" : ""}
                   />
                   <p className="text-xs text-muted-foreground">
@@ -98,181 +96,20 @@ const IndexContent = () => {
               </div>
             </DialogContent>
           </Dialog>
-          </div>
-          
-          {/* Lead Selector */}
-          <LeadSelector />
-        </div>
-
-        {/* Configuration Warning */}
-        {!configured && (
-          <div className="mx-4 mt-4 p-4 bg-destructive/10 border border-destructive/20 rounded-lg flex items-start gap-3">
-            <AlertCircle className="h-5 w-5 text-destructive flex-shrink-0 mt-0.5" />
-            <div>
-              <h3 className="font-semibold text-destructive">
-                No Lead Selected
-              </h3>
-              <p className="text-sm text-muted-foreground mt-1">
-                Please select a lead from the dropdown above to start testing.
-              </p>
-            </div>
-          </div>
-        )}
-
-        {/* Instructions */}
-        <div className="flex-1 p-6 overflow-auto">
-          <div className="max-w-3xl mx-auto space-y-6">
-            <div className="bg-muted/30 rounded-lg p-6">
-              <h2 className="text-lg font-semibold mb-4">How to Use</h2>
-              <div className="space-y-4">
-                <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <span className="text-primary font-bold">1</span>
-                  </div>
-                  <div>
-                    <h3 className="font-semibold mb-1">REST API Plugins (Left Panel)</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Click buttons to test individual REST API endpoints. Results
-                      appear in expandable sections below each plugin.
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <span className="text-primary font-bold">2</span>
-                  </div>
-                  <div>
-                    <h3 className="font-semibold mb-1">WebSocket Chat (Right Panel)</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Real-time streaming chat with the Lead Support Agent. Use
-                      quick action buttons or type custom queries.
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <span className="text-primary font-bold">3</span>
-                  </div>
-                  <div>
-                    <h3 className="font-semibold mb-1">Quick Actions</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Use the quick action buttons in the chat for common tasks:
-                      Summarize, Next Steps, Draft Email, Meeting Prep, and Objection
-                      Handling.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* API Endpoints Reference */}
-            <div className="bg-muted/30 rounded-lg p-6">
-              <h2 className="text-lg font-semibold mb-4">API Endpoints</h2>
-              <div className="space-y-2 font-mono text-sm">
-                <div className="flex items-center gap-2">
-                  <span className="bg-green-500/20 text-green-600 px-2 py-0.5 rounded text-xs">
-                    POST
-                  </span>
-                  <span>/lead-support/summary</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="bg-green-500/20 text-green-600 px-2 py-0.5 rounded text-xs">
-                    POST
-                  </span>
-                  <span>/lead-support/insights</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="bg-green-500/20 text-green-600 px-2 py-0.5 rounded text-xs">
-                    POST
-                  </span>
-                  <span>/lead-support/next-steps</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="bg-green-500/20 text-green-600 px-2 py-0.5 rounded text-xs">
-                    POST
-                  </span>
-                  <span>/lead-support/draft-message</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="bg-green-500/20 text-green-600 px-2 py-0.5 rounded text-xs">
-                    POST
-                  </span>
-                  <span>/lead-support/objection</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="bg-green-500/20 text-green-600 px-2 py-0.5 rounded text-xs">
-                    POST
-                  </span>
-                  <span>/lead-support/meeting-prep</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="bg-blue-500/20 text-blue-600 px-2 py-0.5 rounded text-xs">
-                    WS
-                  </span>
-                  <span>/ws/lead-support</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Current Config Display */}
-            <div className="bg-muted/30 rounded-lg p-6">
-              <h2 className="text-lg font-semibold mb-4">Current Configuration</h2>
-              <div className="space-y-2 font-mono text-sm">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">API URL:</span>
-                  <span>{config.api.baseUrl}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">WS URL:</span>
-                  <span>{config.api.wsUrl}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Business ID:</span>
-                  <span
-                    className={
-                      config.businessId === "YOUR_BUSINESS_ID_HERE"
-                        ? "text-destructive"
-                        : ""
-                    }
-                  >
-                    {config.businessId.slice(0, 20)}
-                    {config.businessId.length > 20 ? "..." : ""}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Selected Lead:</span>
-                  <span className={!selectedLead ? "text-destructive" : ""}>
-                    {selectedLead ? (
-                      <>
-                        {selectedLead.name} ({selectedLead.leadId.slice(0, 8)}...)
-                      </>
-                    ) : (
-                      "No lead selected"
-                    )}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Member ID:</span>
-                  <span
-                    className={
-                      config.memberId === "YOUR_MEMBER_ID_HERE"
-                        ? "text-destructive"
-                        : ""
-                    }
-                  >
-                    {config.memberId.slice(0, 20)}
-                    {config.memberId.length > 20 ? "..." : ""}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
 
-      {/* Right Side - Chat Sidebar */}
-      <div className="w-[400px] flex flex-col">
-        <ChatSidebar />
+      {/* Main Content - Left and Right Panels */}
+      <div className="flex flex-1 overflow-hidden">
+        {/* Left Side - Lead Plugins */}
+        <div className="flex-1 border-r flex flex-col overflow-hidden">
+          <LeadPlugins />
+        </div>
+
+        {/* Right Side - Chat Sidebar */}
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <ChatSidebar />
+        </div>
       </div>
     </div>
   );

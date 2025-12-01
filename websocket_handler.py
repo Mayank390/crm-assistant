@@ -20,6 +20,17 @@ import contextlib
 from time import perf_counter
 load_dotenv()
 
+# Import lead_support_agent websocket_handler to make its globals available
+try:
+    from lead_support_agent import websocket_handler as lsa_ws
+    # Make LSA globals available as our own for mongo constants to access
+    business_id_global = lsa_ws.business_id_global
+    user_id_global = lsa_ws.user_id_global
+except ImportError:
+    # Fallback if LSA not available
+    business_id_global = None
+    user_id_global = None
+
 # Configure logging
 logger = logging.getLogger(__name__)
 

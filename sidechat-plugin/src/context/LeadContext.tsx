@@ -3,8 +3,8 @@ import { createContext, useContext, useState, useEffect, ReactNode } from "react
 export interface Lead {
   leadId: string;
   name: string;
-  email: string;
-  status: string;
+  leadStatus: string;
+  type: string;
 }
 
 interface LeadContextType {
@@ -26,7 +26,7 @@ export const LeadProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const fetchLeads = async () => {
       try {
-        const response = await fetch("/business_leads.json");
+        const response = await fetch("/leads.json");
         if (!response.ok) {
           throw new Error("Failed to fetch leads");
         }

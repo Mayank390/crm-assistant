@@ -68,9 +68,9 @@ export const LeadSelector = () => {
                 <span>{selectedLead.name}</span>
                 <Badge
                   variant="outline"
-                  className={`text-xs ${getStatusColor(selectedLead.status)}`}
+                  className={`text-xs ${getStatusColor(selectedLead.leadStatus)}`}
                 >
-                  {selectedLead.status.replace("_", " ")}
+                  {selectedLead.leadStatus.replace("_", " ")}
                 </Badge>
               </div>
             )}
@@ -83,14 +83,14 @@ export const LeadSelector = () => {
                 <div className="flex flex-col">
                   <span className="font-medium">{lead.name}</span>
                   <span className="text-xs text-muted-foreground">
-                    {lead.email}
+                    ID: {lead.leadId.slice(0, 8)}...
                   </span>
                 </div>
                 <Badge
                   variant="outline"
-                  className={`text-xs ${getStatusColor(lead.status)}`}
+                  className={`text-xs ${getStatusColor(lead.leadStatus)}`}
                 >
-                  {lead.status.replace("_", " ")}
+                  {lead.leadStatus.replace("_", " ")}
                 </Badge>
               </div>
             </SelectItem>

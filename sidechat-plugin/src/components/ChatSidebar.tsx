@@ -12,6 +12,7 @@ import {
   WifiOff,
   RefreshCw,
   Trash2,
+  AlertTriangle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -22,7 +23,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { useLeadSupportSocket } from "@/hooks/useLeadSupportSocket";
 import { useLeadContext } from "@/context/LeadContext";
-import { MessageRenderer } from "@/components/MessageRenderer";
+import { MessageRenderer, Message } from "@/components/MessageRenderer";
 
 export const ChatSidebar = () => {
   const { selectedLead } = useLeadContext();
@@ -100,44 +101,16 @@ export const ChatSidebar = () => {
   return (
     <div className="h-full flex flex-col bg-background border-l overflow-hidden">
       <Tabs defaultValue="chat" className="flex-1 flex flex-col min-h-0">
-        <TabsList className="grid w-full grid-cols-2 rounded-none border-b bg-background flex-shrink-0">
+        <TabsList className="grid w-full grid-cols-1 rounded-none border-b bg-background flex-shrink-0">
           <TabsTrigger value="chat" className="gap-2">
             <Sparkles className="h-4 w-4" />
             AI Chat
-          </TabsTrigger>
-          <TabsTrigger value="timeline" className="gap-2">
-            <Clock className="h-4 w-4" />
-            Timeline
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="chat" className="flex-1 flex flex-col m-0 min-h-0">
           {/* Fixed Header Section */}
           <div className="flex-shrink-0">
-            {/* Connection Status & Lead Info */}
-            <div className="grid grid-cols-3 gap-4 p-4 border-b bg-muted/30">
-              <div className="flex flex-col items-center gap-1">
-                <div className="flex items-center gap-1 text-primary">
-                  <Flame className="h-4 w-4" />
-                  <span className="text-2xl font-bold">82</span>
-                </div>
-                <span className="text-xs text-muted-foreground">Score</span>
-              </div>
-              <div className="flex flex-col items-center gap-1">
-                <span className="text-lg font-semibold text-foreground">
-                  2 days ago
-                </span>
-                <span className="text-xs text-muted-foreground">Last Contact</span>
-              </div>
-              <div className="flex flex-col items-center gap-1">
-                <div className="flex items-center gap-1">
-                  <Instagram className="h-4 w-4 text-primary" />
-                  <span className="text-lg font-semibold text-foreground">IG</span>
-                </div>
-                <span className="text-xs text-muted-foreground">Source</span>
-              </div>
-            </div>
-
             {/* Agent Action Indicator */}
             {currentAction && (
               <div className="px-4 py-3 bg-gradient-to-r from-primary/5 to-accent/5 border-b border-primary/10">
@@ -183,14 +156,6 @@ export const ChatSidebar = () => {
             }}
           >
             <div className="space-y-4">
-              {messages.length === 0 && !isLoading && (
-                <div className="text-center text-muted-foreground py-8">
-                  <Sparkles className="h-12 w-12 mx-auto mb-3 opacity-30" />
-                  <p className="text-sm">
-                    Start a conversation with your AI assistant
-                  </p>
-                </div>
-              )}
               {messages.map(renderMessage)}
               {isLoading && messages[messages.length - 1]?.role === "user" && (
                 <div className="flex gap-3">
@@ -334,12 +299,6 @@ export const ChatSidebar = () => {
           </div>
         </TabsContent>
 
-        <TabsContent value="timeline" className="flex-1 m-0 p-4">
-          <div className="text-center text-muted-foreground">
-            <Clock className="h-12 w-12 mx-auto mb-2 opacity-50" />
-            <p>Timeline view coming soon</p>
-          </div>
-        </TabsContent>
       </Tabs>
     </div>
   );

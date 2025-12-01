@@ -21,7 +21,7 @@ export const config = {
   
   // Lead ID to focus on
   // Replace with your actual lead ObjectId or UUID
-  leadId: import.meta.env.VITE_LEAD_ID || "YOUR_LEAD_ID_HERE",
+  leadId: import.meta.env.VITE_LEAD_ID ,
   
   // Member/User ID for authentication
   // Replace with your actual member UUID
