@@ -6,7 +6,7 @@ Contains all REST endpoints for lead-related AI support functionality.
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-from typing import Optional, List
+from typing import Optional, List, Dict, Any
 from datetime import datetime
 import logging
 
@@ -44,55 +44,15 @@ class LeadInsightsResponse(BaseModel):
     risk_factors: List[str]
     generated_at: str
 
-class LeadNextStepsRequest(BaseModel):
+class LeadEnrichRequest(BaseModel):
     lead_id: str
     business_id: Optional[str] = None
 
-class LeadNextStepsResponse(BaseModel):
+class LeadEnrichResponse(BaseModel):
     lead_id: str
-    next_steps: str
-    generated_at: str
-
-class LeadCompareRequest(BaseModel):
-    lead_ids: List[str]
-    business_id: Optional[str] = None
-
-class LeadCompareResponse(BaseModel):
-    lead_ids: List[str]
-    comparison: str
-    generated_at: str
-
-class DraftMessageRequest(BaseModel):
-    lead_id: str
-    message_type: Optional[str] = "email"  # email, sms, follow_up
-    context: Optional[str] = None
-    business_id: Optional[str] = None
-
-class DraftMessageResponse(BaseModel):
-    lead_id: str
-    message_type: str
-    draft: str
-    generated_at: str
-
-class ObjectionHandlingRequest(BaseModel):
-    lead_id: str
-    objection: str
-    business_id: Optional[str] = None
-
-class ObjectionHandlingResponse(BaseModel):
-    lead_id: str
-    objection: str
-    response: str
-    generated_at: str
-
-class MeetingPrepRequest(BaseModel):
-    lead_id: str
-    meeting_context: Optional[str] = None
-    business_id: Optional[str] = None
-
-class MeetingPrepResponse(BaseModel):
-    lead_id: str
-    prep_document: str
+    enriched_data: Dict[str, Any]
+    missing_fields: List[str]
+    recommendations: List[str]
     generated_at: str
 
 
@@ -298,175 +258,136 @@ Be specific and actionable based on the lead data provided."""
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/next-steps", response_model=LeadNextStepsResponse)
-async def get_lead_next_steps(req: LeadNextStepsRequest):
-    """Get AI-recommended next best steps for a lead.
+@router.post("/enrich", response_model=LeadEnrichResponse)
+async def enrich_lead(req: LeadEnrichRequest):
+    """Enrich a lead with inferred data from available sources.
     
-    Provides prioritized action recommendations:
-    - Immediate actions (within 24 hours)
-    - Short-term actions (this week)
-    - Follow-up strategy
+    Analyzes existing lead data and returns enriched information including:
+    - Inferred company details from related data
+    - Enhanced contact information
+    - Missing field suggestions
+    - Data completeness analysis
+    - Enrichment recommendations
+    
+    Note: This endpoint does NOT update the database - it only returns enriched data.
     """
     try:
         agent = await get_agent()
         _set_business_context(req.business_id)
         
-        next_steps = await agent.run(
-            query="What are the recommended next best steps for this lead?",
+        # Get comprehensive lead context and stats
+        from lead_support_agent.tools import get_lead_context, get_lead_stats
+        
+        lead_context = await get_lead_context.ainvoke({
+            "lead_id": req.lead_id,
+            "include_tasks": True,
+            "include_meetings": True,
+            "include_notes": True,
+            "include_activities": True,
+            "include_calls": True,
+            "include_emails": True,
+        })
+        
+        lead_stats = await get_lead_stats.ainvoke({"lead_id": req.lead_id})
+        
+        # Run the agent for enrichment analysis
+        enrich_prompt = """Analyze this lead's available data and provide enrichment information in the following structured format:
+
+## Enriched Data
+Provide inferred or enhanced information that can be derived from the available data:
+- Company details (name, industry, website, size) - infer from notes, emails, meetings
+- Contact information (email, phone, social profiles) - extract from communications
+- Job title and role - infer from context
+- Location and address - extract from available data
+- Budget and decision-making authority - infer from interactions
+- Technology stack or tools used - extract from activities and notes
+- Pain points and needs - summarize from notes and activities
+
+## Missing Fields
+List all important fields that are missing or incomplete:
+- [Field 1] - why it's important
+- [Field 2] - why it's important
+
+## Recommendations
+Provide actionable recommendations for enriching this lead:
+1. [Recommendation 1 - specific action to take]
+2. [Recommendation 2 - data source to check]
+3. [Recommendation 3 - follow-up question to ask]
+
+Format your response clearly with sections marked by ## headers. Be specific and reference actual data points from the lead context."""
+        
+        full_response = await agent.run(
+            query=enrich_prompt,
             lead_id=req.lead_id,
-            task_type="next_steps",
+            lead_context=f"{lead_context}\n\n{lead_stats}",
         )
         
-        return LeadNextStepsResponse(
+        # Parse the response into structured format
+        enriched_data: Dict[str, Any] = {}
+        missing_fields: List[str] = []
+        recommendations: List[str] = []
+        
+        current_section = None
+        lines = full_response.split('\n')
+        
+        for line in lines:
+            line = line.strip()
+            if not line:
+                continue
+            
+            # Detect sections
+            if "## Enriched Data" in line or "**Enriched Data**" in line:
+                current_section = "enriched"
+                continue
+            elif "## Missing Fields" in line or "**Missing Fields**" in line:
+                current_section = "missing"
+                continue
+            elif "## Recommendations" in line or "**Recommendations**" in line:
+                current_section = "recommendations"
+                continue
+            elif line.startswith("##") or line.startswith("**"):
+                # New section, stop current parsing
+                if current_section == "enriched":
+                    # Store accumulated enriched data as text for now
+                    if "enriched_text" not in enriched_data:
+                        enriched_data["enriched_text"] = ""
+                current_section = None
+                continue
+            
+            # Parse content based on section
+            if current_section == "enriched":
+                # Accumulate enriched data
+                if "enriched_text" not in enriched_data:
+                    enriched_data["enriched_text"] = ""
+                enriched_data["enriched_text"] += line + "\n"
+            elif current_section == "missing":
+                if line.startswith("-") or line.startswith("•") or line.startswith("*"):
+                    field = line.lstrip("-•* ").strip()
+                    if field:
+                        missing_fields.append(field)
+            elif current_section == "recommendations":
+                if line.startswith(("-", "•", "*", "1", "2", "3", "4", "5")):
+                    rec = line.lstrip("-•*0123456789.) ").strip()
+                    if rec:
+                        recommendations.append(rec)
+        
+        # Fallbacks if parsing didn't work well
+        if not enriched_data:
+            enriched_data = {"enriched_text": full_response[:1000]}
+        if not missing_fields:
+            missing_fields = ["Review lead data for missing information"]
+        if not recommendations:
+            recommendations = ["Review the lead context for enrichment opportunities"]
+        
+        return LeadEnrichResponse(
             lead_id=req.lead_id,
-            next_steps=next_steps,
+            enriched_data=enriched_data,
+            missing_fields=missing_fields[:10],  # Limit to top 10
+            recommendations=recommendations[:10],  # Limit to top 10
             generated_at=datetime.utcnow().isoformat()
         )
     except Exception as e:
-        logger.error(f"Error generating next steps: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@router.post("/compare", response_model=LeadCompareResponse)
-async def compare_leads_api(req: LeadCompareRequest):
-    """Compare multiple leads side-by-side with AI analysis.
-    
-    Compares leads across:
-    - Qualification metrics
-    - Engagement levels
-    - Potential value
-    - Recommended prioritization
-    """
-    try:
-        if len(req.lead_ids) < 2:
-            raise HTTPException(status_code=400, detail="At least 2 lead_ids required for comparison")
-        
-        agent = await get_agent()
-        _set_business_context(req.business_id)
-        
-        # Use the compare tool directly and then analyze
-        from lead_support_agent.tools import compare_leads
-        comparison_data = await compare_leads.ainvoke({"lead_ids": req.lead_ids})
-        
-        # Get AI analysis of the comparison
-        analysis = await agent.run(
-            query=f"Based on this comparison data, provide a clear recommendation on which lead(s) to prioritize and why:\n\n{comparison_data}",
-            task_type="compare",
-        )
-        
-        return LeadCompareResponse(
-            lead_ids=req.lead_ids,
-            comparison=f"{comparison_data}\n\n## AI Recommendation\n{analysis}",
-            generated_at=datetime.utcnow().isoformat()
-        )
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Error comparing leads: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@router.post("/draft-message", response_model=DraftMessageResponse)
-async def draft_lead_message(req: DraftMessageRequest):
-    """Draft a personalized message for a lead.
-    
-    Supports different message types:
-    - email: Professional email
-    - sms: Short text message
-    - follow_up: Follow-up message
-    """
-    try:
-        agent = await get_agent()
-        _set_business_context(req.business_id)
-        
-        query = f"Draft a {req.message_type} for this lead"
-        if req.context:
-            query += f". Context: {req.context}"
-        
-        task_type = "email_compose" if req.message_type == "email" else "draft_message"
-        
-        draft = await agent.run(
-            query=query,
-            lead_id=req.lead_id,
-            task_type=task_type,
-        )
-        
-        return DraftMessageResponse(
-            lead_id=req.lead_id,
-            message_type=req.message_type,
-            draft=draft,
-            generated_at=datetime.utcnow().isoformat()
-        )
-    except Exception as e:
-        logger.error(f"Error drafting message: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@router.post("/objection", response_model=ObjectionHandlingResponse)
-async def handle_lead_objection(req: ObjectionHandlingRequest):
-    """Get AI-powered response to a sales objection.
-    
-    Provides structured objection handling:
-    - Acknowledgment
-    - Clarification questions
-    - Response points
-    - Evidence/proof points
-    - Redirect to next steps
-    """
-    try:
-        agent = await get_agent()
-        _set_business_context(req.business_id)
-        
-        response = await agent.run(
-            query=f"Help me respond to this objection from the lead: '{req.objection}'",
-            lead_id=req.lead_id,
-            task_type="objection_handling",
-        )
-        
-        return ObjectionHandlingResponse(
-            lead_id=req.lead_id,
-            objection=req.objection,
-            response=response,
-            generated_at=datetime.utcnow().isoformat()
-        )
-    except Exception as e:
-        logger.error(f"Error handling objection: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@router.post("/meeting-prep", response_model=MeetingPrepResponse)
-async def prepare_lead_meeting(req: MeetingPrepRequest):
-    """Get AI-generated meeting preparation document.
-    
-    Includes:
-    - Lead context summary
-    - Conversation history
-    - Agenda suggestions
-    - Talking points
-    - Potential objections
-    - Meeting goals
-    """
-    try:
-        agent = await get_agent()
-        _set_business_context(req.business_id)
-        
-        query = "Prepare me for a meeting with this lead"
-        if req.meeting_context:
-            query += f". Meeting context: {req.meeting_context}"
-        
-        prep_document = await agent.run(
-            query=query,
-            lead_id=req.lead_id,
-            task_type="meeting_prep",
-        )
-        
-        return MeetingPrepResponse(
-            lead_id=req.lead_id,
-            prep_document=prep_document,
-            generated_at=datetime.utcnow().isoformat()
-        )
-    except Exception as e:
-        logger.error(f"Error preparing meeting: {e}")
+        logger.error(f"Error enriching lead: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -488,8 +409,8 @@ async def get_lead_insights_simple(lead_id: str, business_id: Optional[str] = No
     return await get_lead_ai_insights(req)
 
 
-@router.get("/{lead_id}/next-steps", response_model=LeadNextStepsResponse)
-async def get_lead_next_steps_simple(lead_id: str, business_id: Optional[str] = None):
-    """Simple GET endpoint for lead next steps."""
-    req = LeadNextStepsRequest(lead_id=lead_id, business_id=business_id)
-    return await get_lead_next_steps(req)
+@router.get("/{lead_id}/enrich", response_model=LeadEnrichResponse)
+async def get_lead_enrich_simple(lead_id: str, business_id: Optional[str] = None):
+    """Simple GET endpoint for lead enrichment."""
+    req = LeadEnrichRequest(lead_id=lead_id, business_id=business_id)
+    return await enrich_lead(req)

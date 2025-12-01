@@ -29,6 +29,14 @@ export interface LeadInsightsResponse {
   generated_at: string;
 }
 
+export interface LeadEnrichResponse {
+  lead_id: string;
+  enriched_data: {[key: string]: any};
+  missing_fields: string[];
+  recommendations: string[];
+  generated_at: string;
+}
+
 export interface LeadNextStepsResponse {
   lead_id: string;
   next_steps: string;
@@ -117,83 +125,14 @@ class LeadSupportApiClient {
   }
 
   /**
-   * Get AI-recommended next best steps for a lead
+   * Enrich a lead with inferred data from available sources
    */
-  async getNextSteps(leadId: string): Promise<LeadNextStepsResponse> {
+  async enrichLead(leadId: string): Promise<LeadEnrichResponse> {
     if (!leadId) throw new Error("Lead ID is required");
-    return this.request<LeadNextStepsResponse>("/next-steps", {
+    return this.request<LeadEnrichResponse>("/enrich", {
       method: "POST",
       body: JSON.stringify({
         lead_id: leadId,
-        business_id: config.businessId,
-      }),
-    });
-  }
-
-  /**
-   * Compare multiple leads side-by-side
-   */
-  async compareLeads(leadIds: string[]): Promise<LeadCompareResponse> {
-    return this.request<LeadCompareResponse>("/compare", {
-      method: "POST",
-      body: JSON.stringify({
-        lead_ids: leadIds,
-        business_id: config.businessId,
-      }),
-    });
-  }
-
-  /**
-   * Draft a personalized message for a lead
-   */
-  async draftMessage(
-    leadId: string,
-    messageType: string = "email",
-    context?: string
-  ): Promise<DraftMessageResponse> {
-    if (!leadId) throw new Error("Lead ID is required");
-    return this.request<DraftMessageResponse>("/draft-message", {
-      method: "POST",
-      body: JSON.stringify({
-        lead_id: leadId,
-        message_type: messageType,
-        context,
-        business_id: config.businessId,
-      }),
-    });
-  }
-
-  /**
-   * Get AI-powered response to a sales objection
-   */
-  async handleObjection(
-    objection: string,
-    leadId: string
-  ): Promise<ObjectionHandlingResponse> {
-    if (!leadId) throw new Error("Lead ID is required");
-    return this.request<ObjectionHandlingResponse>("/objection", {
-      method: "POST",
-      body: JSON.stringify({
-        lead_id: leadId,
-        objection,
-        business_id: config.businessId,
-      }),
-    });
-  }
-
-  /**
-   * Get AI-generated meeting preparation document
-   */
-  async prepareMeeting(
-    leadId: string,
-    meetingContext?: string
-  ): Promise<MeetingPrepResponse> {
-    if (!leadId) throw new Error("Lead ID is required");
-    return this.request<MeetingPrepResponse>("/meeting-prep", {
-      method: "POST",
-      body: JSON.stringify({
-        lead_id: leadId,
-        meeting_context: meetingContext,
         business_id: config.businessId,
       }),
     });
@@ -226,12 +165,12 @@ class LeadSupportApiClient {
   }
 
   /**
-   * Quick GET for lead next steps
+   * Quick GET for lead enrichment
    */
-  async getNextStepsQuick(leadId: string): Promise<LeadNextStepsResponse> {
+  async enrichLeadQuick(leadId: string): Promise<LeadEnrichResponse> {
     if (!leadId) throw new Error("Lead ID is required");
     const businessParam = config.businessId ? `?business_id=${config.businessId}` : "";
-    return this.request<LeadNextStepsResponse>(`/${leadId}/next-steps${businessParam}`, {
+    return this.request<LeadEnrichResponse>(`/${leadId}/enrich${businessParam}`, {
       method: "GET",
     });
   }

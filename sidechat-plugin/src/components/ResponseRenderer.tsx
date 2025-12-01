@@ -10,21 +10,23 @@ import { useState } from "react";
 import {
   LeadSummaryResponse,
   LeadInsightsResponse,
+  LeadEnrichResponse,
   LeadNextStepsResponse,
-  LeadCompareResponse,
   DraftMessageResponse,
   ObjectionHandlingResponse,
   MeetingPrepResponse,
+  LeadCompareResponse,
 } from "@/api/leadSupportApi";
 
 type PluginResult =
   | LeadSummaryResponse
   | LeadInsightsResponse
+  | LeadEnrichResponse
   | LeadNextStepsResponse
-  | LeadCompareResponse
   | DraftMessageResponse
   | ObjectionHandlingResponse
   | MeetingPrepResponse
+  | LeadCompareResponse
   | null;
 
 interface ResponseRendererProps {
@@ -270,6 +272,63 @@ ${insights.risk_factors.length > 0
                 components={markdownComponents}
               >
                 {fullInsightsMarkdown}
+              </ReactMarkdown>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Lead Enrich Renderer
+  if ("enriched_data" in result) {
+    const enrich = result as LeadEnrichResponse;
+
+    // Combine all enrich fields into a single markdown string for proper rendering
+    const fullEnrichMarkdown = `## Enriched Data
+${enrich.enriched_data?.enriched_text || "No enriched data available."}
+
+## Missing Fields
+${enrich.missing_fields.length > 0
+  ? enrich.missing_fields.map(field => `- ${field}`).join('\n')
+  : "- No missing fields identified."}
+
+## Recommendations
+${enrich.recommendations.length > 0
+  ? enrich.recommendations.map((rec, index) => `${index + 1}. ${rec}`).join('\n')
+  : "No specific recommendations available."}`;
+
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <Target className="h-5 w-5 text-purple-500" />
+            <h3 className="text-lg font-semibold">Lead Enrichment</h3>
+          </div>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2"
+              onClick={() => copyToClipboard(fullEnrichMarkdown, "enrich")}
+            >
+              {copiedStates["enrich"] ? (
+                <Check className="h-3 w-3 text-green-500" />
+              ) : (
+                <Copy className="h-3 w-3" />
+              )}
+              Copy
+            </Button>
+          </div>
+        </div>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="prose prose-sm dark:prose-invert max-w-none">
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm]}
+                components={markdownComponents}
+              >
+                {fullEnrichMarkdown}
               </ReactMarkdown>
             </div>
           </CardContent>

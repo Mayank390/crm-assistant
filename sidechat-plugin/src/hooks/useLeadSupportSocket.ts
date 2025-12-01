@@ -21,6 +21,8 @@ export interface AgentAction {
 type MessageType =
   | "handshake"
   | "summarize"
+  | "insights"
+  | "enrich"
   | "next_steps"
   | "compare"
   | "draft_message"
@@ -58,7 +60,10 @@ interface UseLeadSupportSocketReturn {
   sendMessage: (options: SendMessageOptions) => void;
   sendQuery: (query: string) => void;
   summarizeLead: () => void;
+  getInsights: () => void;
+  enrichLead: () => void;
   getNextSteps: () => void;
+  compareLeads: (leadIds: string[]) => void;
   draftMessage: (messageType?: string, context?: string) => void;
   handleObjection: (objection: string) => void;
   prepareForMeeting: (context?: string) => void;
@@ -416,6 +421,32 @@ export const useLeadSupportSocket = (
     sendMessage({ type: "summarize" });
   }, [sendMessage]);
 
+  const getInsights = useCallback(() => {
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: `user_${Date.now()}`,
+        role: "user",
+        content: "📊 Get AI insights about this lead",
+        timestamp: new Date().toISOString(),
+      },
+    ]);
+    sendMessage({ type: "insights" });
+  }, [sendMessage]);
+
+  const enrichLead = useCallback(() => {
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: `user_${Date.now()}`,
+        role: "user",
+        content: "🔍 Enrich this lead with additional data",
+        timestamp: new Date().toISOString(),
+      },
+    ]);
+    sendMessage({ type: "enrich" });
+  }, [sendMessage]);
+
   const getNextSteps = useCallback(() => {
     setMessages((prev) => [
       ...prev,
@@ -427,6 +458,19 @@ export const useLeadSupportSocket = (
       },
     ]);
     sendMessage({ type: "next_steps" });
+  }, [sendMessage]);
+
+  const compareLeads = useCallback((leadIds: string[]) => {
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: `user_${Date.now()}`,
+        role: "user",
+        content: `📊 Compare this lead with similar leads in the system`,
+        timestamp: new Date().toISOString(),
+      },
+    ]);
+    sendMessage({ type: "compare", lead_ids: leadIds });
   }, [sendMessage]);
 
   const draftMessage = useCallback(
@@ -534,7 +578,10 @@ export const useLeadSupportSocket = (
     sendMessage,
     sendQuery,
     summarizeLead,
+    getInsights,
+    enrichLead,
     getNextSteps,
+    compareLeads,
     draftMessage,
     handleObjection,
     prepareForMeeting,

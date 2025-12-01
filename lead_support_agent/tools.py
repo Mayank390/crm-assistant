@@ -12,7 +12,7 @@ import base64
 import json
 import logging
 from datetime import datetime
-from typing import Optional, Dict, List, Any, Iterable, Tuple
+from typing import Optional, Dict, List, Any, Iterable, Tuple, Union
 
 from bson import ObjectId
 from bson.binary import Binary
@@ -546,15 +546,16 @@ async def get_lead_context(
 # ============================================================================
 
 @tool
-async def compare_leads(lead_ids: List[str]) -> str:
+async def compare_leads(lead_ids: List[str], compare_with_portfolio: bool = False) -> Union[str, List[Dict[str, Any]]]:
     """
-    Compare multiple leads side-by-side across key dimensions.
+    Compare leads - either specific leads or with business portfolio.
 
     Args:
-        lead_ids: List of lead IDs to compare (2-5 leads recommended)
+        lead_ids: List of lead IDs to compare
+        compare_with_portfolio: If True and only one lead_id, return business portfolio for comparison
 
     Returns:
-        Formatted comparison table and analysis
+        Either formatted comparison string or list of lead data for portfolio comparison
     """
     try:
         if not mongodb_tools.client:
@@ -577,9 +578,65 @@ async def compare_leads(lead_ids: List[str]) -> str:
         else:
             business_filter = {}
 
+        # Handle portfolio comparison for single lead
+        if compare_with_portfolio and len(lead_ids) == 1:
+            # Return all leads in business (excluding the target lead) for portfolio comparison
+            target_lead_id = lead_ids[0]
+            query = business_filter.copy() if business_filter else {}
+
+            # Exclude target lead
+            exclude_clauses = []
+            if obj_id := _try_parse_object_id(target_lead_id):
+                exclude_clauses.append({"_id": {"$ne": obj_id}})
+            if uuid_bin := _try_parse_uuid_binary(target_lead_id):
+                exclude_clauses.append({"_id": {"$ne": uuid_bin}})
+            if base64_bin := _try_parse_base64_binary(target_lead_id):
+                exclude_clauses.append({"_id": {"$ne": base64_bin}})
+            exclude_clauses.append({"_id": {"$ne": target_lead_id}})
+
+            if exclude_clauses:
+                query["$and"] = exclude_clauses
+
+            leads_cursor = lead_coll.find(query).limit(10)  # Limit for portfolio comparison
+            leads_data = []
+
+            async for lead_doc in leads_cursor:
+                lead_ref_id = lead_doc.get("_id")
+                parent_core_filter = {"$or": [{"parentId": lead_ref_id}, {"leadId": lead_ref_id}]}
+                parent_filter = _merge_filters(parent_core_filter, business_filter)
+
+                personal_info = lead_doc.get("personalInfo", {})
+                task_count = await task_coll.count_documents(parent_filter)
+                meeting_count = await meeting_coll.count_documents(parent_filter)
+                activity_count = await activity_coll.count_documents(parent_filter)
+
+                open_task_filter = {"$and": [parent_core_filter, {"taskStatus": {"$nin": ["COMPLETED", "CANCELLED"]}}]}
+                open_task_filter = _merge_filters(open_task_filter, business_filter)
+                open_tasks = await task_coll.count_documents(open_task_filter)
+
+                leads_data.append({
+                    "id": str(lead_ref_id),
+                    "name": personal_info.get("name", "N/A"),
+                    "company": personal_info.get("company", lead_doc.get("company", "N/A")),
+                    "status": lead_doc.get("leadStatus", "N/A"),
+                    "source": lead_doc.get("source", "N/A"),
+                    "score": lead_doc.get("leadScore", 0),
+                    "created": str(lead_doc.get("createdTimeStamp", "N/A"))[:10],
+                    "task_count": task_count,
+                    "open_tasks": open_tasks,
+                    "meeting_count": meeting_count,
+                    "activity_count": activity_count,
+                    "industry": lead_doc.get("company", {}).get("industryName", "N/A"),
+                    "email": personal_info.get("email", "N/A"),
+                    "mobile": personal_info.get("mobile", "N/A"),
+                })
+
+            return leads_data
+
+        # Handle direct lead comparison
         leads_data = []
 
-        for lead_id in lead_ids[:5]:  # Limit to 5 leads
+        for lead_id in lead_ids[:5]:  # Limit to 5 leads for direct comparison
             lead_query_clauses: List[Dict[str, Any]] = []
             if obj_id := _try_parse_object_id(lead_id):
                 lead_query_clauses.append({"_id": obj_id})

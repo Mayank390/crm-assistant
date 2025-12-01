@@ -3,8 +3,6 @@ import {
   Sparkles,
   TrendingUp,
   FileText,
-  Mail,
-  MessageSquare,
   Calendar,
   AlertCircle,
   Loader2,
@@ -19,8 +17,6 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Collapsible,
   CollapsibleContent,
@@ -30,21 +26,26 @@ import {
   leadSupportApi,
   LeadSummaryResponse,
   LeadInsightsResponse,
+  LeadEnrichResponse,
   LeadNextStepsResponse,
   DraftMessageResponse,
   ObjectionHandlingResponse,
   MeetingPrepResponse,
+  LeadCompareResponse,
 } from "@/api/leadSupportApi";
 import { useLeadContext } from "@/context/LeadContext";
+import { useLeadSupportSocket } from "@/hooks/useLeadSupportSocket";
 import { ResponseRenderer } from "@/components/ResponseRenderer";
 
 type PluginResult =
   | LeadSummaryResponse
   | LeadInsightsResponse
+  | LeadEnrichResponse
   | LeadNextStepsResponse
   | DraftMessageResponse
   | ObjectionHandlingResponse
   | MeetingPrepResponse
+  | LeadCompareResponse
   | null;
 
 interface PluginState {
@@ -63,16 +64,23 @@ const initialPluginState: PluginState = {
 
 export const LeadPlugins = () => {
   const { selectedLead } = useLeadContext();
+  const {
+    summarizeLead,
+    getInsights,
+    enrichLead,
+    getNextSteps,
+    draftMessage: sendDraftMessage,
+    handleObjection: sendHandleObjection,
+    prepareForMeeting,
+    messages,
+    isLoading: socketLoading,
+    error: socketError,
+  } = useLeadSupportSocket({ leadId: selectedLead?.leadId });
+
   const [summaryState, setSummaryState] = useState<PluginState>(initialPluginState);
   const [insightsState, setInsightsState] = useState<PluginState>(initialPluginState);
-  const [nextStepsState, setNextStepsState] = useState<PluginState>(initialPluginState);
-  const [draftState, setDraftState] = useState<PluginState>(initialPluginState);
-  const [objectionState, setObjectionState] = useState<PluginState>(initialPluginState);
-  const [meetingPrepState, setMeetingPrepState] = useState<PluginState>(initialPluginState);
+  const [enrichState, setEnrichState] = useState<PluginState>(initialPluginState);
 
-  const [objectionInput, setObjectionInput] = useState("");
-  const [draftContext, setDraftContext] = useState("");
-  const [meetingContext, setMeetingContext] = useState("");
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const configured = selectedLead !== null;
@@ -110,49 +118,17 @@ export const LeadPlugins = () => {
     }
   };
 
-  const handleGetNextSteps = async () => {
+  const handleEnrichLead = async () => {
     if (!leadId) return;
-    setNextStepsState({ ...nextStepsState, loading: true, error: null });
+    setEnrichState({ ...enrichState, loading: true, error: null });
     try {
-      const result = await leadSupportApi.getNextSteps(leadId);
-      setNextStepsState({ loading: false, error: null, result, expanded: true });
+      const result = await leadSupportApi.enrichLead(leadId);
+      setEnrichState({ loading: false, error: null, result, expanded: true });
     } catch (err: any) {
-      setNextStepsState({ ...nextStepsState, loading: false, error: err.message });
+      setEnrichState({ ...enrichState, loading: false, error: err.message });
     }
   };
 
-  const handleDraftMessage = async () => {
-    if (!leadId) return;
-    setDraftState({ ...draftState, loading: true, error: null });
-    try {
-      const result = await leadSupportApi.draftMessage(leadId, "email", draftContext || undefined);
-      setDraftState({ loading: false, error: null, result, expanded: true });
-    } catch (err: any) {
-      setDraftState({ ...draftState, loading: false, error: err.message });
-    }
-  };
-
-  const handleObjection = async () => {
-    if (!leadId || !objectionInput.trim()) return;
-    setObjectionState({ ...objectionState, loading: true, error: null });
-    try {
-      const result = await leadSupportApi.handleObjection(objectionInput, leadId);
-      setObjectionState({ loading: false, error: null, result, expanded: true });
-    } catch (err: any) {
-      setObjectionState({ ...objectionState, loading: false, error: err.message });
-    }
-  };
-
-  const handleMeetingPrep = async () => {
-    if (!leadId) return;
-    setMeetingPrepState({ ...meetingPrepState, loading: true, error: null });
-    try {
-      const result = await leadSupportApi.prepareMeeting(leadId, meetingContext || undefined);
-      setMeetingPrepState({ loading: false, error: null, result, expanded: true });
-    } catch (err: any) {
-      setMeetingPrepState({ ...meetingPrepState, loading: false, error: err.message });
-    }
-  };
 
   // ============================================
   // Render Helpers
@@ -173,10 +149,10 @@ export const LeadPlugins = () => {
     // Generate content for clipboard copy
     let content = "";
     if ("summary" in state.result) content = state.result.summary;
-    else if ("next_steps" in state.result) content = state.result.next_steps;
-    else if ("draft" in state.result) content = state.result.draft;
-    else if ("response" in state.result) content = state.result.response;
-    else if ("prep_document" in state.result) content = state.result.prep_document;
+    else if ("enriched_data" in state.result) {
+      const enrich = state.result as LeadEnrichResponse;
+      content = `## Enriched Data\n${enrich.enriched_data?.enriched_text || "No enriched data available."}\n\n## Missing Fields\n${enrich.missing_fields.map(f => `- ${f}`).join("\n")}\n\n## Recommendations\n${enrich.recommendations.map((r, i) => `${i + 1}. ${r}`).join("\n")}`;
+    }
     else if ("overview" in state.result) {
       const insights = state.result as LeadInsightsResponse;
       content = `## Overview\n${insights.overview}\n\n## Key Insights\n${insights.key_insights.map(i => `- ${i}`).join("\n")}\n\n## Engagement\n${insights.engagement_score || "N/A"}\n\n## Recommended Actions\n${insights.recommended_actions.map((a, i) => `${i + 1}. ${a}`).join("\n")}\n\n## Risk Factors\n${insights.risk_factors.length > 0 ? insights.risk_factors.map(r => `- ${r}`).join("\n") : "None identified"}`;
@@ -186,10 +162,7 @@ export const LeadPlugins = () => {
       <Collapsible open={state.expanded} onOpenChange={(open) => {
         if (id === "summary") setSummaryState({ ...state, expanded: open });
         else if (id === "insights") setInsightsState({ ...state, expanded: open });
-        else if (id === "next_steps") setNextStepsState({ ...state, expanded: open });
-        else if (id === "draft") setDraftState({ ...state, expanded: open });
-        else if (id === "objection") setObjectionState({ ...state, expanded: open });
-        else if (id === "meeting_prep") setMeetingPrepState({ ...state, expanded: open });
+        else if (id === "enrich") setEnrichState({ ...state, expanded: open });
       }}>
         <CollapsibleTrigger asChild>
           <Button variant="ghost" size="sm" className="w-full mt-3 justify-between">
@@ -306,131 +279,33 @@ export const LeadPlugins = () => {
             </CardContent>
           </Card>
 
-          {/* Next Steps Plugin */}
+          {/* Enrich Lead Plugin */}
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-base flex items-center gap-2">
                 <RefreshCw className="h-4 w-4 text-purple-500" />
-                Next Best Steps
+                Enrich Lead
               </CardTitle>
-              <CardDescription>AI-recommended actions</CardDescription>
+              <CardDescription>Analyze and enrich lead data</CardDescription>
             </CardHeader>
             <CardContent>
               <Button
-                onClick={handleGetNextSteps}
-                disabled={nextStepsState.loading || !configured}
+                onClick={handleEnrichLead}
+                disabled={enrichState.loading || !configured}
                 className="w-full"
                 variant="outline"
               >
-                {nextStepsState.loading ? (
+                {enrichState.loading ? (
                   <Loader2 className="h-4 w-4 animate-spin mr-2" />
                 ) : (
                   <RefreshCw className="h-4 w-4 mr-2" />
                 )}
-                Get Next Steps
+                Enrich Lead
               </Button>
-              {renderResult(nextStepsState, "next_steps")}
+              {renderResult(enrichState, "enrich")}
             </CardContent>
           </Card>
 
-          <Separator />
-
-          {/* Draft Message Plugin */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base flex items-center gap-2">
-                <Mail className="h-4 w-4 text-orange-500" />
-                Draft Message
-              </CardTitle>
-              <CardDescription>Create personalized outreach</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <Input
-                placeholder="Context (optional): e.g., follow up on pricing"
-                value={draftContext}
-                onChange={(e) => setDraftContext(e.target.value)}
-              />
-              <Button
-                onClick={handleDraftMessage}
-                disabled={draftState.loading || !configured}
-                className="w-full"
-                variant="outline"
-              >
-                {draftState.loading ? (
-                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                ) : (
-                  <Mail className="h-4 w-4 mr-2" />
-                )}
-                Draft Email
-              </Button>
-              {renderResult(draftState, "draft")}
-            </CardContent>
-          </Card>
-
-          {/* Objection Handling Plugin */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base flex items-center gap-2">
-                <MessageSquare className="h-4 w-4 text-red-500" />
-                Objection Handling
-              </CardTitle>
-              <CardDescription>Get responses to objections</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <Textarea
-                placeholder="Enter the objection: e.g., 'The price is too high'"
-                value={objectionInput}
-                onChange={(e) => setObjectionInput(e.target.value)}
-                rows={2}
-              />
-              <Button
-                onClick={handleObjection}
-                disabled={objectionState.loading || !objectionInput.trim() || !configured}
-                className="w-full"
-                variant="destructive"
-              >
-                {objectionState.loading ? (
-                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                ) : (
-                  <MessageSquare className="h-4 w-4 mr-2" />
-                )}
-                Handle Objection
-              </Button>
-              {renderResult(objectionState, "objection")}
-            </CardContent>
-          </Card>
-
-          {/* Meeting Prep Plugin */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base flex items-center gap-2">
-                <Calendar className="h-4 w-4 text-cyan-500" />
-                Meeting Prep
-              </CardTitle>
-              <CardDescription>Prepare for your meeting</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <Input
-                placeholder="Meeting context (optional): e.g., quarterly review"
-                value={meetingContext}
-                onChange={(e) => setMeetingContext(e.target.value)}
-              />
-              <Button
-                onClick={handleMeetingPrep}
-                disabled={meetingPrepState.loading || !configured}
-                className="w-full"
-                variant="outline"
-              >
-                {meetingPrepState.loading ? (
-                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                ) : (
-                  <Calendar className="h-4 w-4 mr-2" />
-                )}
-                Prepare Meeting
-              </Button>
-              {renderResult(meetingPrepState, "meeting_prep")}
-            </CardContent>
-          </Card>
         </div>
       </ScrollArea>
 

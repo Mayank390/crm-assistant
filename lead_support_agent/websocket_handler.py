@@ -54,8 +54,10 @@ async def handle_lead_support_websocket(
     Message types supported:
     - handshake: Initialize session with business_id and user_id
     - ping: Keep-alive ping
-    - query: General lead support query
+    - query: General lead support query (supports natural language)
     - summarize: Summarize a specific lead
+    - insights: Get AI insights about a lead
+    - enrich: Enrich lead with additional data
     - next_steps: Get next best steps for a lead
     - compare: Compare multiple leads
     - draft_message: Draft a message for a lead
@@ -174,8 +176,7 @@ async def handle_lead_support_websocket(
             query = data.get("query") or data.get("message", "")
             business_id = data.get("business_id") or user_context["business_id"]
             
-            # Validate lead_id for operations that require it
-            if msg_type in ["summarize", "next_steps", "draft_message", "objection", "meeting_prep", "email"]:
+            if msg_type in ["summarize", "insights", "enrich", "next_steps", "draft_message", "objection", "meeting_prep", "email"]:
                 if not lead_id:
                     await websocket.send_json({
                         "type": "error",
@@ -203,7 +204,23 @@ async def handle_lead_support_websocket(
                         business_id=business_id,
                     ):
                         pass  # Streaming happens inside the generator via callback handler
-                
+
+                elif msg_type == "insights":
+                    async for chunk in lead_support_agent.get_insights(
+                        lead_id=lead_id,
+                        websocket=websocket,
+                        business_id=business_id,
+                    ):
+                        pass
+
+                elif msg_type == "enrich":
+                    async for chunk in lead_support_agent.enrich_lead(
+                        lead_id=lead_id,
+                        websocket=websocket,
+                        business_id=business_id,
+                    ):
+                        pass
+
                 elif msg_type == "next_steps":
                     async for chunk in lead_support_agent.get_next_steps(
                         lead_id=lead_id,
@@ -211,28 +228,73 @@ async def handle_lead_support_websocket(
                         business_id=business_id,
                     ):
                         pass
-                
+
                 elif msg_type == "compare":
                     lead_ids = data.get("lead_ids", [])
-                    if not lead_ids or len(lead_ids) < 2:
+                    if not lead_ids:
                         await websocket.send_json({
                             "type": "error",
-                            "message": "At least 2 lead_ids required for comparison",
+                            "message": "At least 1 lead_id required for comparison",
                             "timestamp": datetime.now().isoformat()
                         })
                         continue
-                    
+
+                    # If only one lead is provided, find similar leads to compare with
+                    if len(lead_ids) == 1:
+                        try:
+                            # Get lead context and find similar leads
+                            from lead_support_agent.tools import get_lead_context
+
+                            # Get the current lead's data
+                            lead_context = await get_lead_context.ainvoke({
+                                "lead_id": lead_ids[0],
+                                "include_tasks": False,
+                                "include_meetings": False,
+                                "include_notes": False,
+                                "include_activities": False,
+                                "include_calls": False,
+                                "include_emails": False,
+                            })
+
+                            # Find similar leads based on company and industry
+                            similar_query = f"""Find 2-3 other leads in the database that are similar to this lead based on:
+- Same industry/company type
+- Similar company size
+- Similar lead status/stage
+- Same geographic region
+
+Return only the lead IDs separated by commas, no other text.
+
+Lead context: {lead_context}"""
+
+                            similar_result = await lead_support_agent.run(
+                                query=similar_query,
+                                lead_id=lead_ids[0],
+                                business_id=business_id,
+                            )
+
+                            # Extract lead IDs from the response using regex
+                            import re
+                            found_ids = re.findall(r'[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}', similar_result)
+                            if found_ids:
+                                lead_ids.extend(found_ids[:3])  # Add up to 3 similar leads
+                            else:
+                                # If no similar leads found, still provide comparison with insights about this lead
+                                pass  # Keep the single lead for analysis
+                        except Exception as e:
+                            logger.warning(f"Failed to find similar leads for comparison: {e}")
+
                     async for chunk in lead_support_agent.compare_leads_handler(
                         lead_ids=lead_ids,
                         websocket=websocket,
                         business_id=business_id,
                     ):
                         pass
-                
+
                 elif msg_type == "draft_message":
                     message_type = data.get("message_type", "message")
                     context = data.get("context")
-                    
+
                     async for chunk in lead_support_agent.draft_message(
                         lead_id=lead_id,
                         message_type=message_type,
@@ -241,7 +303,7 @@ async def handle_lead_support_websocket(
                         business_id=business_id,
                     ):
                         pass
-                
+
                 elif msg_type == "objection":
                     objection = data.get("objection", query)
                     if not objection:
@@ -251,7 +313,7 @@ async def handle_lead_support_websocket(
                             "timestamp": datetime.now().isoformat()
                         })
                         continue
-                    
+
                     async for chunk in lead_support_agent.handle_objection(
                         lead_id=lead_id,
                         objection=objection,
@@ -259,10 +321,10 @@ async def handle_lead_support_websocket(
                         business_id=business_id,
                     ):
                         pass
-                
+
                 elif msg_type == "meeting_prep":
                     meeting_context = data.get("meeting_context")
-                    
+
                     async for chunk in lead_support_agent.prepare_meeting(
                         lead_id=lead_id,
                         meeting_context=meeting_context,
@@ -270,10 +332,10 @@ async def handle_lead_support_websocket(
                         business_id=business_id,
                     ):
                         pass
-                
+
                 elif msg_type == "email":
                     context = data.get("context")
-                    
+
                     async for chunk in lead_support_agent.draft_message(
                         lead_id=lead_id,
                         message_type="email",

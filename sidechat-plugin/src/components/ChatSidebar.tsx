@@ -13,6 +13,8 @@ import {
   RefreshCw,
   Trash2,
   AlertTriangle,
+  Calendar,
+  Scale,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -35,10 +37,14 @@ export const ChatSidebar = () => {
     error,
     sendQuery,
     summarizeLead,
+    getInsights,
+    enrichLead,
     getNextSteps,
+    compareLeads,
     draftMessage,
     handleObjection,
     prepareForMeeting,
+    composeEmail,
     clearMessages,
     reconnect,
   } = useLeadSupportSocket({ leadId: selectedLead?.leadId });
@@ -61,9 +67,12 @@ export const ChatSidebar = () => {
 
   const quickActions = [
     { label: "Summarize", icon: Sparkles, action: summarizeLead },
-    { label: "Next Step", icon: Sparkles, action: getNextSteps },
+    { label: "Insights", icon: Flame, action: getInsights },
+    { label: "Next Steps", icon: Clock, action: getNextSteps },
     { label: "Draft Email", icon: Mail, action: () => draftMessage("email") },
-    { label: "Meeting Prep", icon: Clock, action: () => prepareForMeeting() },
+    { label: "Enrich", icon: RefreshCw, action: enrichLead },
+    { label: "Compare", icon: Scale, action: () => selectedLead && compareLeads([selectedLead.leadId]) },
+    { label: "Meeting Prep", icon: Calendar, action: () => prepareForMeeting() },
   ];
 
   const handleSend = () => {
@@ -207,7 +216,7 @@ export const ChatSidebar = () => {
                   className="gap-2"
                   onClick={() => setObjectionMode(!objectionMode)}
                 >
-                  <Copy className="h-3 w-3" />
+                  <AlertTriangle className="h-3 w-3" />
                   {objectionMode ? "Cancel" : "Objection"}
                 </Button>
               </div>

@@ -629,20 +629,23 @@ async def websocket_chat(websocket: WebSocket):
 @app.websocket("/ws/lead-support")
 async def websocket_lead_support(websocket: WebSocket):
     """WebSocket endpoint for Lead Support Agent.
-    
+
     This is a focused helper agent specifically for lead-related support tasks:
     - Lead summarization
+    - AI insights and analysis
+    - Lead enrichment with inferred data
     - Next best steps recommendations
-    - Lead comparison
-    - Message drafting
+    - Message drafting and email composition
     - Objection handling
-    - Meeting prep
-    - Email composition
-    
+    - Meeting preparation
+    - Lead comparison
+
     Message types:
     - handshake: Initialize session with member_id and business_id
     - ping: Keep-alive
     - summarize: Summarize a specific lead (requires lead_id)
+    - insights: Get AI insights about a lead (requires lead_id)
+    - enrich: Enrich lead with additional data (requires lead_id)
     - next_steps: Get next best steps for a lead (requires lead_id)
     - compare: Compare multiple leads (requires lead_ids array)
     - draft_message: Draft a message (requires lead_id, optional message_type, context)

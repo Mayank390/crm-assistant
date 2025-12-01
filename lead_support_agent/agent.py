@@ -256,6 +256,59 @@ IMPORTANT INSTRUCTIONS:
         # Max steps reached
         return last_response.content if last_response else "Max steps reached without response."
 
+    async def _direct_compare_analysis(self, query: str, websocket=None) -> None:
+        """Direct LLM analysis for comparison without agent reasoning loop."""
+        from lead_support_agent.callback_handler import LeadSupportCallbackHandler
+
+        callback_handler = LeadSupportCallbackHandler(websocket)
+
+        try:
+            # Connect if needed
+            if not self.connected:
+                await self.connect()
+
+            # Build simple messages for direct completion
+            messages = [
+                SystemMessage(content="You are a lead analysis expert. Provide comprehensive, actionable insights based on the provided information. Be specific and data-driven in your analysis."),
+                HumanMessage(content=query)
+            ]
+
+            # Direct LLM call without tools
+            response = await self.llm.ainvoke(messages)
+
+            # Stream the response directly
+            content = response.content
+            chunk_size = 100
+
+            # Send start message
+            await callback_handler._safe_send({
+                "type": "llm_start",
+                "message": "Analyzing lead comparison...",
+                "timestamp": datetime.now().isoformat()
+            })
+
+            # Stream content in chunks
+            for i in range(0, len(content), chunk_size):
+                chunk = content[i:i + chunk_size]
+                await callback_handler.on_llm_new_token(chunk)
+
+            # Send completion message
+            await callback_handler._safe_send({
+                "type": "llm_end",
+                "token_count": len(content),
+                "elapsed_time": 0.1,
+                "full_content": content,
+                "timestamp": datetime.now().isoformat()
+            })
+
+        except Exception as e:
+            error_msg = f"Error in direct comparison analysis: {str(e)}"
+            await callback_handler._safe_send({
+                "type": "error",
+                "message": error_msg,
+                "timestamp": datetime.now().isoformat()
+            })
+
     async def run_streaming(
         self,
         query: str,
@@ -437,6 +490,87 @@ IMPORTANT INSTRUCTIONS:
         ):
             yield chunk
 
+    async def get_insights(
+        self,
+        lead_id: str,
+        websocket=None,
+        business_id: Optional[str] = None
+    ) -> AsyncGenerator[str, None]:
+        """Convenience method to get AI insights about a specific lead."""
+        query = """Analyze this lead and provide structured insights in the following format:
+
+## Overview
+[2-3 sentence overview of the lead]
+
+## Key Insights
+- [Insight 1]
+- [Insight 2]
+- [Insight 3]
+
+## Engagement Assessment
+[Assessment of engagement level: High/Medium/Low with brief explanation]
+
+## Recommended Actions
+1. [Action 1]
+2. [Action 2]
+3. [Action 3]
+
+## Risk Factors
+- [Risk 1 if any]
+- [Risk 2 if any]
+
+Be specific and actionable based on the lead data provided."""
+
+        async for chunk in self.run_streaming(
+            query=query,
+            lead_id=lead_id,
+            task_type="insights",
+            websocket=websocket,
+            business_id=business_id,
+        ):
+            yield chunk
+
+    async def enrich_lead(
+        self,
+        lead_id: str,
+        websocket=None,
+        business_id: Optional[str] = None
+    ) -> AsyncGenerator[str, None]:
+        """Convenience method to enrich a lead with inferred data."""
+        query = """Analyze this lead's available data and provide enrichment information in the following structured format:
+
+## Enriched Data
+Provide inferred or enhanced information that can be derived from the available data:
+- Company details (name, industry, website, size) - infer from notes, emails, meetings
+- Contact information (email, phone, social profiles) - extract from communications
+- Job title and role - infer from context
+- Location and address - extract from available data
+- Budget and decision-making authority - infer from interactions
+- Technology stack or tools used - extract from activities and notes
+- Pain points and needs - summarize from notes and activities
+
+## Missing Fields
+List all important fields that are missing or incomplete:
+- [Field 1] - why it's important
+- [Field 2] - why it's important
+
+## Recommendations
+Provide actionable recommendations for enriching this lead:
+1. [Recommendation 1 - specific action to take]
+2. [Recommendation 2 - data source to check]
+3. [Recommendation 3 - follow-up question to ask]
+
+Format your response clearly with sections marked by ## headers. Be specific and reference actual data points from the lead context."""
+
+        async for chunk in self.run_streaming(
+            query=query,
+            lead_id=lead_id,
+            task_type="enrich",
+            websocket=websocket,
+            business_id=business_id,
+        ):
+            yield chunk
+
     async def get_next_steps(
         self,
         lead_id: str,
@@ -465,13 +599,139 @@ Prioritize by urgency and potential impact."""
         websocket=None,
         business_id: Optional[str] = None
     ) -> AsyncGenerator[str, None]:
-        """Convenience method to compare multiple leads."""
-        query = f"""Compare these leads side-by-side and provide:
-1. A comparison table with key metrics
-2. Analysis of strengths and weaknesses for each
-3. Clear prioritization recommendation
-Lead IDs to compare: {', '.join(lead_ids)}"""
-        
+        """Compare leads and provide insights."""
+        from lead_support_agent.callback_handler import LeadSupportCallbackHandler
+        from lead_support_agent.tools import get_lead_context
+
+        # Create callback handler to send results to websocket
+        callback_handler = LeadSupportCallbackHandler(websocket)
+
+        if len(lead_ids) == 1:
+            # Single lead: Compare with all other leads in the business
+            target_lead_id = lead_ids[0]
+
+            # Send start message
+            await callback_handler._safe_send({
+                "type": "llm_start",
+                "message": "Analyzing lead and comparing with business portfolio...",
+                "timestamp": datetime.now().isoformat()
+            })
+
+            try:
+                # Get the target lead's context
+                target_lead_context = await get_lead_context.ainvoke({
+                    "lead_id": target_lead_id,
+                    "include_tasks": True,
+                    "include_meetings": True,
+                    "include_notes": False,
+                    "include_activities": True,
+                    "include_calls": False,
+                    "include_emails": False,
+                })
+
+                # Get all other leads in the business (limit to 10 for performance)
+                from lead_support_agent.tools import compare_leads
+                other_leads = await compare_leads.ainvoke({
+                    "lead_ids": [target_lead_id],
+                    "compare_with_portfolio": True
+                })
+
+                if not other_leads:
+                    result = "No other leads found in your business to compare with."
+                    await callback_handler.on_llm_new_token(result)
+                    yield result
+
+                    await callback_handler._safe_send({
+                        "type": "llm_end",
+                        "token_count": len(result),
+                        "elapsed_time": 0.1,
+                        "full_content": result,
+                        "timestamp": datetime.now().isoformat()
+                    })
+                    return
+
+                # Create comprehensive comparison query
+                comparison_data = "\n".join([
+                    f"- {lead['name']} ({lead['company']}) - Status: {lead['status']}, Score: {lead['score']}, Industry: {lead['industry']}"
+                    for lead in other_leads[:5]  # Limit to top 5 for analysis
+                ])
+
+                query = f"""ANALYZE THIS LEAD COMPARISON - DO NOT USE ANY TOOLS OR SEARCH FOR ADDITIONAL INFORMATION.
+
+You have been provided with complete information about the target lead and sample leads from the business portfolio. Use ONLY this provided information to generate your analysis.
+
+**TARGET LEAD CONTEXT:**
+{target_lead_context}
+
+**OTHER LEADS IN BUSINESS (sample):**
+{comparison_data}
+
+**ANALYSIS REQUEST:**
+Provide a comprehensive lead comparison analysis covering:
+
+1. **Lead Positioning**: How does this lead compare to others in terms of lead score, status, industry alignment, and engagement level?
+
+2. **Competitive Analysis**: Is this lead more/less promising than similar leads? What makes it unique or similar?
+
+3. **Strategic Insights**: Prioritization recommendation, specific next steps, and resource allocation suggestions.
+
+4. **Business Portfolio Context**: How this lead fits into the overall pipeline and potential opportunities.
+
+IMPORTANT: Base your analysis SOLELY on the information provided above. Do not search for or request additional data."""
+
+                # Use direct LLM call for comparison analysis (no tool usage needed)
+                await self._direct_compare_analysis(query, websocket)
+
+            except Exception as e:
+                error_msg = f"Error preparing lead comparison: {str(e)}"
+                await callback_handler._safe_send({
+                    "type": "error",
+                    "message": error_msg,
+                    "timestamp": datetime.now().isoformat()
+                })
+                raise
+
+        else:
+            # Multiple leads provided: Compare the specified leads
+            await callback_handler._safe_send({
+                "type": "llm_start",
+                "message": f"Comparing {len(lead_ids)} selected leads...",
+                "timestamp": datetime.now().isoformat()
+            })
+
+            try:
+                # Use the compare_leads tool for direct comparison
+                from lead_support_agent.tools import compare_leads
+                comparison_result = await compare_leads.ainvoke({"lead_ids": lead_ids})
+
+                # Send the comparison result as tokens to simulate streaming
+                # Split the result into chunks to simulate streaming
+                chunk_size = 100
+                for i in range(0, len(comparison_result), chunk_size):
+                    chunk = comparison_result[i:i + chunk_size]
+                    await callback_handler.on_llm_new_token(chunk)
+                    yield chunk  # Also yield for the generator
+
+                # Send completion message
+                await callback_handler._safe_send({
+                    "type": "llm_end",
+                    "token_count": len(comparison_result),
+                    "elapsed_time": 0.1,
+                    "full_content": comparison_result,
+                    "timestamp": datetime.now().isoformat()
+                })
+                return
+
+            except Exception as e:
+                error_msg = f"Error comparing selected leads: {str(e)}"
+                await callback_handler._safe_send({
+                    "type": "error",
+                    "message": error_msg,
+                    "timestamp": datetime.now().isoformat()
+                })
+                raise
+
+        # For single lead analysis, use the streaming LLM
         async for chunk in self.run_streaming(
             query=query,
             task_type="compare",
