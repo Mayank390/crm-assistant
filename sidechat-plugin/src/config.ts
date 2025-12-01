@@ -7,8 +7,8 @@
 export const config = {
   // API Configuration
   api: {
-    baseUrl: import.meta.env.VITE_API_BASE_URL || "http://localhost:8000",
-    wsUrl: import.meta.env.VITE_WS_BASE_URL || "ws://localhost:8000",
+    baseUrl: import.meta.env.VITE_API_BASE_URL || "https://stage-aicrm.simpo.ai",
+    wsUrl: import.meta.env.VITE_WS_BASE_URL || "wss://stage-aicrm.simpo.ai",
   },
 
   // ============================================
