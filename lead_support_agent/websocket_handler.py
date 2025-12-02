@@ -63,6 +63,7 @@ async def handle_lead_support_websocket(
     - draft_message: Draft a message for a lead
     - objection: Handle a sales objection
     - meeting_prep: Prepare for a meeting
+    - qualification: Assess lead qualification using BANT framework
     - email: Compose an email for a lead
     """
     session_id = None
@@ -176,7 +177,7 @@ async def handle_lead_support_websocket(
             query = data.get("query") or data.get("message", "")
             business_id = data.get("business_id") or user_context["business_id"]
             
-            if msg_type in ["summarize", "insights", "enrich", "next_steps", "draft_message", "objection", "meeting_prep", "email"]:
+            if msg_type in ["summarize", "insights", "enrich", "next_steps", "draft_message", "objection", "meeting_prep", "qualification", "email"]:
                 if not lead_id:
                     await websocket.send_json({
                         "type": "error",
@@ -328,6 +329,17 @@ Lead context: {lead_context}"""
                     async for chunk in lead_support_agent.prepare_meeting(
                         lead_id=lead_id,
                         meeting_context=meeting_context,
+                        websocket=websocket,
+                        business_id=business_id,
+                    ):
+                        pass
+
+                elif msg_type == "qualification":
+                    qualification_context = data.get("qualification_context")
+
+                    async for chunk in lead_support_agent.qualify_lead(
+                        lead_id=lead_id,
+                        qualification_context=qualification_context,
                         websocket=websocket,
                         business_id=business_id,
                     ):

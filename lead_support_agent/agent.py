@@ -123,7 +123,7 @@ class LeadSupportAgent:
             context_message = f"""
 ## Lead Context (Pre-loaded Data)
 
-The following lead information has been gathered for you. Use this data to provide your response.
+The following lead information has been gathered for you. Use ONLY RELEVANT PARTS of this data to directly address the user's query.
 DO NOT call any tools to fetch this data again - it is already provided below.
 
 ---
@@ -131,10 +131,11 @@ DO NOT call any tools to fetch this data again - it is already provided below.
 ---
 
 IMPORTANT INSTRUCTIONS:
-1. Use the lead context above to provide a detailed, actionable response
-2. Reference specific details from the lead's profile, history, and activities
-3. DO NOT call the get_lead_context tool - the context is already provided above
-4. Be specific and mention actual names, dates, and details from the context
+1. Match your response scope to the query complexity - simple questions get brief answers, complex requests get detailed analysis
+2. Use only the context information that directly helps answer the specific question asked
+3. Reference specific details from the context when they add value to the response
+4. DO NOT call the get_lead_context tool - the context is already provided above
+5. Ignore irrelevant context sections entirely - focus on what's needed for this specific query
 """
             messages.append(SystemMessage(content=context_message))
         
@@ -416,12 +417,12 @@ IMPORTANT INSTRUCTIONS:
             # Add synthesis instruction for better output
             synthesis_instruction = SystemMessage(content=(
                 "Now provide your final response based on all the information gathered. "
-                "Be comprehensive, specific, and actionable. "
-                "Format your response using markdown:\n"
+                "Match the response depth to the query complexity - for simple questions, provide concise answers; for complex requests, provide detailed analysis. "
+                "Format your response using markdown when structured responses are appropriate:\n"
                 "- Use **bold** for key points\n"
                 "- Use bullet points and numbered lists\n"
                 "- Use headers (##, ###) for sections\n"
-                "- Reference specific details from the lead context"
+                "- Reference specific details from the lead context when relevant"
             ))
             
             final_messages = messages + [synthesis_instruction]
@@ -817,6 +818,33 @@ Provide:
             query=query,
             lead_id=lead_id,
             task_type="meeting_prep",
+            websocket=websocket,
+            business_id=business_id,
+        ):
+            yield chunk
+
+    async def qualify_lead(
+        self,
+        lead_id: str,
+        qualification_context: Optional[str] = None,
+        websocket=None,
+        business_id: Optional[str] = None
+    ) -> AsyncGenerator[str, None]:
+        """Convenience method to qualify a lead with assessment."""
+        query = """Assess this lead's qualification using BANT framework and provide:
+1. **BANT Analysis**: Budget, Authority, Need, Timeline assessment
+2. **Fit Assessment**: How well this lead matches our ideal customer profile
+3. **Engagement Assessment**: Level of interaction and interest indicators
+4. **Qualification Verdict**: Qualified/Hot, Warm, Cold with reasoning
+5. **Next Steps**: Recommended actions based on qualification level"""
+
+        if qualification_context:
+            query += f"\n\nAdditional qualification context: {qualification_context}"
+
+        async for chunk in self.run_streaming(
+            query=query,
+            lead_id=lead_id,
+            task_type="qualification",
             websocket=websocket,
             business_id=business_id,
         ):
