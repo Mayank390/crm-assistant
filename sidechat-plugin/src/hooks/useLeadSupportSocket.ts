@@ -23,6 +23,8 @@ type MessageType =
   | "summarize"
   | "insights"
   | "enrich"
+  | "qualification"
+  | "statistics"
   | "next_steps"
   | "compare"
   | "draft_message"
@@ -62,6 +64,8 @@ interface UseLeadSupportSocketReturn {
   summarizeLead: () => void;
   getInsights: () => void;
   enrichLead: () => void;
+  qualifyLead: () => void;
+  getStatistics: () => void;
   getNextSteps: () => void;
   compareLeads: (leadIds: string[]) => void;
   draftMessage: (messageType?: string, context?: string) => void;
@@ -447,6 +451,32 @@ export const useLeadSupportSocket = (
     sendMessage({ type: "enrich" });
   }, [sendMessage]);
 
+  const qualifyLead = useCallback(() => {
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: `user_${Date.now()}`,
+        role: "user",
+        content: "🎯 Qualify this lead using BANT analysis",
+        timestamp: new Date().toISOString(),
+      },
+    ]);
+    sendMessage({ type: "qualification" });
+  }, [sendMessage]);
+
+  const getStatistics = useCallback(() => {
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: `user_${Date.now()}`,
+        role: "user",
+        content: "📊 Get lead statistics and engagement metrics",
+        timestamp: new Date().toISOString(),
+      },
+    ]);
+    sendMessage({ type: "statistics" });
+  }, [sendMessage]);
+
   const getNextSteps = useCallback(() => {
     setMessages((prev) => [
       ...prev,
@@ -580,6 +610,8 @@ export const useLeadSupportSocket = (
     summarizeLead,
     getInsights,
     enrichLead,
+    qualifyLead,
+    getStatistics,
     getNextSteps,
     compareLeads,
     draftMessage,

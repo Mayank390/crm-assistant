@@ -16,6 +16,8 @@ import {
   ObjectionHandlingResponse,
   MeetingPrepResponse,
   LeadCompareResponse,
+  LeadQualificationResponse,
+  LeadStatisticsResponse,
 } from "@/api/leadSupportApi";
 
 type PluginResult =
@@ -27,6 +29,8 @@ type PluginResult =
   | ObjectionHandlingResponse
   | MeetingPrepResponse
   | LeadCompareResponse
+  | LeadQualificationResponse
+  | LeadStatisticsResponse
   | null;
 
 interface ResponseRendererProps {
@@ -329,6 +333,129 @@ ${enrich.recommendations.length > 0
                 components={markdownComponents}
               >
                 {fullEnrichMarkdown}
+              </ReactMarkdown>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Lead Qualification Renderer
+  if ("qualification_analysis" in result) {
+    const qualification = result as LeadQualificationResponse;
+
+    const fullQualificationMarkdown = `## Qualification Analysis
+${qualification.qualification_analysis}
+
+## Qualification Score
+${qualification.qualification_score ? `${qualification.qualification_score}/10` : "Not scored"}
+
+## Recommendations
+${qualification.recommendations.length > 0
+  ? qualification.recommendations.map((rec, index) => `${index + 1}. ${rec}`).join('\n')
+  : "No specific recommendations available."}`;
+
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <Target className="h-5 w-5 text-orange-500" />
+            <h3 className="text-lg font-semibold">Lead Qualification</h3>
+            {qualification.qualification_score && (
+              <Badge variant="secondary" className="ml-2">
+                Score: {qualification.qualification_score}/10
+              </Badge>
+            )}
+          </div>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2"
+              onClick={() => copyToClipboard(fullQualificationMarkdown, "qualification")}
+            >
+              {copiedStates["qualification"] ? (
+                <Check className="h-3 w-3 text-green-500" />
+              ) : (
+                <Copy className="h-3 w-3" />
+              )}
+              Copy
+            </Button>
+          </div>
+        </div>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="prose prose-sm dark:prose-invert max-w-none">
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm]}
+                components={markdownComponents}
+              >
+                {fullQualificationMarkdown}
+              </ReactMarkdown>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Lead Statistics Renderer
+  if ("statistics_analysis" in result) {
+    const statistics = result as LeadStatisticsResponse;
+
+    const fullStatisticsMarkdown = `## Statistics Analysis
+${statistics.statistics_analysis}
+
+## Engagement Score
+${statistics.engagement_score ? `${statistics.engagement_score}/10` : "Not calculated"}
+
+## Key Trends
+${statistics.trends.length > 0
+  ? statistics.trends.map(trend => `- ${trend}`).join('\n')
+  : "No significant trends identified."}
+
+## Recommendations
+${statistics.recommendations.length > 0
+  ? statistics.recommendations.map((rec, index) => `${index + 1}. ${rec}`).join('\n')
+  : "No specific recommendations available."}`;
+
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <TrendingUp className="h-5 w-5 text-cyan-500" />
+            <h3 className="text-lg font-semibold">Lead Statistics</h3>
+            {statistics.engagement_score && (
+              <Badge variant="secondary" className="ml-2">
+                Engagement: {statistics.engagement_score}/10
+              </Badge>
+            )}
+          </div>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2"
+              onClick={() => copyToClipboard(fullStatisticsMarkdown, "statistics")}
+            >
+              {copiedStates["statistics"] ? (
+                <Check className="h-3 w-3 text-green-500" />
+              ) : (
+                <Copy className="h-3 w-3" />
+              )}
+              Copy
+            </Button>
+          </div>
+        </div>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="prose prose-sm dark:prose-invert max-w-none">
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm]}
+                components={markdownComponents}
+              >
+                {fullStatisticsMarkdown}
               </ReactMarkdown>
             </div>
           </CardContent>

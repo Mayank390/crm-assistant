@@ -130,6 +130,7 @@ export const LeadPlugins = () => {
   };
 
 
+
   // ============================================
   // Render Helpers
   // ============================================
@@ -305,6 +306,7 @@ export const LeadPlugins = () => {
               {renderResult(enrichState, "enrich")}
             </CardContent>
           </Card>
+
 
         </div>
       </ScrollArea>

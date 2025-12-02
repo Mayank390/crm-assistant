@@ -15,6 +15,8 @@ import {
   AlertTriangle,
   Calendar,
   Scale,
+  Target,
+  BarChart3,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -39,6 +41,8 @@ export const ChatSidebar = () => {
     summarizeLead,
     getInsights,
     enrichLead,
+    qualifyLead,
+    getStatistics,
     getNextSteps,
     compareLeads,
     draftMessage,
@@ -68,6 +72,8 @@ export const ChatSidebar = () => {
   const quickActions = [
     { label: "Summarize", icon: Sparkles, action: summarizeLead },
     { label: "Insights", icon: Flame, action: getInsights },
+    { label: "Qualify", icon: Target, action: qualifyLead },
+    { label: "Statistics", icon: BarChart3, action: getStatistics },
     { label: "Next Steps", icon: Clock, action: getNextSteps },
     { label: "Draft Email", icon: Mail, action: () => draftMessage("email") },
     { label: "Enrich", icon: RefreshCw, action: enrichLead },

@@ -261,18 +261,54 @@ Provide qualification analysis that directly addresses the user's request. Use t
 - **📋 Information Gaps** - Missing data when helpful
 
 Provide qualification assessment that matches the depth and focus of the user's request.
+""",
+
+    "statistics": """
+## TASK: Lead Statistics Analysis
+
+Provide comprehensive statistical analysis and engagement insights for a lead based on raw metrics data.
+
+**Core Responsibilities:**
+- Analyze engagement patterns and activity levels
+- Calculate meaningful performance indicators
+- Identify trends and patterns in lead behavior
+- Provide actionable insights from statistical data
+- Highlight areas of concern or opportunity
+
+**Analysis Framework:**
+1. **📊 Overall Engagement Score** - Calculate composite engagement based on multiple factors
+2. **📈 Activity Trends** - Analyze recent vs historical activity levels
+3. **✅ Task Performance** - Assess completion rates and productivity patterns
+4. **📅 Meeting Effectiveness** - Evaluate meeting scheduling and completion trends
+5. **💬 Communication Patterns** - Analyze contact frequency and channel usage
+6. **🎯 Lead Health Indicators** - Identify engagement level (High/Medium/Low) with reasoning
+
+**Response Structure:**
+- **Overall Engagement Score** - Lead score, activity levels, key metrics
+- **Task Metrics** - Completion rates, overdue items, productivity insights
+- **Meeting Metrics** - Meeting frequency, completion rates, scheduling patterns
+- **Communication Metrics** - Channel usage, contact frequency, response patterns
+- **Engagement Trend** - Activity level assessment with time-based analysis
+
+**Key Insights to Include:**
+- Performance comparisons (e.g., "Above average task completion")
+- Risk indicators (e.g., "High overdue task count may indicate issues")
+- Opportunity signals (e.g., "Recent activity increase suggests growing interest")
+- Action recommendations based on statistical patterns
+
+Focus on data-driven insights that help sales teams prioritize and strategize effectively.
 """
 }
 
 
 def get_prompt_for_task(task_type: str) -> str:
     """Get the combined system prompt for a specific task type.
-    
+
     Args:
         task_type: One of 'summarize', 'next_steps', 'compare', 'draft_message',
-                   'objection_handling', 'meeting_prep', 'email_compose', 
-                   'follow_up', 'qualification'
-    
+                   'objection_handling', 'meeting_prep', 'email_compose',
+                   'follow_up', 'qualification', 'statistics'
+
     Returns:
         Combined system prompt string
     """

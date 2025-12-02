@@ -801,24 +801,31 @@ async def search_lead_content(
 @tool
 async def get_lead_stats(lead_id: str) -> str:
     """
-    Get statistical summary and engagement metrics for a lead.
-    
+    Get AI-analyzed statistical summary and engagement insights for a lead.
+
+    Uses LLM to analyze raw metrics and provide data-driven insights about lead engagement,
+    performance patterns, and strategic recommendations.
+
     Args:
         lead_id: The unique identifier of the lead
-    
+
     Returns:
-        Statistical summary of lead engagement and activity
+        AI-analyzed statistical summary with insights and recommendations
     """
     from mongo.constants import mongodb_tools, DATABASE_NAME, uuid_str_to_mongo_binary
     from bson import ObjectId
     from datetime import datetime, timedelta
-    
+    from langchain_groq import ChatGroq
+    from langchain_core.messages import SystemMessage, HumanMessage
+    from lead_support_agent.prompts import get_prompt_for_task
+    import os
+
     try:
         if not mongodb_tools.client:
             await mongodb_tools.connect()
-        
+
         db = mongodb_tools.client[DATABASE_NAME]
-        
+
         # Parse lead_id
         lead_query = {"$or": []}
         try:
@@ -829,87 +836,115 @@ async def get_lead_stats(lead_id: str) -> str:
             lead_query["$or"].append({"_id": uuid_str_to_mongo_binary(lead_id)})
         except Exception:
             pass
-        
+
         lead_doc = await db["Lead"].find_one(lead_query)
         if not lead_doc:
             return f"Lead not found: {lead_id}"
-        
+
         lead_ref_id = lead_doc.get("_id")
         parent_filter = {"$or": [{"parentId": lead_ref_id}, {"leadId": lead_ref_id}]}
-        
-        # Gather statistics
+
+        # Gather raw statistics
         task_coll = db["task"]
         meeting_coll = db["meeting"]
         activity_coll = db["activity"]
         call_coll = db["callLog"]
         mail_coll = db["mailInfo"]
         notes_coll = db["notes"]
-        
+
         # Task stats
         total_tasks = await task_coll.count_documents(parent_filter)
         completed_tasks = await task_coll.count_documents({**parent_filter, "taskStatus": "COMPLETED"})
         overdue_tasks = await task_coll.count_documents({
-            **parent_filter, 
+            **parent_filter,
             "taskStatus": {"$nin": ["COMPLETED", "CANCELLED"]},
             "dueDate": {"$lt": datetime.utcnow().isoformat()}
         })
-        
+
         # Meeting stats
         total_meetings = await meeting_coll.count_documents(parent_filter)
         completed_meetings = await meeting_coll.count_documents({**parent_filter, "meetingStatus": "COMPLETED"})
-        
+
         # Communication stats
         total_calls = await call_coll.count_documents(parent_filter)
         total_emails = await mail_coll.count_documents(parent_filter)
         total_notes = await notes_coll.count_documents(parent_filter)
         total_activities = await activity_coll.count_documents(parent_filter)
-        
+
         # Recent activity (last 30 days)
         thirty_days_ago = (datetime.utcnow() - timedelta(days=30)).isoformat()
         recent_activities = await activity_coll.count_documents({
             **parent_filter,
             "createdTimeStamp": {"$gte": thirty_days_ago}
         })
-        
+
+        # Additional metrics for better analysis
+        # Task completion rate
+        task_completion_rate = (completed_tasks / total_tasks * 100) if total_tasks > 0 else 0
+
+        # Meeting completion rate
+        meeting_completion_rate = (completed_meetings / total_meetings * 100) if total_meetings > 0 else 0
+
+        # Activity trends (last 7 days vs 30 days)
+        seven_days_ago = (datetime.utcnow() - timedelta(days=7)).isoformat()
+        recent_7day_activities = await activity_coll.count_documents({
+            **parent_filter,
+            "createdTimeStamp": {"$gte": seven_days_ago}
+        })
+
+        # Lead profile info
         personal_info = lead_doc.get("personalInfo", {})
-        
-        result = f"""
-## Lead Statistics: {personal_info.get('name', 'Unknown')}
+        lead_name = personal_info.get('name', 'Unknown')
 
-### Overall Engagement Score
-- **Lead Score**: {lead_doc.get('leadScore', 'N/A')}
-- **Total Activities (30 days)**: {recent_activities}
-- **Total All-time Activities**: {total_activities}
+        # Prepare raw data for LLM analysis
+        raw_data = f"""
+LEAD PROFILE:
+- Name: {lead_name}
+- Lead Score: {lead_doc.get('leadScore', 'N/A')}
+- Status: {lead_doc.get('leadStatus', 'N/A')}
+- Pipeline Stage: {lead_doc.get('pipelineStage', {}).get('stageName', 'N/A') if isinstance(lead_doc.get('pipelineStage'), dict) else 'N/A'}
 
-### Task Metrics
-| Metric | Count |
-|--------|-------|
-| Total Tasks | {total_tasks} |
-| Completed | {completed_tasks} |
-| Overdue | {overdue_tasks} |
-| Completion Rate | {(completed_tasks/total_tasks*100) if total_tasks > 0 else 0:.1f}% |
+RAW METRICS:
+- Total Tasks: {total_tasks}
+- Completed Tasks: {completed_tasks}
+- Overdue Tasks: {overdue_tasks}
+- Task Completion Rate: {task_completion_rate:.1f}%
 
-### Meeting Metrics
-| Metric | Count |
-|--------|-------|
-| Total Meetings | {total_meetings} |
-| Completed | {completed_meetings} |
-| Meeting Rate | {(completed_meetings/total_meetings*100) if total_meetings > 0 else 0:.1f}% |
+- Total Meetings: {total_meetings}
+- Completed Meetings: {completed_meetings}
+- Meeting Completion Rate: {meeting_completion_rate:.1f}%
 
-### Communication Metrics
-| Channel | Count |
-|---------|-------|
-| Calls | {total_calls} |
-| Emails | {total_emails} |
-| Notes | {total_notes} |
+- Total Activities (all-time): {total_activities}
+- Recent Activities (30 days): {recent_activities}
+- Recent Activities (7 days): {recent_7day_activities}
 
-### Engagement Trend
-- Recent activity level: {"High" if recent_activities > 10 else "Medium" if recent_activities > 3 else "Low"}
-- Last 30 days: {recent_activities} activities
+- Communication Channels:
+  * Calls: {total_calls}
+  * Emails: {total_emails}
+  * Notes: {total_notes}
+
+TIME CONTEXT:
+- Analysis Date: {datetime.utcnow().strftime('%Y-%m-%d %H:%M UTC')}
+- 30-day period: Activities from {thirty_days_ago[:10]} to present
+- 7-day period: Activities from {seven_days_ago[:10]} to present
 """
-        
-        return result
-        
+
+        # Use LLM to analyze the statistics
+        llm = ChatGroq(
+            model=os.getenv("GROQ_MODEL", "openai/gpt-oss-120b"),
+            temperature=0.2,  # Lower temperature for more consistent analysis
+            max_tokens=2048
+        )
+
+        system_prompt = get_prompt_for_task("statistics")
+        messages = [
+            SystemMessage(content=system_prompt),
+            HumanMessage(content=f"Analyze the following lead statistics data and provide comprehensive insights:\n\n{raw_data}")
+        ]
+
+        response = await llm.ainvoke(messages)
+        return response.content
+
     except Exception as e:
         logger.error(f"Error in get_lead_stats: {e}")
         return f"Error getting lead stats: {str(e)}"

@@ -849,3 +849,30 @@ Provide:
             business_id=business_id,
         ):
             yield chunk
+
+    async def get_statistics(
+        self,
+        lead_id: str,
+        statistics_context: Optional[str] = None,
+        websocket=None,
+        business_id: Optional[str] = None
+    ) -> AsyncGenerator[str, None]:
+        """Convenience method to get comprehensive lead statistics and engagement analysis."""
+        query = """Analyze this lead's statistical data and provide comprehensive insights about:
+1. **Overall Engagement Score**: Calculate composite engagement based on activity levels
+2. **Activity Trends**: Analyze recent vs historical activity patterns
+3. **Performance Metrics**: Task completion rates, meeting attendance, communication frequency
+4. **Engagement Patterns**: Identify high/low activity periods and communication channels
+5. **Strategic Recommendations**: Actionable insights based on statistical analysis"""
+
+        if statistics_context:
+            query += f"\n\nAdditional statistics context: {statistics_context}"
+
+        async for chunk in self.run_streaming(
+            query=query,
+            lead_id=lead_id,
+            task_type="statistics",
+            websocket=websocket,
+            business_id=business_id,
+        ):
+            yield chunk

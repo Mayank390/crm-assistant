@@ -69,6 +69,25 @@ export interface MeetingPrepResponse {
   generated_at: string;
 }
 
+export interface LeadQualificationResponse {
+  lead_id: string;
+  qualification_analysis: string;
+  qualification_score?: number;
+  bant_analysis?: {[key: string]: string};
+  recommendations: string[];
+  generated_at: string;
+}
+
+export interface LeadStatisticsResponse {
+  lead_id: string;
+  statistics_analysis: string;
+  engagement_score?: number;
+  key_metrics: {[key: string]: any};
+  trends: string[];
+  recommendations: string[];
+  generated_at: string;
+}
+
 // ============================================
 // API Client
 // ============================================
@@ -171,6 +190,56 @@ class LeadSupportApiClient {
     if (!leadId) throw new Error("Lead ID is required");
     const businessParam = config.businessId ? `?business_id=${config.businessId}` : "";
     return this.request<LeadEnrichResponse>(`/${leadId}/enrich${businessParam}`, {
+      method: "GET",
+    });
+  }
+
+  /**
+   * Get AI-generated lead qualification analysis
+   */
+  async getQualification(leadId: string): Promise<LeadQualificationResponse> {
+    if (!leadId) throw new Error("Lead ID is required");
+    return this.request<LeadQualificationResponse>("/qualification", {
+      method: "POST",
+      body: JSON.stringify({
+        lead_id: leadId,
+        business_id: config.businessId,
+      }),
+    });
+  }
+
+  /**
+   * Get comprehensive lead statistics and engagement analysis
+   */
+  async getStatistics(leadId: string): Promise<LeadStatisticsResponse> {
+    if (!leadId) throw new Error("Lead ID is required");
+    return this.request<LeadStatisticsResponse>("/statistics", {
+      method: "POST",
+      body: JSON.stringify({
+        lead_id: leadId,
+        business_id: config.businessId,
+      }),
+    });
+  }
+
+  /**
+   * Quick GET for lead qualification
+   */
+  async getQualificationQuick(leadId: string): Promise<LeadQualificationResponse> {
+    if (!leadId) throw new Error("Lead ID is required");
+    const businessParam = config.businessId ? `?business_id=${config.businessId}` : "";
+    return this.request<LeadQualificationResponse>(`/${leadId}/qualification${businessParam}`, {
+      method: "GET",
+    });
+  }
+
+  /**
+   * Quick GET for lead statistics
+   */
+  async getStatisticsQuick(leadId: string): Promise<LeadStatisticsResponse> {
+    if (!leadId) throw new Error("Lead ID is required");
+    const businessParam = config.businessId ? `?business_id=${config.businessId}` : "";
+    return this.request<LeadStatisticsResponse>(`/${leadId}/statistics${businessParam}`, {
       method: "GET",
     });
   }
