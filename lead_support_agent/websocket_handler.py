@@ -178,7 +178,7 @@ async def handle_lead_support_websocket(
             query = data.get("query") or data.get("message", "")
             business_id = data.get("business_id") or user_context["business_id"]
             
-            if msg_type in ["summarize", "insights", "enrich", "next_steps", "draft_message", "objection", "meeting_prep", "qualification", "statistics", "email"]:
+            if msg_type in ["summarize", "insights", "enrich", "next_steps", "draft_message", "meeting_prep", "qualification", "statistics", "email"]:
                 if not lead_id:
                     await websocket.send_json({
                         "type": "error",
@@ -306,23 +306,6 @@ Lead context: {lead_context}"""
                     ):
                         pass
 
-                elif msg_type == "objection":
-                    objection = data.get("objection", query)
-                    if not objection:
-                        await websocket.send_json({
-                            "type": "error",
-                            "message": "objection text is required",
-                            "timestamp": datetime.now().isoformat()
-                        })
-                        continue
-
-                    async for chunk in lead_support_agent.handle_objection(
-                        lead_id=lead_id,
-                        objection=objection,
-                        websocket=websocket,
-                        business_id=business_id,
-                    ):
-                        pass
 
                 elif msg_type == "meeting_prep":
                     meeting_context = data.get("meeting_context")

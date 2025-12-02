@@ -768,34 +768,6 @@ IMPORTANT: Base your analysis SOLELY on the information provided above. Do not s
         ):
             yield chunk
 
-    async def handle_objection(
-        self,
-        lead_id: str,
-        objection: str,
-        websocket=None,
-        business_id: Optional[str] = None
-    ) -> AsyncGenerator[str, None]:
-        """Convenience method to handle a sales objection."""
-        query = f"""Help me respond to this objection from the lead:
-
-"{objection}"
-
-Provide:
-1. Acknowledgment of their concern
-2. Thoughtful response addressing the objection
-3. Supporting evidence or examples
-4. Way to redirect the conversation positively
-5. Suggested follow-up"""
-        
-        async for chunk in self.run_streaming(
-            query=query,
-            lead_id=lead_id,
-            task_type="objection_handling",
-            websocket=websocket,
-            business_id=business_id,
-        ):
-            yield chunk
-
     async def prepare_meeting(
         self,
         lead_id: str,

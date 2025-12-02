@@ -46,7 +46,6 @@ export const ChatSidebar = () => {
     getNextSteps,
     compareLeads,
     draftMessage,
-    handleObjection,
     prepareForMeeting,
     composeEmail,
     clearMessages,
@@ -55,7 +54,6 @@ export const ChatSidebar = () => {
 
   const [inputValue, setInputValue] = useState("");
   const [copiedId, setCopiedId] = useState<string | null>(null);
-  const [objectionMode, setObjectionMode] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll to bottom when new messages arrive
@@ -84,12 +82,7 @@ export const ChatSidebar = () => {
   const handleSend = () => {
     if (!inputValue.trim()) return;
 
-    if (objectionMode) {
-      handleObjection(inputValue);
-      setObjectionMode(false);
-    } else {
-      sendQuery(inputValue);
-    }
+    sendQuery(inputValue);
     setInputValue("");
   };
 
@@ -216,15 +209,6 @@ export const ChatSidebar = () => {
                     {action.label}
                   </Button>
                 ))}
-                <Button
-                  variant={objectionMode ? "default" : "destructive"}
-                  size="sm"
-                  className="gap-2"
-                  onClick={() => setObjectionMode(!objectionMode)}
-                >
-                  <AlertTriangle className="h-3 w-3" />
-                  {objectionMode ? "Cancel" : "Objection"}
-                </Button>
               </div>
             </div>
 
@@ -235,12 +219,8 @@ export const ChatSidebar = () => {
                   value={inputValue}
                   onChange={(e) => setInputValue(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSend()}
-                  placeholder={
-                    objectionMode
-                      ? "Enter the objection to handle..."
-                      : "Ask anything about this lead..."
-                  }
-                  className={cn("flex-1", objectionMode && "border-destructive")}
+                  placeholder="Ask anything about this lead..."
+                  className="flex-1"
                   disabled={!isConnected}
                 />
                 <Button

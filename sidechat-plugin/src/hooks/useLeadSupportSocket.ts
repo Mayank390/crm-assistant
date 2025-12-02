@@ -28,7 +28,6 @@ type MessageType =
   | "next_steps"
   | "compare"
   | "draft_message"
-  | "objection"
   | "meeting_prep"
   | "email"
   | "query"
@@ -41,7 +40,6 @@ interface SendMessageOptions {
   lead_ids?: string[];
   message_type?: string;
   context?: string;
-  objection?: string;
   meeting_context?: string;
   task_type?: string;
 }
@@ -69,7 +67,6 @@ interface UseLeadSupportSocketReturn {
   getNextSteps: () => void;
   compareLeads: (leadIds: string[]) => void;
   draftMessage: (messageType?: string, context?: string) => void;
-  handleObjection: (objection: string) => void;
   prepareForMeeting: (context?: string) => void;
   composeEmail: (context?: string) => void;
   clearMessages: () => void;
@@ -188,7 +185,7 @@ export const useLeadSupportSocket = (
               id: `welcome_${Date.now()}`,
               role: "assistant",
               content:
-                "👋 **Hello!** I'm your AI assistant for this lead.\n\nI can help you:\n- 📋 **Summarize** activity and history\n- 📧 **Draft** personalized messages\n- 🎯 **Suggest** next best steps\n- 💬 **Handle** objections\n- 📅 **Prepare** for meetings\n\nWhat would you like to know?",
+                "👋 **Hello!** I'm your AI assistant for this lead.\n\nI can help you:\n- 📋 **Summarize** activity and history\n- 📧 **Draft** personalized messages\n- 🎯 **Suggest** next best steps\n- 📅 **Prepare** for meetings\n\nWhat would you like to know?",
               timestamp: new Date().toISOString(),
             },
           ]);
@@ -384,7 +381,6 @@ export const useLeadSupportSocket = (
       if (options.lead_ids) message.lead_ids = options.lead_ids;
       if (options.message_type) message.message_type = options.message_type;
       if (options.context) message.context = options.context;
-      if (options.objection) message.objection = options.objection;
       if (options.meeting_context)
         message.meeting_context = options.meeting_context;
       if (options.task_type) message.task_type = options.task_type;
@@ -519,21 +515,6 @@ export const useLeadSupportSocket = (
     [sendMessage]
   );
 
-  const handleObjection = useCallback(
-    (objection: string) => {
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: `user_${Date.now()}`,
-          role: "user",
-          content: `💬 Help me handle this objection:\n\n> "${objection}"`,
-          timestamp: new Date().toISOString(),
-        },
-      ]);
-      sendMessage({ type: "objection", objection });
-    },
-    [sendMessage]
-  );
 
   const prepareForMeeting = useCallback(
     (context?: string) => {
@@ -615,7 +596,6 @@ export const useLeadSupportSocket = (
     getNextSteps,
     compareLeads,
     draftMessage,
-    handleObjection,
     prepareForMeeting,
     composeEmail,
     clearMessages,
