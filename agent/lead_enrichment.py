@@ -17,11 +17,9 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class LeadEnrichmentConfig:
-    crawl4ai_url: str = os.getenv("CRAWL4AI_URL", "http://crawl4ai-local:11235")
     serpapi_key: str = os.getenv("SERPAPI_KEY", "").strip()
 
-# Global cache — prevents duplicate crawls forever
-_crawled_cache: Dict[str, dict] = {}
+# Global cache for coordinates
 _coords_cache: Dict[str, str] = {}
 
 async def upload_to_tmpfiles(csv_content: str) -> str:
@@ -160,35 +158,6 @@ async def _get_leads_via_google_maps(business_type: str, city: str, area: str, c
         logger.error(f"Google Maps failed: {e}")
         return []
 
-async def _enrich_with_crawl4ai(gmb_leads: List[dict], cfg: LeadEnrichmentConfig) -> List[dict]:
-    urls = []
-    for lead in gmb_leads:
-        url = lead.get("url")
-        if url and isinstance(url, str) and url.startswith("http") and not is_trash_directory_url(url) and url not in _crawled_cache:
-            urls.append(url)
-
-    if urls:
-        urls = urls[:15]  # Limit to 15 URLs for speed (25-40 sec total)
-        payload = {"urls": urls, "crawler": {"delay_range": [8000, 14000]}}
-        try:
-            async with httpx.AsyncClient(timeout=300.0) as client:
-                resp = await client.post(f"{cfg.crawl4ai_url}/crawl", json=payload)
-                results = resp.json().get("results", [])
-            for r in results:
-                if r.get("extracted"):
-                    _crawled_cache[r["url"]] = r["extracted"]
-        except Exception as e:
-            logger.warning(f"Crawl4AI failed: {e}")
-
-    for lead in gmb_leads:
-        url = lead.get("url")
-        if url and url in _crawled_cache:
-            e = _crawled_cache[url]
-            lead["email"] = e.get("email") or lead.get("email")
-            lead["phone"] = e.get("phone") or lead.get("phone")
-            lead["source"] = "hybrid_gmb+crawl4ai"
-
-    return gmb_leads
 
 async def run_pipeline(business_type: str, area: str, city: str, max_leads: int = 40) -> List[dict]:
     cfg = LeadEnrichmentConfig()
@@ -200,9 +169,8 @@ async def run_pipeline(business_type: str, area: str, city: str, max_leads: int 
 
     gmb_leads = await _get_leads_via_google_maps(business_type, city_clean, area_clean, cfg)
 
-    if len(gmb_leads) > 5:
-        enriched = await _enrich_with_crawl4ai(gmb_leads, cfg)
-        final = enriched[:desired]
+    if len(gmb_leads) > 0:
+        final = gmb_leads[:desired]
         await _complete(final)
         return final
 

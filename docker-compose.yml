@@ -27,25 +27,6 @@ services:
     networks:
       - app-net
 
-  crawl4ai:
-    image: ghcr.io/unclecode/crawl4ai:latest
-    container_name: crawl4ai
-    env_file:
-      - .env
-    environment:
-      - GROQ_API_KEY=${GROQ_API_KEY:-}
-      - CRAWL4AI_RATE_LIMIT=${CRAWL4AI_RATE_LIMIT:-25}
-      - CRAWL4AI_MAX_CONCURRENCY=${CRAWL4AI_MAX_CONCURRENCY:-4}
-      - CRAWL4AI_DELAY_MIN_MS=${CRAWL4AI_DELAY_MIN_MS:-2000}
-      - CRAWL4AI_DELAY_MAX_MS=${CRAWL4AI_DELAY_MAX_MS:-4000}
-      - CRAWL4AI_STEALTH=${CRAWL4AI_STEALTH:-true}
-      - CRAWL4AI_HEADLESS=${CRAWL4AI_HEADLESS:-false}
-      - PROXY_URL=${PROXY_URL:-}
-    command: ["/bin/sh", "-c", "crawl4ai serve --host 0.0.0.0 --port 11235"]
-    ports:
-      - "${CRAWL4AI_EXPOSE_PORT:-11235}:11235"
-    networks:
-      - app-net
 
   redis:
     image: redis/redis-stack:latest
@@ -306,7 +287,6 @@ volumes:
   qdrant_data:
   redis_data:
   hf_cache:
-  crawl4ai_cache:
 
 networks:
   app-net:
