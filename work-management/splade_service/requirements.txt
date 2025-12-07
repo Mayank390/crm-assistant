@@ -1,2 +1,0 @@
-# SPLADE service specific dependencies
-einops==0.7.0

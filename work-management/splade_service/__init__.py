@@ -1,1 +1,0 @@
-"""SPLADE encoding microservice."""
