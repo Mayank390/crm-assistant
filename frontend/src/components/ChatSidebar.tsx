@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Plus, MessageSquare, History, Search, Settings as SettingsIcon } from "lucide-react";
+import { Plus, MessageSquare, History, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
@@ -24,7 +24,7 @@ export const ChatSidebar = ({
   activeConversationId,
   onNewChat,
   onSelectConversation,
-  onShowPersonalization,
+  onShowPersonalization: _onShowPersonalization, // intentionally unused; settings entry disabled
 }: ChatSidebarProps) => {
   const [query, setQuery] = useState("");
   const filteredConversations = useMemo(() => {
@@ -33,7 +33,7 @@ export const ChatSidebar = ({
     return conversations.filter((c) => c.title.toLowerCase().includes(q));
   }, [conversations, query]);
   return (
-    <div className="flex h-full flex-col bg-sidebar/95 backdrop-blur-xl border border-sidebar-border rounded-2xl shadow-2xl my-1 mx-4">
+    <div className="flex h-full flex-col bg-sidebar/95 backdrop-blur-xl border border-sidebar-border md:rounded-2xl shadow-2xl md:my-1 md:mx-4 md:m-0">
       <div className="p-4 border-b border-sidebar-border">
         <Button
           onClick={onNewChat}
@@ -87,23 +87,7 @@ export const ChatSidebar = ({
         </div>
       </ScrollArea>
 
-      <div className="p-2 border-t border-sidebar-border">
-        <button
-          onClick={onShowPersonalization}
-          className={cn(
-            "w-full text-left px-3 py-2.5 rounded-lg transition-all duration-200",
-            "hover:bg-sidebar-accent group text-sidebar-foreground"
-          )}
-        >
-          <div className="flex items-center gap-2">
-            <SettingsIcon className="h-4 w-4 flex-shrink-0 opacity-70" />
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium truncate">Settings</p>
-              <p className="text-xs text-muted-foreground">Personalize the AI agent</p>
-            </div>
-          </div>
-        </button>
-      </div>
+      {/* Settings entry intentionally disabled (parity with prod) */}
     </div>
   );
 };

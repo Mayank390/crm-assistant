@@ -2563,11 +2563,33 @@ async def generate_content(
 
 
 # Define the tools list - streamlined and powerful
+# Note: lead_enrichment is imported later to avoid circular import
 tools = [
     mongo_query,              # Structured MongoDB queries with intelligent planning
     rag_search,               # Universal RAG search with filtering, grouping, and metadata
     generate_content,         # Generate leads/tasks/meetings/notes (returns summary only, not full content)
 ]
+
+# Import lead_enrichment after tools list is defined to avoid circular import
+try:
+    from agent.lead_enrichment import lead_enrichment
+
+    @tool
+    async def lead_enrichment_tool(business_type: str, city: str, area: str = "", max_leads: Optional[int] = None) -> str:
+        """
+        Extract Indian business leads with 99.9% location accuracy.
+        Use max_leads to control count (e.g. 15, 30, 50).
+        """
+        try:
+            return await lead_enrichment.ainvoke({"business_type": business_type, "area": area, "city": city, "max_leads": max_leads})
+        except Exception as e:
+            logger.error(f"lead_enrichment tool failed: {e}")
+            return f"Lead tool error: {e}"
+
+    tools.append(lead_enrichment_tool)
+    logger.info("lead_enrichment tool registered")
+except ImportError as e:
+    logger.warning("lead_enrichment failed to import", exc_info=True)
 
 # import asyncio
 

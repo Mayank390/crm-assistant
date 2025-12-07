@@ -49,10 +49,10 @@ export const ChatInput = ({ onSendMessage, isLoading = false, showSuggestedPromp
       <form onSubmit={handleSubmit}>
         <div
           className={cn(
-            "relative flex items-center rounded-full border border-input bg-card py-2 px-3",
+            "relative flex items-center md:rounded-full rounded-2xl border border-input bg-card py-2 px-3",
             "shadow-lg transition-all duration-200",
-            "focus-within:border-primary focus-within:shadow-[0_0_20px_rgba(255,160,100,0.2)]",
-            "w-[75%] m-auto",
+            "focus-within:border-primary focus-within:shadow-[0_0_20px_rgba(168,85,247,0.2)]",
+            "md:w-[75%] m-auto w-[96%] mt-4 md:mt-0",
           )}
         >
           <VoiceRecorder

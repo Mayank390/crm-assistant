@@ -19,11 +19,11 @@ const Settings = () => {
         </div>
 
         <Card>
-          <CardHeader className="pb-3">
+          <CardHeader className="pb-3 md:p-6 p-4">
             <CardTitle>Memory</CardTitle>
             <CardDescription>Choose whether your agent should retain context across sessions.</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-3 pt-0">
+          <CardContent className="space-y-3 md:p-6 p-4 pt-0">
             <div className="flex items-center justify-between">
               <div>
                 <Label htmlFor="remember">Remember context</Label>
@@ -43,7 +43,7 @@ const Settings = () => {
               </div>
             </div>
           )}
-          <CardHeader className={`pb-3 ${!settings.rememberLongTermContext ? "opacity-50" : ""}`}>
+          <CardHeader className={`pb-3 md:p-6 p-4 ${!settings.rememberLongTermContext ? "opacity-50" : ""}`}>
             <div className="flex items-center gap-2">
               <CardTitle className={!settings.rememberLongTermContext ? "text-muted-foreground" : ""}>
                  Context
@@ -62,12 +62,12 @@ const Settings = () => {
               }
             </CardDescription>
           </CardHeader>
-          <CardContent className={`space-y-3 pt-0 ${!settings.rememberLongTermContext ? "opacity-50" : ""}`}>
+          <CardContent className={`space-y-3 md:p-6 p-4 pt-0 ${!settings.rememberLongTermContext ? "opacity-50" : ""}`}>
             <Textarea
               value={settings.longTermContext}
               onChange={(e) => updateSettings({ longTermContext: e.target.value })}
               placeholder={!settings.rememberLongTermContext ? "Enable memory to edit context..." : "e.g., Our team focuses on B2B sales; we prioritize leads from tech companies; follow-up calls should be scheduled within 24 hours; tone should be professional and consultative."}
-              className="min-h-[100px]"
+              className="min-h-[120px]"
               disabled={!settings.rememberLongTermContext}
             />
             <div className="flex gap-2">
@@ -90,11 +90,11 @@ const Settings = () => {
         </Card>
 
         <Card>
-          <CardHeader className="pb-3">
+          <CardHeader className="pb-3 md:p-6 p-4">
             <CardTitle>Response Style</CardTitle>
             <CardDescription>Control the tone and style of the agent's responses.</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-3 pt-0">
+          <CardContent className="space-y-3 md:p-6 p-4 pt-0">
             <div className="space-y-2">
               <Label>Response Tone</Label>
               <Select value={settings.responseTone} onValueChange={(value: any) => updateSettings({ responseTone: value })}>

@@ -4,7 +4,7 @@ import { ChatSidebar } from "@/components/ChatSidebar";
 import { ChatMessage } from "@/components/ChatMessage";
 import { ChatInput } from "@/components/ChatInput";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Briefcase } from "lucide-react";
+import { Briefcase, LucideMenu } from "lucide-react";
 import Settings from "@/pages/Settings";
 import { useChatSocket, type ChatEvent } from "@/hooks/useChatSocket";
 import { getConversations, getConversationMessages, reactToMessage } from "@/api/conversations";
@@ -78,6 +78,7 @@ const Index = () => {
   const endRef = useRef<HTMLDivElement | null>(null);
   const streamingAssistantIdRef = useRef<string | null>(null);
   const activeConversationIdRef = useRef<string | null>(null);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   const getConversationIdFromUrl = () => {
     try {
@@ -671,7 +672,37 @@ const Index = () => {
   }, [messages, isLoading, showPersonalization]);
 
   return (
-    <div className="flex h-screen w-full overflow-hidden bg-background relative pb-4 pt-3">
+    <div className="flex h-screen w-full overflow-hidden bg-background relative pb-4 md:pt-3">
+      <button className="md:hidden absolute z-[60] w-full bg-background p-3"
+        onClick={() => setMobileSidebarOpen(true)}
+      >
+        <LucideMenu className="w-6 h-6 text-foreground" />
+      </button>
+      <div className={cn(
+        "fixed inset-0 bg-black/40 z-[55] transition-opacity md:hidden",
+        mobileSidebarOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+      )}
+        onClick={() => setMobileSidebarOpen(false)}
+      ></div>
+      <div className={cn(
+        "fixed top-0 left-0 h-full w-[90%] bg-background z-[60] shadow-xl transform transition-transform md:hidden",
+        mobileSidebarOpen ? "translate-x-0" : "-translate-x-full"
+      )}
+      >
+        <ChatSidebar
+          conversations={conversations}
+          activeConversationId={activeConversationId}
+          onNewChat={handleNewChat}
+          onSelectConversation={(id) => {
+            handleSelectConversation(id);
+            setMobileSidebarOpen(false);
+          }}
+          onShowPersonalization={() => {
+            handleShowPersonalization();
+            setMobileSidebarOpen(false);
+          }}
+        />
+      </div>
       <div
         className={cn(
           "absolute top-8 left-8 w-[550px] h-[550px] rounded-full bg-primary/45 blur-2xl pointer-events-none transition-opacity duration-1000 ease-in-out",
@@ -702,7 +733,7 @@ const Index = () => {
         }}
       />
 
-      <div className="w-80 flex-shrink-0 relative z-10">
+      <div className="w-80 flex-shrink-0 relative z-10 hidden md:block">
         <ChatSidebar
           conversations={conversations}
           activeConversationId={activeConversationId}
@@ -714,18 +745,18 @@ const Index = () => {
 
       <div className="flex flex-1 flex-col relative z-10">
         {showPersonalization ? (
-          <div className="flex items-start justify-center p-6 h-full overflow-y-auto">
-            <div className="w-full max-w-3xl">
+          <div className="flex items-start justify-center md:p-6 py-6 px-3 h-full overflow-y-auto relative" style={{ top: window.innerWidth < 768 ? "3rem" : undefined }}>
+            <div className="md:w-full md:max-w-3xl">
               <Settings />
             </div>
           </div>
         ) : isEmpty ? (
           <div className="flex flex-1 items-center justify-center p-8">
-            <div className="text-center space-y-6 max-w-2xl animate-fade-in">
+            <div className="text-center md:space-y-6 md:max-w-2xl animate-fade-in">
               <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-primary to-accent shadow-xl animate-pulse-glow">
                 <Briefcase className="h-10 w-10 text-white" />
               </div>
-              <div className="space-y-2">
+              <div className="md:space-y-2">
                 <h1 className="text-4xl font-bold text-gradient">
                   ProspectIQ
                 </h1>
@@ -737,7 +768,7 @@ const Index = () => {
           </div>
         ) : (
           <ScrollArea className="flex-1 scrollbar-thin">
-            <div className="mx-auto max-w-4xl">
+            <div className="mx-auto max-w-4xl relative" style={{ top: window.innerWidth < 768 ? "3rem" : undefined }}>
               {messages.map((message) => (
                 <ChatMessage
                   key={message.id}
@@ -765,8 +796,9 @@ const Index = () => {
           <div
             className={cn(
               "relative z-20 transition-transform duration-500 ease-out",
-              isEmpty ? "-translate-y-[35vh] md:-translate-y-[30vh]" : "translate-y-0"
+              isEmpty ? "-translate-y-[35vh]" : "translate-y-0"
             )}
+            style={isEmpty ? { top: '3.5rem' } : {}}
           >
             {feedbackTargetId && (
               <div className="mx-auto max-w-4xl mb-3 px-4">

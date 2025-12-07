@@ -43,6 +43,9 @@ DEFAULT_SYSTEM_PROMPT = (
     "- If a tool is appropriate, always call it before answering.\n"
     "- Keep answers concise and structured. If lists are long, summarize and offer to expand.\n"
     "- If tooling is unavailable for the task, state the limitation plainly.\n\n"
+    "LEAD ENRICHMENT: Never copy tool output verbatim. Rephrase naturally using: lead count, top business names, and download link (when present).\n"
+    "Example: 'Found 35 jewellers in Gachibowli including Malabar Gold, Tanishq. Download full list: [link] Ready to import?'\n"
+    "Always highlight CSV download links and encourage immediate CRM import action.\n\n"
     "RESPONSE FORMATTING (CRITICAL):\n"
     "- ALWAYS format your responses using **markdown** for maximum readability.\n"
     "- Use headings (##, ###) to organize sections and break up content.\n"
@@ -104,6 +107,7 @@ DEFAULT_SYSTEM_PROMPT = (
     "- Examples of INDEPENDENT: 'Show task counts AND meeting counts' → call both tools together\n"
     "- Examples of DEPENDENT: 'Find tasks by John, THEN search notes about those tasks' → call mongo_query first, wait for results, then call rag_search\n\n"
     "DECISION GUIDE:\n"
+"0) Lead extraction / enrichment requests (e.g., 'extract leads', 'find leads online', 'business leads in <city>') → prefer the `lead_enrichment` tool first. If it fails gracefully, explain the limitation and offer alternate approaches.\n"
     "1) Use 'mongo_query' for structured questions about entities/fields in collections: Lead, Task, Activity, Meeting, Notes, CallLog, MailInfo, LeadScoreRule, Segmentation.\n"
     "   - Examples: counts, lists, filters, sort, group by, breakdowns by leadStatus/taskStatus/assignedName/priority/date.\n"
     "   - The query planner automatically determines when complex joins are beneficial and adds strategic relationships only when they improve query performance.\n"
@@ -150,7 +154,11 @@ DEFAULT_SYSTEM_PROMPT = (
     "- generate_content(content_type:str, prompt:str, template_title:str='', template_content:str='', context:dict=None): Generate leads/tasks/meetings/notes.\n"
     "  REQUIRED: content_type ('lead'|'task'|'meeting'|'note'), prompt (what to generate).\n"
     "  OPTIONAL: template_title, template_content, context.\n"
-    "  NOTE: Returns '✅ Content generated' only - full content sent directly to frontend to save tokens.\n\n"
+    "  NOTE: Returns '✅ Content generated' only - full content sent directly to frontend to save tokens.\n"
+    "- lead_enrichment(query:str): Search and enrich local business leads using SearxNG + Crawl4AI.\n"
+    "  REQUIRED: 'query' - natural language description of leads to find (e.g., 'textile businesses in Hyderabad').\n"
+    "  CAPABILITIES: Web search, URL deduplication, stealth crawling, structured data extraction (name, address, phone, email, etc.), progress streaming.\n"
+    "  ENVIRONMENT: Override SEARXNG_URL and CRAWL4AI_URL if needed.\n\n"
     "CONTENT TYPE ROUTING EXAMPLES:\n"
     "- 'What leads are about?' → rag_search(query='leads', content_type='lead')\n"
     "- 'What are recent tasks about?' → rag_search(query='recent tasks', content_type='task')\n"
@@ -163,13 +171,15 @@ DEFAULT_SYSTEM_PROMPT = (
     "- 'Create a new lead' → generate_content(content_type='lead', prompt='New lead: TechCorp Inc')\n"
     "- 'Generate task for follow-up' → generate_content(content_type='task', prompt='Follow-up task: Call customer tomorrow')\n"
     "- 'Schedule meeting' → generate_content(content_type='meeting', prompt='Schedule meeting with lead')\n"
-    "- 'Create note' → generate_content(content_type='note', prompt='Meeting notes: Discussed pricing')\n\n"
+    "- 'Create note' → generate_content(content_type='note', prompt='Meeting notes: Discussed pricing')\n"
+    "- 'Extract textile business leads in Hyderabad' → lead_enrichment(query='textile businesses in Hyderabad')\n\n"
     "WHEN UNSURE WHICH TOOL:\n"
     "- If the query is ambiguous or entity/field mapping to Mongo is unclear → prefer rag_search first.\n"
     "- Question about structured data (counts, filters, group by, breakdown by leadStatus/taskStatus/assignedName/priority/date) → mongo_query.\n"
     "- Advanced analytics (time-series, trends, anomalies, complex aggregations) → mongo_query.\n"
     "- Question about content meaning/semantics (find notes, analyze patterns, content search, descriptions) → rag_search.\n"
     "- Request to CREATE/GENERATE new content → generate_content.\n"
+    "- Request to EXTRACT/FIND new leads from web search → lead_enrichment.\n"
     "- Question needs both structured + semantic analysis → use BOTH tools together.\n\n"
     "PATTERN ANALYSIS (EXPLICIT PATTERN QUERIES ONLY):\n"
     "- ONLY when queries EXPLICITLY ask about patterns, frequency, or causation with keywords like 'most common', 'frequent', 'patterns', 'influence', 'factors', 'why', 'what causes' → use BOTH tools:\n"
@@ -262,7 +272,7 @@ def _select_tools_for_query(user_query: str):
     - Let the LLM decide routing based on instructions; no keyword gating.
     - Add CRM-specific query analysis hints for better tool selection.
     """
-    allowed_names = ["mongo_query", "rag_search", "generate_content"]
+    allowed_names = ["mongo_query", "rag_search", "generate_content", "lead_enrichment_tool"]
     selected_tools = [tool for name, tool in _TOOLS_BY_NAME.items() if name in allowed_names]
     if not selected_tools and "mongo_query" in _TOOLS_BY_NAME:
         selected_tools = [_TOOLS_BY_NAME["mongo_query"]]

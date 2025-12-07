@@ -81,7 +81,7 @@ export const SuggestedPrompts = ({ onSelectPrompt, className }: SuggestedPrompts
 
   return (
     <div className={cn("w-full flex justify-center items-center mt-4", className)}>
-      <div className="w-[60%] max-w-2xl">
+      <div className="md:w-[60%] md:max-w-2xl md:w-[90%]">
         <div
           className={cn(
             "text-center text-sm text-muted-foreground/80 cursor-pointer",

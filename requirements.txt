@@ -13,6 +13,7 @@ typing-extensions
 asyncio-mqtt
 aiohttp
 httpx
+beautifulsoup4==4.12.2
 python-dateutil
 
 # Web framework
