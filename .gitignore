@@ -3,6 +3,7 @@
 .env.local
 .env.*.local
 *.env
+*.env.backup
 enrichment/.env
 crm_env_config.sh
 
