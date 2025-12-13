@@ -1,0 +1,8 @@
+rails:
+  input:
+    flows:
+      - check safety with llama guard
+      
+  dialog:
+    user_messages:
+      embeddings_only: true  # <--- The Critical Setting
