@@ -1,0 +1,15 @@
+# Prompt Injection Detection Flow
+# Uses Llama Guard via Groq to detect attempts to extract internal agent details
+
+define flow check safety with llama guard
+  # 1. Trigger on any user message
+  user ...
+
+  # 2. Call Llama Guard to check for prompt injection attempts
+  $is_safe = execute call_llama_guard_4(user_message=$user_message)
+  
+  # 3. Block if prompt injection detected
+  if not $is_safe
+    $response = execute get_safety_blocked_response()
+    bot $response
+    stop

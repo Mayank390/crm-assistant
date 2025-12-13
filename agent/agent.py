@@ -35,6 +35,56 @@ from mongo.constants import DATABASE_NAME, mongodb_tools
 from mongo.conversations import save_assistant_message, save_action_event
 from agent.callback_handler import AgentCallbackHandler
 
+from guardrails.llama_gaurd_client import llama_guard_client, get_blocked_response
+
+async def _run_parallel_safety_checks(
+    query: str, 
+    conversation_history: List[dict]
+) -> tuple[bool, bool, str, str]:
+    """
+    Run Llama Guard safety check for prompt injection detection.
+    
+    Uses Llama Guard via Groq to detect attempts to:
+    - Extract system prompts or instructions
+    - Reveal internal implementation details
+    - Get raw/unprocessed responses
+    - Bypass safety guidelines (jailbreaks)
+    
+    Args:
+        query: The user input to check
+        conversation_history: Previous conversation for context
+            tuple: (toxic_check_passed, prompt_injection_safe, blocked_reason, violation_category)
+        Note: toxic_check_passed is always True (disabled), kept for API compatibility
+    """
+    # COMMENTED OUT: Toxic language check - using Llama Guard only
+    # toxic_task = asyncio.create_task(_validate_guard_async(query))
+    
+    # Run Llama Guard prompt injection check
+    try:
+        prompt_injection_result = await llama_guard_client.check_prompt_injection(
+            user_message=query,
+            conversation_history=conversation_history
+        )
+        
+        prompt_injection_safe = prompt_injection_result.is_safe
+        blocked_reason = ""
+        violation_category = ""
+        
+        if not prompt_injection_safe:
+            blocked_reason = prompt_injection_result.blocked_reason or get_blocked_response()
+            violation_category = prompt_injection_result.category or "UNKNOWN"
+            
+    except Exception as e:
+        logger.error(f"Prompt injection check failed: {e}")
+        # Fail open on error
+        prompt_injection_safe = True
+        blocked_reason = ""
+        violation_category = ""
+    
+    # Return format: (toxic_passed, prompt_injection_safe, blocked_reason, violation_category)
+    # toxic_passed is always True since we disabled that check
+    return True, prompt_injection_safe, blocked_reason, violation_category
+
 
 DEFAULT_SYSTEM_PROMPT = (
     "You are a precise, non-speculative CRM assistant.\n\n"
@@ -259,6 +309,24 @@ def _hash_messages(messages: List[BaseMessage]) -> str:
         content_parts.append(f"{msg_type}:{content[:200]}")  # Limit content length for hashing
     combined = "|".join(content_parts)
     return hashlib.md5(combined.encode()).hexdigest()
+
+def _log_guard_violation(query: str, error_details: str, conversation_id: str) -> None:
+    """Log guard validation failures for security auditing.
+    
+    Args:
+        query: The user input that was flagged
+        error_details: Details about why it was flagged
+        conversation_id: Conversation context for audit trail
+    """
+    try:
+        query_preview = query[:100] if query else "[empty]"
+        logger.warning(
+            f"[GUARD_VIOLATION] Conversation: {conversation_id} | "
+            f"Query: {query_preview} | Details: {error_details}"
+        )
+    except Exception as e:
+        logger.error(f"Failed to log guard violation: {e}")
+
 
 # Simple per-query tool router: restrict RAG unless content/context is requested
 _TOOLS_BY_NAME = {getattr(t, "name", str(i)): t for i, t in enumerate(tools_list)}
@@ -524,10 +592,53 @@ class AgentExecutor:
                 human_message = HumanMessage(content=query)
                 messages.append(human_message)
 
+                # ✅ PARALLEL SAFETY CHECKS: Run both toxic language + prompt injection detection
+                # Convert conversation context to dict format for Llama Guard
+                conversation_history_for_guard = [
+                    {
+                        "role": "user" if isinstance(msg, HumanMessage) else "assistant",
+                        "content": msg.content
+                    }
+                    for msg in conversation_context
+                    if isinstance(msg, (HumanMessage, AIMessage))
+                ]
+                
+                # Run safety checks in parallel (Safety Sidecar Pattern)
+                toxic_passed, prompt_injection_safe, blocked_reason, violation_category = await _run_parallel_safety_checks(
+                    query=query,
+                    conversation_history=conversation_history_for_guard
+                )
+                
+                # Combined guard result: both checks must pass
+                guard_passed = toxic_passed and prompt_injection_safe
+                guard_error_details = ""
+                if not toxic_passed:
+                    guard_error_details = "Toxic language detected"
+                elif not prompt_injection_safe:
+                    guard_error_details = f"Prompt injection detected: {violation_category}"
+                
+                logger.info(f"Safety checks - Toxic: {toxic_passed}, Prompt Injection Safe: {prompt_injection_safe}")
+                
                 callback_handler = AgentCallbackHandler(websocket, conversation_id)
 
                 # Persist the human message
                 await conversation_memory.add_message(conversation_id, human_message)
+
+                # ✅ IMPROVED: Log guard violations for security auditing
+                if not guard_passed:
+                    _log_guard_violation(query, guard_error_details, conversation_id)
+                    
+                    # For prompt injection, return immediately with blocked response
+                    if not prompt_injection_safe:
+                        # Persist the blocked response
+                        blocked_ai_message = AIMessage(content=blocked_reason)
+                        await conversation_memory.add_message(conversation_id, blocked_ai_message)
+                        try:
+                            await save_assistant_message(conversation_id, blocked_reason)
+                        except Exception as e:
+                            logger.error(f"Failed to save blocked response: {e}")
+                        yield blocked_reason
+                        return
 
                 steps = 0
                 last_response: Optional[AIMessage] = None
