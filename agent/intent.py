@@ -19,6 +19,8 @@ from mongo.constants import mongodb_tools, DATABASE_NAME
 from langchain_groq import ChatGroq
 from langchain_core.messages import SystemMessage, HumanMessage
 from agent.planner import QueryIntent
+# from tracking.token_usage import record_usage
+# from tracking.token_accumulator import ensure_accumulator
  
 from langchain_groq import ChatGroq
 # Orchestration utilities
@@ -363,8 +365,9 @@ class LLMIntentParser:
         return None
 
 
-    async def parse(self, query: str) -> Optional[QueryIntent]:
+    async def parse(self, query: str, business_id: Optional[str] = None, user_id: Optional[str] = None) -> Optional[QueryIntent]:
         """Use the LLM to produce a structured intent. Returns None on failure."""
+            
         system = (
             "You are an expert MongoDB query planner for a CRM System.\n"
             "Your task is to convert natural language queries into structured JSON intent objects.\n\n"
@@ -404,7 +407,7 @@ class LLMIntentParser:
             "- callType: IN_BOUND|OUT_BOUND (for CallLog)\n"
             "- mailType: SEND|SCHEDULED|DRAFTS (for MailInfo)\n"
             "- source: WEBSITE|COLD_CALL|REFERRAL|OTHER (for Lead - optional field)\n"
-            "- type: LEAD|CUSTOMER (for Lead - optional field)\n"
+            "- type: LEAD|CUSTOMER|PROSPECT|VENDOR (for Lead - optional field)\n"
             "- leadActiveType: ACTIVE|INACTIVE (for Lead - optional field)\n"
             "- customerType: INDIVIDUAL|BUSINESS (for Lead - optional field)\n"
             "- notes: (text search in lead notes - optional field)\n"
@@ -431,6 +434,13 @@ class LLMIntentParser:
             "- 'exactly N X' / 'N X' (when referring to count) → MUST add: X_count: \"N\"\n"
             "- 'no X' / 'unassigned' / 'without X' → MUST add: X_count: \"0\"\n"
             "- 'with X' / 'has X' (when X is an array field) → MUST add: X_count: \">=1\"\n\n"
+            "## ENTITY TYPE DISTINCTION (CRITICAL - MANDATORY)\n"
+            "The 'Lead' collection contains various entity types. YOU MUST explicitly filter by 'type' when these keywords are used:\n"
+            "- 'leads', 'show my leads' → MUST add: type: \"LEAD\"\n"
+            "- 'customers', 'my clients', 'won leads' → MUST add: type: \"CUSTOMER\"\n"
+            "- 'vendors', 'suppliers' → MUST add: type: \"VENDOR\"\n"
+            "- 'prospects', 'show my prospects' → MUST add: type: \"PROSPECT\"\n"
+            "DO NOT return all records when a specific type is implied.\n\n"
             "ARRAY FIELD MAPPINGS (USE THESE EXACT KEYS):\n"
             "- fieldData → fieldData_count (for Lead)\n"
             "- participantsList → participantsList_count (for Meeting)\n"
@@ -596,10 +606,13 @@ class LLMIntentParser:
 
             "## EXAMPLES\n"
             "- 'show me tasks for john' → {\"primary_entity\": \"Task\", \"filters\": {\"leadName\": \"john\"}, \"aggregations\": []}\n"
-            "- 'how many leads are there' → {\"primary_entity\": \"Lead\", \"aggregations\": [\"count\"]}\n"
-            "- 'count active leads' → {\"primary_entity\": \"Lead\", \"filters\": {\"leadActiveType\": \"ACTIVE\"}, \"aggregations\": [\"count\"]}\n"
-            "- 'group leads by status' → {\"primary_entity\": \"Lead\", \"aggregations\": [\"group\"], \"group_by\": [\"leadStatus\"]}\n"
-            "- 'show qualified leads' → {\"primary_entity\": \"Lead\", \"filters\": {\"leadStatus\": \"QUALIFIED\"}, \"aggregations\": []}\n"
+            "- 'list all leads' → {\"primary_entity\": \"Lead\", \"filters\": {\"type\": \"LEAD\"}, \"aggregations\": []}\n"
+            "- 'show my customers' → {\"primary_entity\": \"Lead\", \"filters\": {\"type\": \"CUSTOMER\"}, \"aggregations\": []}\n"
+            "- 'how many prospects do I have' → {\"primary_entity\": \"Lead\", \"filters\": {\"type\": \"PROSPECT\"}, \"aggregations\": [\"count\"]}\n"
+            "- 'how many leads are there' → {\"primary_entity\": \"Lead\", \"filters\": {\"type\": \"LEAD\"}, \"aggregations\": [\"count\"]}\n"
+            "- 'count active leads' → {\"primary_entity\": \"Lead\", \"filters\": {\"leadActiveType\": \"ACTIVE\", \"type\": \"LEAD\"}, \"aggregations\": [\"count\"]}\n"
+            "- 'group leads by status' → {\"primary_entity\": \"Lead\", \"filters\": {\"type\": \"LEAD\"}, \"aggregations\": [\"group\"], \"group_by\": [\"leadStatus\"]}\n"
+            "- 'show qualified leads' → {\"primary_entity\": \"Lead\", \"filters\": {\"leadStatus\": \"QUALIFIED\", \"type\": \"LEAD\"}, \"aggregations\": []}\n"
             "- 'find leads with high score' → {\"primary_entity\": \"Lead\", \"filters\": {\"score\": {\"$gte\": 80}}, \"aggregations\": []}\n"
             "- 'find leads with name containing john' → {\"primary_entity\": \"Lead\", \"filters\": {\"personalInfo.name\": \"john\"}, \"aggregations\": []}\n"
             "- 'who is assigned to this lead' → {\"primary_entity\": \"Lead\", \"filters\": {\"staffName\": \"assigned_person\"}, \"aggregations\": []}\n"
@@ -608,19 +621,19 @@ class LLMIntentParser:
             "- 'count closed activities' → {\"primary_entity\": \"Activity\", \"filters\": {\"activityStatus\": \"CLOSE\"}, \"aggregations\": [\"count\"]}\n"
             "- 'what is the email address for lead John' → {\"primary_entity\": \"Lead\", \"filters\": {\"personalInfo.name\": \"John\"}, \"projections\": [\"personalInfo.email\"], \"aggregations\": []}\n"
             "- 'show activities for ABC Corp' → {\"primary_entity\": \"Activity\", \"filters\": {\"leadName\": \"ABC Corp\"}, \"aggregations\": []}\n\n"
-            "- 'show recent leads' → {\"primary_entity\": \"Lead\", \"aggregations\": [], \"sort_order\": {\"createdTimeStamp\": -1}}\n"
+            "- 'show recent leads' → {\"primary_entity\": \"Lead\", \"filters\": {\"type\": \"LEAD\"}, \"aggregations\": [], \"sort_order\": {\"createdTimeStamp\": -1}}\n"
             "- 'list oldest tasks' → {\"primary_entity\": \"Task\", \"aggregations\": [], \"sort_order\": {\"createdTimeStamp\": 1}}\n"
             "- 'calls in ascending created order' → {\"primary_entity\": \"CallLog\", \"aggregations\": [], \"sort_order\": {\"createdTimeStamp\": 1}}\n"
-            "- 'leads updated in the last 30 days' → {\"primary_entity\": \"Lead\", \"filters\": {\"updatedTimeStamp_from\": \"now-30d\"}, \"aggregations\": []}\n"
+            "- 'leads updated in the last 30 days' → {\"primary_entity\": \"Lead\", \"filters\": {\"type\": \"LEAD\", \"updatedTimeStamp_from\": \"now-30d\"}, \"aggregations\": []}\n"
             "- 'tasks created since yesterday' → {\"primary_entity\": \"Task\", \"filters\": {\"createdTimeStamp_from\": \"yesterday\"}, \"aggregations\": []}\n"
             "- 'meetings from the last week' → {\"primary_entity\": \"Meeting\", \"filters\": {\"createdTimeStamp_from\": \"last_week\"}, \"aggregations\": []}\n"
-            "- 'top 5 scoring leads' → {\"primary_entity\": \"Lead\", \"aggregations\": [], \"sort_order\": {\"score\": -1}, \"limit\": 5}\n"
+            "- 'top 5 scoring leads' → {\"primary_entity\": \"Lead\", \"filters\": {\"type\": \"LEAD\"}, \"aggregations\": [], \"sort_order\": {\"score\": -1}, \"limit\": 5}\n"
             "- 'first 10 meetings' → {\"primary_entity\": \"Meeting\", \"aggregations\": [], \"limit\": 10}\n"
-            "- 'all active leads' → {\"primary_entity\": \"Lead\", \"filters\": {\"leadActiveType\": \"ACTIVE\"}, \"aggregations\": [], \"limit\": 1000}\n"
-            "- 'show me a few qualified leads' → {\"primary_entity\": \"Lead\", \"filters\": {\"leadStatus\": \"QUALIFIED\"}, \"aggregations\": [], \"limit\": 5}\n"
-            "- 'find one lead named John' → {\"primary_entity\": \"Lead\", \"filters\": {\"personalInfo.name\": \"John\"}, \"aggregations\": [], \"limit\": 1, \"fetch_one\": true}\n"
-            "- 'show leads with contact info' → {\"primary_entity\": \"Lead\", \"projections\": [\"personalInfo.name\", \"personalInfo.email\", \"personalInfo.mobile\"], \"aggregations\": []}\n"
-            "- 'show activity history for leads' → {\"primary_entity\": \"Lead\", \"projections\": [\"personalInfo.name\", \"emailCount\", \"callCount\"], \"aggregations\": []}\n\n"
+            "- 'all active leads' → {\"primary_entity\": \"Lead\", \"filters\": {\"type\": \"LEAD\", \"leadActiveType\": \"ACTIVE\"}, \"aggregations\": [], \"limit\": 1000}\n"
+            "- 'show me a few qualified leads' → {\"primary_entity\": \"Lead\", \"filters\": {\"type\": \"LEAD\", \"leadStatus\": \"QUALIFIED\"}, \"aggregations\": [], \"limit\": 5}\n"
+            "- 'find one lead named John' → {\"primary_entity\": \"Lead\", \"filters\": {\"personalInfo.name\": \"John\", \"type\": \"LEAD\"}, \"aggregations\": [], \"limit\": 1, \"fetch_one\": true}\n"
+            "- 'show leads with contact info' → {\"primary_entity\": \"Lead\", \"filters\": {\"type\": \"LEAD\"}, \"projections\": [\"personalInfo.name\", \"personalInfo.email\", \"personalInfo.mobile\"], \"aggregations\": []}\n"
+            "- 'show activity history for leads' → {\"primary_entity\": \"Lead\", \"filters\": {\"type\": \"LEAD\"}, \"projections\": [\"personalInfo.name\", \"emailCount\", \"callCount\"], \"aggregations\": []}\n\n"
             "## ARRAY SIZE EXAMPLES (MUST FOLLOW THESE PATTERNS)\n"
             "- 'how many meetings have multiple participants?' → {\"primary_entity\": \"Meeting\", \"filters\": {\"participantsList_count\": \">1\"}, \"aggregations\": [\"count\"]}\n"
             "- 'show meetings with more than 2 participants' → {\"primary_entity\": \"Meeting\", \"filters\": {\"participantsList_count\": \">2\"}, \"aggregations\": []}\n"
@@ -1000,6 +1013,19 @@ class LLMIntentParser:
             # Exclude commonly done/closed states if user didn't explicitly filter state
             if "taskStatus" not in filters and "taskStatus_not" not in filters:
                 filters["taskStatus_not"] = ["COMPLETED", "DONE"]
+
+        # 3) Entity type defaults for Lead collection (fallback enrichment)
+        if primary == "Lead" and "type" not in filters:
+            if re.search(r"\bprospects?\b", oq_text):
+                filters["type"] = "PROSPECT"
+            elif re.search(r"\bcustomers?\b|\bclients?\b", oq_text):
+                filters["type"] = "CUSTOMER"
+            elif re.search(r"\bvendors?\b|\bsuppliers?\b", oq_text):
+                filters["type"] = "VENDOR"
+            elif re.search(r"\bleads?\b", oq_text):
+                filters["type"] = "LEAD"
+        if "type" in filters:
+            print(f"DEBUG: Intent Filter 'type' identified: {filters['type']}")
 
         # 3) Advanced feature detection from query text (heuristic fallback)
         

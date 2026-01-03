@@ -94,6 +94,7 @@ ENUM_TRANSFORMATIONS: Dict[str, Dict[str, Dict[str, str]]] = {
             "LEAD": "Lead",
             "CUSTOMER": "Customer",
             "VENDOR": "Vendor",
+            "PROSPECT": "Prospect",
         },
         "customerType": {
             "BUSINESS": "Business",
@@ -503,7 +504,9 @@ def filter_meaningful_content(data: Any) -> Any:
         'personalInfo', 'company', 'address', 'dueDate', 'startDateTime', 'endDateTime',
         'description', 'body', 'notesAttachments', 'participantsList', 'emailData',
         # Segmentation fields
-        'conditions', 'tags', 'isActive', 'operator'
+        'conditions', 'tags', 'isActive', 'operator',
+        #pipeline fields
+        'pipeline', 'pipelineStage','stageName', 'statusName',
     }
 
     # Fields to always exclude (metadata)
@@ -793,11 +796,11 @@ def _transform_by_collection(doc: Dict[str, Any], collection: Optional[str]) -> 
                             if block_type == "paragraph":
                                 text = block_data.get("text", "")
                                 if text.strip():
-                                    text_blocks.append(truncate_str(text, 100))
+                                    text_blocks.append(truncate_str(text, 500))
                             elif block_type == "header":
                                 text = block_data.get("text", "")
                                 if text.strip():
-                                    text_blocks.append(f"Header: {truncate_str(text, 100)}")
+                                    text_blocks.append(f"Header: {truncate_str(text, 500)}")
                 if text_blocks:
                     out["contentPreview"] = text_blocks[:3]  # First 3 meaningful blocks
 
@@ -907,6 +910,16 @@ def _transform_by_collection(doc: Dict[str, Any], collection: Optional[str]) -> 
             pipeline_name = pipeline.get("name")
             if pipeline_name:
                 out["pipelineName"] = pipeline_name
+            #extract pipline stage info
+            pipeline_stage = doc.get("pipelineStage")
+            if isinstance(pipeline_stage, dict):
+                stage_name = pipeline_stage.get("stageName")
+                status_name = pipeline_stage.get("statusName")
+
+                if stage_name:
+                    out["stageName"] = stage_name
+                if status_name:
+                    out["statusName"] = status_name
         
         # Copy important fields with enum transformations
         copy_if_present("referenceNo")
@@ -1141,7 +1154,7 @@ def _transform_by_collection(doc: Dict[str, Any], collection: Optional[str]) -> 
     return out
 
 
-def truncate_str(s: Any, limit: int = 120) -> str:
+def truncate_str(s: Any, limit: int = 500) -> str:
     """Truncate string to specified limit with ellipsis."""
     if not isinstance(s, str):
         return str(s)
@@ -1192,7 +1205,12 @@ def filter_and_transform_content(data: Any, primary_entity: Optional[str] = None
 
 
 @tool
-async def mongo_query(query: str, show_all: bool = False) -> str:
+async def mongo_query(
+    query: str,
+    show_all: bool = False,
+    business_id: Optional[str] = None,
+    user_id: Optional[str] = None,
+) -> str:
     """Plan-first Mongo query executor for structured, factual questions.
 
     Use this ONLY when the user asks for authoritative data that must come from
@@ -1233,7 +1251,6 @@ async def mongo_query(query: str, show_all: bool = False) -> str:
     Returns: A compact result suitable for direct user display. Results are automatically
     formatted based on query type: lists, counts, grouped results, or trend/aggregated data.
     """
-    tool_start_time = perf_counter()
     print(f"\n🔧 [TOOL] mongo_query() EXECUTING")
     print(f"   Input: query='{query}', show_all={show_all}")
     
@@ -1243,6 +1260,24 @@ async def mongo_query(query: str, show_all: bool = False) -> str:
         return result
 
     try:
+        # Resolve context ids for token tracking
+        resolved_business_id = business_id
+        resolved_user_id = user_id
+        if not resolved_business_id or not resolved_user_id:
+            try:
+                import websocket_handler as root_ws
+                resolved_business_id = resolved_business_id or getattr(root_ws, "business_id_global", None)
+                resolved_user_id = resolved_user_id or getattr(root_ws, "user_id_global", None)
+            except Exception:
+                pass
+        if not resolved_business_id or not resolved_user_id:
+            try:
+                import lead_support_agent.websocket_handler as lsa_ws
+                resolved_business_id = resolved_business_id or getattr(lsa_ws, "business_id_global", None)
+                resolved_user_id = resolved_user_id or getattr(lsa_ws, "user_id_global", None)
+            except Exception:
+                pass
+
         # Validate query input
         if not query or not isinstance(query, str):
             result = "❌ Invalid query: query must be a non-empty string."
@@ -1252,7 +1287,7 @@ async def mongo_query(query: str, show_all: bool = False) -> str:
         if len(query.strip()) == 0:
             return "❌ Invalid query: query cannot be empty."
         
-        result = await plan_and_execute_query(query)
+        result = await plan_and_execute_query(query, business_id=resolved_business_id, user_id=resolved_user_id)
         print(result)
         # Validate result structure
         if not isinstance(result, dict):
@@ -1361,7 +1396,7 @@ async def mongo_query(query: str, show_all: bool = False) -> str:
                         return [val]
                     return []
 
-                def truncate_str(s: Any, limit: int = 120) -> str:
+                def truncate_str(s: Any, limit: int = 500) -> str:
                     if not isinstance(s, str):
                         return str(s)
                     return s if len(s) <= limit else s[:limit] + "..."
@@ -1401,6 +1436,8 @@ async def mongo_query(query: str, show_all: bool = False) -> str:
                         source = transform_val("source", entity.get("source"))
                         customer_type = transform_val("customerType", entity.get("customerType"))
                         active_type = transform_val("leadActiveType", entity.get("leadActiveType"))
+                        stage = entity.get("stageName")
+                        status_stage = entity.get("statusName")
                         
                         base = f"• {ref_no or name or 'Lead'}: {name or ''}"
                         if status:
@@ -1427,6 +1464,10 @@ async def mongo_query(query: str, show_all: bool = False) -> str:
                             base += f", pipeline={pipeline}"
                         if notes:
                             base += f", notes={truncate_str(notes, 100)}"
+                        if stage:
+                            base += f", stage={stage}"
+                        if status_stage:
+                            base += f", status={status_stage}"
                         return base
                     
                     if e == "task":
@@ -1916,7 +1957,7 @@ async def mongo_query(query: str, show_all: bool = False) -> str:
                         count_query = query
                     
                     # Execute count query
-                    count_result = await plan_and_execute_query(count_query)
+                    count_result = await plan_and_execute_query(count_query, business_id=resolved_business_id, user_id=resolved_user_id)
                     if count_result.get("success"):
                         count_data = count_result.get("result")
                         if isinstance(count_data, list) and len(count_data) > 0:

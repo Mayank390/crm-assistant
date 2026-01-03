@@ -15,7 +15,7 @@ MONGODB_CONNECTION_STRING = os.getenv(
 
 # Qdrant configuration
 QDRANT_API_KEY = os.getenv("QDRANT_API_KEY", "")
-QDRANT_URL = os.getenv("QDRANT_URL", "http://172.171.192.172:6333")  # Default Qdrant URL
+QDRANT_URL = os.getenv("QDRANT_URL", "http://localhost:6333")  # Default Qdrant URL
 QDRANT_COLLECTION_NAME = os.getenv("QDRANT_COLLECTION", "crm")  # Collection for CRM content
 EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL")  # Sentence transformer model for embeddings
  

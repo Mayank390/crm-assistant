@@ -87,6 +87,7 @@ class Orchestrator:
     async def _execute_one(self, step: StepSpec, context: Dict[str, Any], correlation_id: Optional[str]) -> Tuple[str, Any, Optional[Exception]]:
         cache_key = self._make_cache_key(step, context)
         if cache_key and cache_key in self._cache:
+            logger.info(f"⚡ STEP_CACHE_HIT - Step: {step.name} | Correlation: {correlation_id}")
             return step.name, self._cache[cache_key], None
 
         attempt = 0
@@ -94,6 +95,7 @@ class Orchestrator:
         backoff = step.retry_backoff_s
         while attempt <= step.retries:
             start = time.time()
+            logger.info(f"▶️ STEP_START - Step: {step.name} | Attempt: {attempt+1}/{step.retries+1} | Correlation: {correlation_id}")
             try:
                 coro = step.coroutine(context)
                 result = await (asyncio.wait_for(coro, step.timeout_s) if step.timeout_s else coro)
@@ -111,21 +113,26 @@ class Orchestrator:
                 if cache_key:
                     self._cache[cache_key] = result
                 # duration and preview kept for potential future logging (no-op here)
-                _ = int((time.time() - start) * 1000)
+                duration_ms = int((time.time() - start) * 1000)
                 try:
-                    _ = str(result)[:400]
+                    result_preview = str(result)[:400]
                 except Exception:
-                    _ = "<unserializable>"
+                    result_preview = "<unserializable>"
+                logger.info(f"✅ STEP_SUCCESS - Step: {step.name} | Duration: {duration_ms}ms | Result: {result_preview} | Correlation: {correlation_id}")
                 return step.name, result, None
             except Exception as e:  # noqa: BLE001
+                duration_ms = int((time.time() - start) * 1000)
                 last_exc = e
+                logger.warning(f"⚠️ STEP_ERROR - Step: {step.name} | Attempt: {attempt+1} | Duration: {duration_ms}ms | Error: {str(e)} | Correlation: {correlation_id}")
                 pass
             # Retry with backoff
             attempt += 1
             if attempt <= step.retries:
+                logger.info(f"🔄 STEP_RETRY - Step: {step.name} | Next Attempt: {attempt+1}/{step.retries+1} | Backoff: {backoff}s | Correlation: {correlation_id}")
                 await asyncio.sleep(backoff)
                 backoff *= 2
 
+        logger.error(f"❌ STEP_FAILED - Step: {step.name} | All {step.retries+1} attempts failed | Final Error: {str(last_exc)} | Correlation: {correlation_id}")
         return step.name, None, last_exc
 
     async def run(self, steps: Sequence[StepSpec], initial_context: Optional[Dict[str, Any]] = None, correlation_id: Optional[str] = None) -> Dict[str, Any]:

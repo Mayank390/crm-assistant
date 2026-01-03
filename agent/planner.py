@@ -29,6 +29,7 @@ from mongo.constants import mongodb_tools, DATABASE_NAME
 from agent.orchestrator import Orchestrator, StepSpec, as_async
 
 
+
 from dotenv import load_dotenv
 load_dotenv()
 groq_api_key = os.getenv("GROQ_API_KEY")
@@ -136,7 +137,7 @@ class Planner:
         self.llm_parser = LLMIntentParser()
         self.orchestrator = Orchestrator(tracer_name=__name__, max_parallel=5)
 
-    async def plan_and_execute(self, query: str) -> Dict[str, Any]:
+    async def plan_and_execute(self, query: str, business_id: Optional[str] = None, user_id: Optional[str] = None) -> Dict[str, Any]:
         """Plan and execute a natural language query using the Orchestrator."""
         planner_start_time = perf_counter()
         try:
@@ -146,7 +147,11 @@ class Planner:
                 return True
 
             async def _parse_intent(ctx: Dict[str, Any]) -> Optional[QueryIntent]:
-                return await self.llm_parser.parse(ctx["query"])  # type: ignore[index]
+                return await self.llm_parser.parse(
+                    ctx["query"], 
+                    business_id=ctx.get("business_id"), 
+                    user_id=ctx.get("user_id")
+                )  # type: ignore[index]
 
             def _parse_validator(result: Any, _ctx: Dict[str, Any]) -> bool:
                 return result is not None
@@ -160,7 +165,11 @@ class Planner:
                 # Validate intent has required fields
                 if not intent.primary_entity:
                     raise ValueError("Intent must have a primary_entity")
+                
+                 # Create generator with business_id from context
+
                 return self.generator.generate_pipeline(intent)  # type: ignore[index]
+            
 
             async def _execute(ctx: Dict[str, Any]) -> Any:
                 intent: QueryIntent = ctx["intent"]  # type: ignore[assignment]
@@ -177,6 +186,7 @@ class Planner:
                 # Validate intent
                 if not intent or not intent.primary_entity:
                     raise ValueError("Intent with primary_entity is required")
+                
                 
                 args = {
                     "database": DATABASE_NAME,
@@ -222,7 +232,7 @@ class Planner:
 
             ctx = await self.orchestrator.run(
                 steps,
-                initial_context={"query": query},
+                initial_context={"query": query, "business_id": business_id, "user_id": user_id},
                 correlation_id=f"planner_{hash(query) & 0xFFFFFFFF:x}",
             )
 
@@ -250,7 +260,7 @@ class Planner:
 # Global instance
 query_planner = Planner()
 
-async def plan_and_execute_query(query: str) -> Dict[str, Any]:
+async def plan_and_execute_query(query: str, business_id: Optional[str] = None, user_id: Optional[str] = None) -> Dict[str, Any]:
     """Convenience function to plan and execute queries"""
-    return await query_planner.plan_and_execute(query)
+    return await query_planner.plan_and_execute(query, business_id, user_id)
 

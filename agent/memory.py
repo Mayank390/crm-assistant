@@ -111,21 +111,33 @@ class ScenarioOptimizedMemory:
             msg_dict["tool_calls"] = message.tool_calls
         if hasattr(message, "additional_kwargs"):
             msg_dict["additional_kwargs"] = message.additional_kwargs
+        # Preserve flagged_unsafe metadata for guardrails filtering
+        if hasattr(message, "additional_kwargs") and message.additional_kwargs.get("flagged_unsafe"):
+            msg_dict["flagged_unsafe"] = True
         return json.dumps(msg_dict)
 
     def _deserialize_message(self, msg_str: str) -> BaseMessage:
         msg_dict = json.loads(msg_str)
         msg_type = msg_dict.get("type")
         content = msg_dict.get("content", "")
+        flagged_unsafe = msg_dict.get("flagged_unsafe", False)
+        
+        # Prepare additional_kwargs with flagged_unsafe if needed
+        additional_kwargs = msg_dict.get("additional_kwargs", {})
+        if flagged_unsafe:
+            additional_kwargs["flagged_unsafe"] = True
         
         if msg_type == "HumanMessage":
-            return HumanMessage(content=content)
+            msg = HumanMessage(content=content)
+            if additional_kwargs:
+                msg.additional_kwargs = additional_kwargs
+            return msg
         elif msg_type == "AIMessage":
             msg = AIMessage(content=content)
             if "tool_calls" in msg_dict:
                 msg.tool_calls = msg_dict["tool_calls"]
-            if "additional_kwargs" in msg_dict:
-                msg.additional_kwargs = msg_dict["additional_kwargs"]
+            if additional_kwargs:
+                msg.additional_kwargs = additional_kwargs
             return msg
         elif msg_type == "ToolMessage":
             return ToolMessage(content=content, tool_call_id=msg_dict.get("tool_call_id", ""))
@@ -378,6 +390,48 @@ class ScenarioOptimizedMemory:
         
         return self._apply_token_budget(messages, summary, budget, approx_tokens)
 
+    def _is_message_flagged_unsafe(self, message: BaseMessage) -> bool:
+        """Check if a message has been flagged as unsafe.
+        
+        Args:
+            message: The message to check.
+            
+        Returns:
+            True if the message is flagged as unsafe, False otherwise.
+        """
+        if hasattr(message, "additional_kwargs"):
+            return bool(message.additional_kwargs.get("flagged_unsafe", False))
+        return False
+
+    async def get_messages_for_guardrails(
+        self, 
+        conversation_id: str,
+        max_messages: int = 10
+    ) -> List[BaseMessage]:
+        """Get recent messages filtered for guardrails safety checks.
+        
+        This method returns conversation history with previously flagged unsafe
+        messages removed, preventing false positives when evaluating new queries.
+        
+        Args:
+            conversation_id: The conversation to get messages for.
+            max_messages: Maximum number of messages to return (default: 10).
+            
+        Returns:
+            List of messages safe to pass to guardrails, with flagged messages excluded.
+        """
+        # Get recent context first
+        all_messages = await self.get_recent_context(conversation_id)
+        
+        # Filter out messages flagged as unsafe
+        safe_messages = [
+            msg for msg in all_messages 
+            if not self._is_message_flagged_unsafe(msg)
+        ]
+        
+        # Return only the last N messages for guardrails context
+        return safe_messages[-max_messages:] if safe_messages else []
+        
     async def _load_from_mongodb_with_budget(self, conversation_id: str, max_tokens: int) -> List[BaseMessage]:
         try:
             from mongo.conversations import conversation_mongo_client, CONVERSATIONS_DB_NAME, CONVERSATIONS_COLLECTION_NAME

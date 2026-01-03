@@ -11,7 +11,7 @@ from huggingface_hub import login
 from transformers import AutoModel, AutoTokenizer
 from sentence_transformers import SentenceTransformer
 
-DEFAULT_MODEL_NAME = "google/embeddinggemma-300m"
+DEFAULT_MODEL_NAME = "sentence-transformers/all-mpnet-base-v2"
 logger = logging.getLogger(__name__)
 
 

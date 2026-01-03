@@ -26,16 +26,18 @@ async def upload_to_tmpfiles(csv_content: str) -> str:
     """Upload CSV to free file hosting service and return download URL"""
     filename = f"leads_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
 
-    # Try transfer.sh (10GB limit, 14 days, direct download)
+    # Try transfer.sh first (10GB limit, 14 days, direct download)
     try:
         url = f"https://transfer.sh/{filename}"
         headers = {'Content-Type': 'text/csv'}
         async with httpx.AsyncClient(timeout=60.0) as client:
             resp = await client.put(url, content=csv_content.encode('utf-8'), headers=headers)
             if resp.status_code == 200:
-                return resp.text.strip()  # transfer.sh returns the download URL
+                download_url = resp.text.strip()
+                logger.info(f"Successfully uploaded to transfer.sh: {download_url}")
+                return download_url
     except Exception as e:
-        logger.debug(f"transfer.sh failed: {e}")
+        logger.warning(f"transfer.sh failed: {e}")
 
     # Fallback to file.io (2GB limit, 14 days)
     try:
@@ -45,22 +47,37 @@ async def upload_to_tmpfiles(csv_content: str) -> str:
             resp = await client.post("https://file.io/", data=data, files=files)
             result = resp.json()
             if result.get("success"):
-                return result["link"]  # Direct download link
+                download_url = result["link"]
+                logger.info(f"Successfully uploaded to file.io: {download_url}")
+                return download_url
     except Exception as e:
-        logger.debug(f"file.io failed: {e}")
+        logger.warning(f"file.io failed: {e}")
 
-    # Last fallback to tmpfiles.org (view URL)
+    # Last fallback to tmpfiles.org - try to get direct download URL
     try:
         files = {'file': (filename, csv_content.encode('utf-8'), 'text/csv')}
         async with httpx.AsyncClient(timeout=30.0) as client:
             resp = await client.post("https://tmpfiles.org/api/v1/upload", files=files)
             data = resp.json()
             if data.get("status") == "success":
-                return data["data"]["url"]  # View URL that users can click to download
+                view_url = data["data"]["url"]
+                # Try to convert view URL to direct download URL
+                # tmpfiles.org view URLs are like: https://tmpfiles.org/dl/xxxxx/filename.csv
+                # Direct download URLs are like: https://tmpfiles.org/download/xxxxx/filename.csv
+                if "tmpfiles.org/" in view_url:
+                    # Replace 'dl' with 'download' in the URL to get direct download
+                    download_url = view_url.replace("/dl/", "/download/")
+                    logger.info(f"Successfully uploaded to tmpfiles.org: {download_url}")
+                    return download_url
+                else:
+                    # Fallback to view URL if we can't convert
+                    logger.warning(f"Could not convert tmpfiles.org view URL to download URL, using view URL: {view_url}")
+                    return view_url
     except Exception as e:
-        logger.debug(f"tmpfiles.org failed: {e}")
+        logger.error(f"tmpfiles.org failed: {e}")
 
-    return None
+    # If all services fail, raise an exception instead of returning None
+    raise Exception("All file upload services failed. Unable to generate download link for leads.")
 
 def generate_csv(leads: List[dict]) -> str:
     output = io.StringIO()
@@ -117,57 +134,88 @@ async def _complete(leads: List[dict]):
             await ws.send_json({"type": "pipeline_complete", "leads": leads})
         except: pass
 
-async def _get_leads_via_google_maps(business_type: str, city: str, area: str, cfg: LeadEnrichmentConfig) -> List[dict]:
-    if not cfg.serpapi_key: return []
+async def _get_leads_via_google_maps(business_type: str, city: str, area: str, cfg: LeadEnrichmentConfig, desired: int = 40) -> List[dict]:
+    if not cfg.serpapi_key:
+        return []
 
     ll = await get_optimal_ll(business_type, area or city, city, cfg)
 
-    params = {
-        "engine": "google_maps", "q": business_type, "type": "search", "ll": ll,
-        "gl": "in", "hl": "en", "google_domain": "google.co.in", "num": 40, "api_key": cfg.serpapi_key
+    base_params = {
+        "engine": "google_maps",
+        "q": business_type,
+        "type": "search",
+        "ll": ll,
+        "gl": "in",
+        "hl": "en",
+        "google_domain": "google.co.in",
+        # Remove "num": 40 — not supported/effective here
+        "api_key": cfg.serpapi_key
     }
+
+    leads = []
+    seen = set()  # For deduplication: use (title, address) tuple
+    start = 0
+    max_start = 100  # Page 6 → up to ~120 raw results
 
     try:
         async with httpx.AsyncClient(timeout=80.0) as client:
-            resp = await client.get("https://serpapi.com/search", params=params)
-            data = resp.json()
+            while start <= max_start and len(leads) < desired:
+                params = {**base_params, "start": start}
+                resp = await client.get("https://serpapi.com/search", params=params)
+                data = resp.json()
 
-        results = data.get("local_results", [])
-        leads = []
-        for place in results:
-            lat = place.get("gps_coordinates", {}).get("latitude")
-            lng = place.get("gps_coordinates", {}).get("longitude")
-            lead = {
-                "name": place.get("title"),
-                "phone": place.get("phone"),
-                "email": None,
-                "address": place.get("address"),
-                "url": place.get("website") or place.get("link"),
-                "geo": f"{lat},{lng}" if lat and lng else None,
-                "rating": place.get("rating"),
-                "total_reviews": place.get("reviews"),
-                "source": "google_maps",
-                "location_match": f"{area} {city}".strip() or city
-            }
-            if lead.get("name"):
-                leads.append({k: v for k, v in lead.items() if v})
+                results = data.get("local_results", [])
+                if not results:
+                    break
 
-        return leads[:40]
+                for place in results:
+                    if len(leads) >= desired:
+                        break
+
+                    title = place.get("title")
+                    address = place.get("address")
+                    key = (title, address)
+                    if key in seen:
+                        continue
+                    seen.add(key)
+
+                    lat = place.get("gps_coordinates", {}).get("latitude")
+                    lng = place.get("gps_coordinates", {}).get("longitude")
+
+                    lead = {
+                        "name": title,
+                        "phone": place.get("phone"),
+                        "email": None,
+                        "address": address,
+                        "url": place.get("website") or place.get("link"),
+                        "geo": f"{lat},{lng}" if lat and lng else None,
+                        "rating": place.get("rating"),
+                        "total_reviews": place.get("reviews"),
+                        "source": "google_maps",
+                        "location_match": f"{area} {city}".strip() or city
+                    }
+                    if lead.get("name"):
+                        cleaned_lead = {k: v for k, v in lead.items() if v}
+                        leads.append(cleaned_lead)
+
+                start += 20
+
+        return leads
 
     except Exception as e:
         logger.error(f"Google Maps failed: {e}")
         return []
 
 
-async def run_pipeline(business_type: str, area: str, city: str, max_leads: int = 40) -> List[dict]:
+async def run_pipeline(business_type: str, area: str, city: str, max_leads: int = 100) -> List[dict]:  # Changed default to 100
     cfg = LeadEnrichmentConfig()
-    desired = min(max_leads, 40)
+    desired = min(max_leads, 100)  # Hard cap at 100 to avoid bad results
     area_clean = area.strip()
     city_clean = city.strip().title()
 
     await _emit("start", 0, desired, f"Hunting {business_type} in {area_clean or 'entire'} {city_clean}")
 
-    gmb_leads = await _get_leads_via_google_maps(business_type, city_clean, area_clean, cfg)
+    gmb_leads = await _get_leads_via_google_maps(business_type, city_clean, area_clean, cfg, desired=desired)
 
     if len(gmb_leads) > 0:
         final = gmb_leads[:desired]
@@ -182,9 +230,9 @@ async def lead_enrichment(
     business_type: str,
     city: str,
     area: str = "",
-    max_leads: int = 40
+    max_leads: int = 100  # Updated default and doc
 ) -> str:
-    """Extract up to 40 verified Indian business leads with one clean download link."""
+    """Extract up to 100 verified Indian business leads with one clean download link."""
     leads = await run_pipeline(business_type, area, city, max_leads)
     count = len(leads)
 
@@ -197,13 +245,26 @@ async def lead_enrichment(
 
     # ONE CSV upload
     csv_content = generate_csv(leads)
-    download_url = await upload_to_tmpfiles(csv_content)
+    try:
+        download_url = await upload_to_tmpfiles(csv_content)
+    except Exception as e:
+        logger.error(f"Failed to upload leads CSV: {e}")
+        # Return results without download link but still provide value
+        bullet_list = '\n• '.join(top_names)
+        return f"""{count} verified {business_type}(s) found in {area or 'entire'} {city}
+Email capture: {email_rate:.1f}% ({email_count}/{count})
+Top businesses:
+• {bullet_list}
+
+⚠️  Unable to generate download link due to temporary service issues.
+Please try again in a few minutes or contact support if the issue persists."""
 
     # FINAL CLEAN MESSAGE — agent will love this
+    bullet_list = '\n• '.join(top_names)
     return f"""{count} verified {business_type}(s) found in {area or 'entire'} {city}
 Email capture: {email_rate:.1f}% ({email_count}/{count})
 Top businesses:
-• {'\n• '.join(top_names)}
+• {bullet_list}
 Download all {count} leads (CSV):
 {download_url}
 Click **Import to CRM** to save."""

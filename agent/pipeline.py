@@ -4,6 +4,7 @@ from typing import Dict, List, Any, Optional, Set
 import os
 import logging
 from dotenv import load_dotenv
+import json
 
 # Load environment variables from .env file
 load_dotenv()
@@ -11,7 +12,7 @@ load_dotenv()
 # Configure logging
 logger = logging.getLogger(__name__)
 
-from mongo.registry import REL, ALLOWED_FIELDS, build_lookup_stage
+from mongo.registry import REL, ALLOWED_FIELDS, build_lookup_stage,validate_joined_fields
 from agent.planner import QueryIntent
 
 class PipelineGenerator:
@@ -19,7 +20,7 @@ class PipelineGenerator:
 
     def __init__(self):
         self.relationship_cache = {}  # Cache for computed relationship paths
-
+        
     def _add_comprehensive_lookups(self, pipeline: List[Dict[str, Any]], collection: str, intent: QueryIntent, required_relations: Set[str]):
         """Add strategic lookups only for relationships that provide clear query benefits"""
         # Only add strategic relationships that are likely to improve query performance
@@ -110,6 +111,23 @@ class PipelineGenerator:
 
         # Use strategic joins if any of these conditions are met
         return needs_multi_hop or has_complex_grouping or (wants_details and has_basic_relations)
+    
+    def _infer_lead_type_from_intent(self, intent: QueryIntent) -> Optional[str]:
+        """
+        Infer Lead.type from natural language.
+        This prevents hallucination like returning all leads.
+        """
+        text = (getattr(intent, "raw_query", "") or "").lower()
+
+        if "prospect" in text:
+            return "PROSPECT"
+        if "customer" in text:
+            return "CUSTOMER"
+        if "lead" in text:
+            return "LEAD"
+
+        return None
+
 
     def generate_pipeline(self, intent: QueryIntent) -> List[Dict[str, Any]]:
         """Generate MongoDB aggregation pipeline for the given intent"""
@@ -117,10 +135,28 @@ class PipelineGenerator:
 
         # Start with the primary collection
         collection = intent.primary_entity
+        
+        #start with required relations
+        required_relations: Set[str] = set()
 
         # Build sanitized filters once
         primary_filters = self._extract_primary_filters(intent.filters, collection) if intent.filters else {}
         secondary_filters = self._extract_secondary_filters(intent.filters, collection) if intent.filters else {}
+
+        if collection == "Lead":
+            inferred_type = self._infer_lead_type_from_intent(intent)
+
+            if inferred_type:
+                if "type" not in primary_filters:
+                    primary_filters["type"] = {
+                        "$regex": f"^{inferred_type}$",
+                        "$options": "i"
+                    }
+                    logger.info(
+                        "Applied inferred Lead type filter: %s (from query: %s)",
+                        inferred_type,
+                        intent.raw_query
+                    )
 
         # COUNT-ONLY: no group_by, no details → do not add lookups
         if (("count" in intent.aggregations) or intent.wants_count) and not intent.group_by and not intent.wants_details:
@@ -138,6 +174,7 @@ class PipelineGenerator:
 
         # Add filters for the primary collection
         if primary_filters:
+            print(f"DEBUG: Applying primary filters for {collection}: {primary_filters}")
             pipeline.append({"$match": primary_filters})
 
         # Ensure lookups needed by secondary filters or grouping are included
@@ -152,6 +189,8 @@ class PipelineGenerator:
                 'notes': 'notes',
                 'callLog': 'callLog',
                 'mailInfo': 'mailInfo',
+                'pipeline': 'pipeline',
+                'pipelineDetails': 'pipeline',
             },
             'task': {
                 'lead': 'lead',
@@ -434,6 +473,17 @@ class PipelineGenerator:
                 pipeline.append({"$limit": int(effective_limit)})
             except Exception:
                 pass
+        query_text = getattr(intent, "raw_query", None) or "<not available>"  
+        logger.info(
+            "Generated MongoDB pipeline\n"
+            "Query      : %s\n"
+            "Entity     : %s\n"
+            "Pipeline   :\n%s",
+            query_text,
+            intent.primary_entity,
+            intent.filters,
+            json.dumps(pipeline, default=str, indent=2)
+        )
         
         return pipeline
 
@@ -446,6 +496,15 @@ class PipelineGenerator:
             return primary_filters
         if not isinstance(filters, dict):
             return primary_filters
+        
+        if 'createdByName' in filters and isinstance(filters['createdByName'], str):
+            primary_filters['createdByName'] = {
+                '$regex': f"^{re.escape(filters['createdByName'])}$",
+                '$options': 'i'
+            }
+
+        if 'createdById' in filters:
+            primary_filters['createdById'] = filters['createdById']
 
         # Handle direct _id filters first using $expr with $toObjectId for safety
         def _is_hex24(s: str) -> bool:
@@ -721,8 +780,12 @@ class PipelineGenerator:
                     primary_filters['status'] = filters['status']
             if 'source' in filters:
                 primary_filters['source'] = filters['source']
-            if 'type' in filters:
+            if 'type' in filters and isinstance(filters['type'], str):
+                primary_filters['type'] = {'$regex': f"^{filters['type']}$", '$options': 'i'}
+                print(f"DEBUG: Lead Type Filter Applied: {primary_filters['type']}")
+            elif 'type' in filters:
                 primary_filters['type'] = filters['type']
+                print(f"DEBUG: Lead Type Filter Added (Exact): {primary_filters['type']}")
             if 'leadActiveType' in filters:
                 primary_filters['leadActiveType'] = filters['leadActiveType']
             if 'customerType' in filters:
@@ -794,8 +857,12 @@ class PipelineGenerator:
             if 'activityStatus' in filters and 'activityStatus' not in primary_filters:
                 if 'activityStatus_not' not in filters:
                     primary_filters['activityStatus'] = filters['activityStatus']
-            if 'type' in filters:
+            if 'type' in filters and isinstance(filters['type'], str):
+                primary_filters['type'] = {'$regex': f"^{filters['type']}$", '$options': 'i'}
+                print(f"DEBUG: Activity Type Filter Applied: {primary_filters['type']}")
+            elif 'type' in filters:
                 primary_filters['type'] = filters['type']
+                print(f"DEBUG: Activity Type Filter Added (Exact): {primary_filters['type']}")
             if 'leadId' in filters:
                 primary_filters['leadId'] = filters['leadId']
             if 'parentId' in filters:
@@ -1114,16 +1181,35 @@ class PipelineGenerator:
     def _generate_projection(self, projections: List[str], target_entities: List[str], primary_entity: str) -> Dict[str, Any]:
         """Generate projection object"""
         projection = {"_id": 1}  # Always include ID
+        if primary_entity == "Lead":
+            projection.update({
+                "pipeline": 1,
+                #"pipelineStage": 1,
+                "pipelineStage.stageName": 1,
+                "pipelineStage.statusName": 1,
+            })
 
         # Add requested projections
         for field in projections:
             if field in ALLOWED_FIELDS.get(primary_entity, {}):
                 projection[field] = 1
+        
+        if primary_entity == "Lead":
+            joined_fields = validate_joined_fields(
+                joined_collection="pipeline",
+                fields=projections,
+                join_alias="pipelineDetails"
+            )
+            for f in joined_fields:
+                projection[f] = 1
+        
+        for alias in target_entities:
+            projection[alias] = 1
 
-        # Add target entity fields
+        '''# Add target entity fields
         for entity in target_entities:
             if entity in REL.get(primary_entity, {}):
-                projection[entity] = 1
+                projection[entity] = 1'''
 
         return projection
 
@@ -1321,3 +1407,117 @@ class PipelineGenerator:
         val = entity_map.get(token)
         # Some bucket_expr entries may be None if field not applicable
         return val if val is not None else None
+    
+    def pipeline_breakdown(self) -> list[dict]:
+        """
+        Returns all currently available pipelines.
+        Used for queries like:
+        - pipeline breakdown
+        - list pipelines
+        - show available pipelines
+        """
+        match_filter = {"isActive": True}
+        
+        # Add business filter if business_id is available
+        if self.business_id:
+            match_filter["business._id"] = self.business_id
+        return [
+            {
+                "$match": match_filter
+            },
+            {
+                "$project": {
+                    "_id": 1,
+                    "name": 1,
+                    "description": 1,
+                    "isActive": 1,
+                    "createdAt": 1,
+                    "createdBy": 1,
+                    "assignedStaff":1
+
+                }
+            },
+            {
+                "$sort": { "createdAt": -1 }
+            }
+        ]
+    
+    # --------------------------------------------------
+    # PIPELINE DETAILS (FULL ANALYTICS)
+    # --------------------------------------------------
+    def pipeline_details(self, pipeline_name: str) -> List[Dict]:
+        """
+        Full breakdown for a specific pipeline:
+        - total leads
+        - type split (LEAD / PROSPECT / CUSTOMER)
+        - stage → status → counts
+        """
+        match_filter = {"pipeline.name": pipeline_name}
+        
+        # Add business filter if business_id is available
+        if self.business_id:
+            match_filter["business._id"] = self.business_id
+
+        return [
+            # 🔹 Filter by pipeline
+            {
+                "$match": match_filter            },
+
+            # 🔹 Group by stage + status + type
+            {
+                "$group": {
+                    "_id": {
+                        "stage": "$pipelineStage.stageName",
+                        "status": "$pipelineStage.statusName",
+                        "type": "$type"
+                    },
+                    "count": { "$sum": 1 }
+                }
+            },
+
+            # 🔹 Regroup by stage + status
+            {
+                "$group": {
+                    "_id": {
+                        "stage": "$_id.stage",
+                        "status": "$_id.status"
+                    },
+                    "byType": {
+                        "$push": {
+                            "type": "$_id.type",
+                            "count": "$count"
+                        }
+                    },
+                    "total": { "$sum": "$count" }
+                }
+            },
+
+            # 🔹 Regroup by stage
+            {
+                "$group": {
+                    "_id": "$_id.stage",
+                    "stageTotal": { "$sum": "$total" },
+                    "statuses": {
+                        "$push": {
+                            "status": "$_id.status",
+                            "total": "$total",
+                            "byType": "$byType"
+                        }
+                    }
+                }
+            },
+
+            # 🔹 Final shape
+            {
+                "$project": {
+                    "_id": 0,
+                    "stage": "$_id",
+                    "stageTotal": 1,
+                    "statuses": 1
+                }
+            },
+
+            {
+                "$sort": { "stage": 1 }
+            }
+        ]

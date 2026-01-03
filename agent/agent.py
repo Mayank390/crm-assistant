@@ -34,57 +34,60 @@ from langchain_groq import ChatGroq
 from mongo.constants import DATABASE_NAME, mongodb_tools
 from mongo.conversations import save_assistant_message, save_action_event
 from agent.callback_handler import AgentCallbackHandler
+# from tracking.credit_check import check_credit_balance_for_agent
+# from tracking.token_usage import record_usage
+# from tracking.token_accumulator import ensure_accumulator
 
-from guardrails.llama_gaurd_client import llama_guard_client, get_blocked_response
 
-async def _run_parallel_safety_checks(
-    query: str, 
-    conversation_history: List[dict]
-) -> tuple[bool, bool, str, str]:
-    """
-    Run Llama Guard safety check for prompt injection detection.
-    
-    Uses Llama Guard via Groq to detect attempts to:
-    - Extract system prompts or instructions
-    - Reveal internal implementation details
-    - Get raw/unprocessed responses
-    - Bypass safety guidelines (jailbreaks)
-    
-    Args:
-        query: The user input to check
-        conversation_history: Previous conversation for context
-            tuple: (toxic_check_passed, prompt_injection_safe, blocked_reason, violation_category)
-        Note: toxic_check_passed is always True (disabled), kept for API compatibility
-    """
-    # COMMENTED OUT: Toxic language check - using Llama Guard only
-    # toxic_task = asyncio.create_task(_validate_guard_async(query))
-    
-    # Run Llama Guard prompt injection check
-    try:
-        prompt_injection_result = await llama_guard_client.check_prompt_injection(
-            user_message=query,
-            conversation_history=conversation_history
-        )
-        
-        prompt_injection_safe = prompt_injection_result.is_safe
-        blocked_reason = ""
-        violation_category = ""
-        
-        if not prompt_injection_safe:
-            blocked_reason = prompt_injection_result.blocked_reason or get_blocked_response()
-            violation_category = prompt_injection_result.category or "UNKNOWN"
-            
-    except Exception as e:
-        logger.error(f"Prompt injection check failed: {e}")
-        # Fail open on error
-        prompt_injection_safe = True
-        blocked_reason = ""
-        violation_category = ""
-    
-    # Return format: (toxic_passed, prompt_injection_safe, blocked_reason, violation_category)
-    # toxic_passed is always True since we disabled that check
-    return True, prompt_injection_safe, blocked_reason, violation_category
+# from guardrails.llama_gaurd_client import llama_guard_client, get_blocked_response
 
+# async def _run_parallel_safety_checks(
+#     query: str, 
+#     conversation_history: List[dict]
+# ) -> tuple[bool, bool, str, str]:
+#     """
+#     Run Llama Guard safety check for prompt injection detection.
+#     
+#     Uses Llama Guard via Groq to detect attempts to:
+#     - Extract system prompts or instructions
+#     - Reveal internal implementation details
+#     - Get raw/unprocessed responses
+#     - Bypass safety guidelines (jailbreaks)
+#     
+#     Args:
+#         query: The user input to check
+#         conversation_history: Previous conversation for context
+#             tuple: (toxic_check_passed, prompt_injection_safe, blocked_reason, violation_category)
+#         Note: toxic_check_passed is always True (disabled), kept for API compatibility
+#     """
+#     # COMMENTED OUT: Toxic language check - using Llama Guard only
+#     # toxic_task = asyncio.create_task(_validate_guard_async(query))
+#     
+#     # Run Llama Guard prompt injection check
+#     try:
+#         prompt_injection_result = await llama_guard_client.check_prompt_injection(
+#             user_message=query,
+#             conversation_history=conversation_history
+#         )
+#         
+#         prompt_injection_safe = prompt_injection_result.is_safe
+#         blocked_reason = ""
+#         violation_category = ""
+#         
+#         if not prompt_injection_safe:
+#             blocked_reason = prompt_injection_result.blocked_reason or get_blocked_response()
+#             violation_category = prompt_injection_result.category or "UNKNOWN"
+#             
+#     except Exception as e:
+#         logger.error(f"Prompt injection check failed: {e}")
+#         # Fail open on error
+#         prompt_injection_safe = True
+#         blocked_reason = ""
+#         violation_category = ""
+#     
+#     # Return format: (toxic_passed, prompt_injection_safe, blocked_reason, violation_category)
+#     # toxic_passed is always True since we disabled that check
+#     return True, prompt_injection_safe, blocked_reason, violation_category
 
 DEFAULT_SYSTEM_PROMPT = (
     "You are a precise, non-speculative CRM assistant.\n\n"
@@ -95,7 +98,8 @@ DEFAULT_SYSTEM_PROMPT = (
     "- If tooling is unavailable for the task, state the limitation plainly.\n\n"
     "LEAD ENRICHMENT: Never copy tool output verbatim. Rephrase naturally using: lead count, top business names, and download link (when present).\n"
     "Example: 'Found 35 jewellers in Gachibowli including Malabar Gold, Tanishq. Download full list: [link] Ready to import?'\n"
-    "Always highlight CSV download links and encourage immediate CRM import action.\n\n"
+    "Always highlight CSV download links and encourage immediate CRM import action.\n"
+    "- When returning 50+ leads, emphasize the comprehensiveness: e.g., \"Comprehensive list of 87 jewellers across Gachibowli, Hyderabad\" and strongly encourage CRM import.\n\n"
     "RESPONSE FORMATTING (CRITICAL):\n"
     "- ALWAYS format your responses using **markdown** for maximum readability.\n"
     "- Use headings (##, ###) to organize sections and break up content.\n"
@@ -157,7 +161,11 @@ DEFAULT_SYSTEM_PROMPT = (
     "- Examples of INDEPENDENT: 'Show task counts AND meeting counts' → call both tools together\n"
     "- Examples of DEPENDENT: 'Find tasks by John, THEN search notes about those tasks' → call mongo_query first, wait for results, then call rag_search\n\n"
     "DECISION GUIDE:\n"
-"0) Lead extraction / enrichment requests (e.g., 'extract leads', 'find leads online', 'business leads in <city>') → prefer the `lead_enrichment` tool first. If it fails gracefully, explain the limitation and offer alternate approaches.\n"
+    "0) Lead extraction / enrichment requests (e.g., 'extract leads', 'find leads online', 'business leads in <city>') → prefer the `lead_enrichment` tool first.\n"
+    "   - Default to max_leads=100 for comprehensive results unless the user specifies a smaller number or wants a quick sample.\n"
+    "   - If user says \"top 10\", \"just a few\", or \"sample\", use a lower max_leads (e.g., 20–30).\n"
+    "   - Always respect explicit user requests for count.\n"
+    "   If it fails gracefully, explain the limitation and offer alternate approaches.\n"
     "1) Use 'mongo_query' for structured questions about entities/fields in collections: Lead, Task, Activity, Meeting, Notes, CallLog, MailInfo, LeadScoreRule, Segmentation.\n"
     "   - Examples: counts, lists, filters, sort, group by, breakdowns by leadStatus/taskStatus/assignedName/priority/date.\n"
     "   - The query planner automatically determines when complex joins are beneficial and adds strategic relationships only when they improve query performance.\n"
@@ -205,8 +213,9 @@ DEFAULT_SYSTEM_PROMPT = (
     "  REQUIRED: content_type ('lead'|'task'|'meeting'|'note'), prompt (what to generate).\n"
     "  OPTIONAL: template_title, template_content, context.\n"
     "  NOTE: Returns '✅ Content generated' only - full content sent directly to frontend to save tokens.\n"
-    "- lead_enrichment(query:str): Search and enrich local business leads using Google Maps.\n"
-    "  REQUIRED: 'query' - natural language description of leads to find (e.g., 'textile businesses in Hyderabad').\n"
+    "- lead_enrichment_tool(business_type:str, city:str, area:str='', max_leads:int=100): Search and enrich local business leads using Google Maps.\n"
+    "  REQUIRED: 'business_type' - type of business (e.g., 'textile businesses'), 'city' - city name (e.g., 'Hyderabad').\n"
+    "  OPTIONAL: 'area' - specific locality, 'max_leads' - limit results (default 100, max 100).\n"
     "  CAPABILITIES: Google Maps search, structured data extraction (name, address, phone, email, etc.), progress streaming.\n"
     "CONTENT TYPE ROUTING EXAMPLES:\n"
     "- 'What leads are about?' → rag_search(query='leads', content_type='lead')\n"
@@ -221,14 +230,14 @@ DEFAULT_SYSTEM_PROMPT = (
     "- 'Generate task for follow-up' → generate_content(content_type='task', prompt='Follow-up task: Call customer tomorrow')\n"
     "- 'Schedule meeting' → generate_content(content_type='meeting', prompt='Schedule meeting with lead')\n"
     "- 'Create note' → generate_content(content_type='note', prompt='Meeting notes: Discussed pricing')\n"
-    "- 'Extract textile business leads in Hyderabad' → lead_enrichment(query='textile businesses in Hyderabad')\n\n"
+    "- 'Extract textile business leads in Hyderabad' → lead_enrichment_tool(business_type='textile businesses', city='Hyderabad', max_leads=100)\n\n"
     "WHEN UNSURE WHICH TOOL:\n"
     "- If the query is ambiguous or entity/field mapping to Mongo is unclear → prefer rag_search first.\n"
     "- Question about structured data (counts, filters, group by, breakdown by leadStatus/taskStatus/assignedName/priority/date) → mongo_query.\n"
     "- Advanced analytics (time-series, trends, anomalies, complex aggregations) → mongo_query.\n"
     "- Question about content meaning/semantics (find notes, analyze patterns, content search, descriptions) → rag_search.\n"
     "- Request to CREATE/GENERATE new content → generate_content.\n"
-    "- Request to EXTRACT/FIND new leads from web search → lead_enrichment.\n"
+    "- Request to EXTRACT/FIND new leads from web search → lead_enrichment_tool.\n"
     "- Question needs both structured + semantic analysis → use BOTH tools together.\n\n"
     "PATTERN ANALYSIS (EXPLICIT PATTERN QUERIES ONLY):\n"
     "- ONLY when queries EXPLICITLY ask about patterns, frequency, or causation with keywords like 'most common', 'frequent', 'patterns', 'influence', 'factors', 'why', 'what causes' → use BOTH tools:\n"
@@ -310,22 +319,22 @@ def _hash_messages(messages: List[BaseMessage]) -> str:
     combined = "|".join(content_parts)
     return hashlib.md5(combined.encode()).hexdigest()
 
-def _log_guard_violation(query: str, error_details: str, conversation_id: str) -> None:
-    """Log guard validation failures for security auditing.
-    
-    Args:
-        query: The user input that was flagged
-        error_details: Details about why it was flagged
-        conversation_id: Conversation context for audit trail
-    """
-    try:
-        query_preview = query[:100] if query else "[empty]"
-        logger.warning(
-            f"[GUARD_VIOLATION] Conversation: {conversation_id} | "
-            f"Query: {query_preview} | Details: {error_details}"
-        )
-    except Exception as e:
-        logger.error(f"Failed to log guard violation: {e}")
+# def _log_guard_violation(query: str, error_details: str, conversation_id: str) -> None:
+#     """Log guard validation failures for security auditing.
+#     
+#     Args:
+#         query: The user input that was flagged
+#         error_details: Details about why it was flagged
+#         conversation_id: Conversation context for audit trail
+#     """
+#     try:
+#         query_preview = query[:100] if query else "[empty]"
+#         logger.warning(
+#             f"[GUARD_VIOLATION] Conversation: {conversation_id} | "
+#             f"Query: {query_preview} | Details: {error_details}"
+#         )
+#     except Exception as e:
+#         logger.error(f"Failed to log guard violation: {e}")
 
 
 # Simple per-query tool router: restrict RAG unless content/context is requested
@@ -436,7 +445,10 @@ class AgentExecutor:
         tool, 
         tool_call: Dict[str, Any], 
         selected_tools: List[Any],
-        tracer=None
+        tracer=None,
+        *,
+        user_id: Optional[str] = None,
+        business_id: Optional[str] = None,
     ) -> tuple[ToolMessage, bool]:
         """Execute a single tool with tracing support.
         
@@ -462,13 +474,13 @@ class AgentExecutor:
                     args = {}
                 if not isinstance(args, dict):
                     raise ValueError(f"Tool arguments must be a dictionary, got {type(args)}")
-                
+                # Auto-inject context for tooling so downstream LLM usage can be tracked
+                if business_id and "business_id" not in args:
+                    args["business_id"] = business_id
+                if user_id and "user_id" not in args:
+                    args["user_id"] = user_id
+
                 tool_name = tool_call.get("name", "unknown")
-                print(f"\n{'='*80}")
-                print(f"🔧 [TOOL EXECUTION] {tool_name}")
-                print(f"   Tool Call ID: {tool_call.get('id', 'N/A')}")
-                print(f"   Arguments: {json.dumps(args, indent=2, default=str)}")
-                print(f"{'='*80}")
                 
                 result = await actual_tool.ainvoke(args)
                 
@@ -479,16 +491,6 @@ class AgentExecutor:
                 else:
                     success = True
                 
-                # Print tool output summary
-                result_preview = str(result)[:500] if result else "None"
-                if len(str(result)) > 500:
-                    result_preview += "... [truncated]"
-                print(f"\n{'='*80}")
-                print(f"✓ [TOOL RESULT] {tool_name}")
-                print(f"   Success: {success}")
-                print(f"   Output Preview: {result_preview}")
-                print(f"   Full Output Length: {len(str(result))} characters")
-                print(f"{'='*80}\n")
             except ValueError as ve:
                 result = f"Invalid tool arguments: {ve}"
                 success = False
@@ -500,10 +502,6 @@ class AgentExecutor:
                 logger.error(f"Tool execution error for {tool_name}: {tool_exc}", exc_info=True)
                 result = f"Tool execution error: {str(tool_exc)}"
                 success = False
-                print(f"\n{'='*80}")
-                print(f"❌ [TOOL ERROR] {tool_name}")
-                print(f"   Error: {str(tool_exc)}")
-                print(f"{'='*80}\n")
 
             tool_message = ToolMessage(
                 content=str(result),
@@ -592,53 +590,16 @@ class AgentExecutor:
                 human_message = HumanMessage(content=query)
                 messages.append(human_message)
 
+                # Skip guardrails checks - all queries are allowed now
+                # The following guardrails code has been commented out:
                 # ✅ PARALLEL SAFETY CHECKS: Run both toxic language + prompt injection detection
-                # Convert conversation context to dict format for Llama Guard
-                conversation_history_for_guard = [
-                    {
-                        "role": "user" if isinstance(msg, HumanMessage) else "assistant",
-                        "content": msg.content
-                    }
-                    for msg in conversation_context
-                    if isinstance(msg, (HumanMessage, AIMessage))
-                ]
-                
-                # Run safety checks in parallel (Safety Sidecar Pattern)
-                toxic_passed, prompt_injection_safe, blocked_reason, violation_category = await _run_parallel_safety_checks(
-                    query=query,
-                    conversation_history=conversation_history_for_guard
-                )
-                
-                # Combined guard result: both checks must pass
-                guard_passed = toxic_passed and prompt_injection_safe
-                guard_error_details = ""
-                if not toxic_passed:
-                    guard_error_details = "Toxic language detected"
-                elif not prompt_injection_safe:
-                    guard_error_details = f"Prompt injection detected: {violation_category}"
-                
-                logger.info(f"Safety checks - Toxic: {toxic_passed}, Prompt Injection Safe: {prompt_injection_safe}")
-                
+                # guardrails_context = await conversation_memory.get_messages_for_guardrails(conversation_id)
+                # conversation_history_for_guard = [...]  # Convert to dict format
+                # toxic_passed, prompt_injection_safe, blocked_reason, violation_category = await _run_parallel_safety_checks(...)
+                # guard_passed = toxic_passed and prompt_injection_safe
+                # if not guard_passed:
+                #     # Handle blocked queries
                 callback_handler = AgentCallbackHandler(websocket, conversation_id)
-
-                # Persist the human message
-                await conversation_memory.add_message(conversation_id, human_message)
-
-                # ✅ IMPROVED: Log guard violations for security auditing
-                if not guard_passed:
-                    _log_guard_violation(query, guard_error_details, conversation_id)
-                    
-                    # For prompt injection, return immediately with blocked response
-                    if not prompt_injection_safe:
-                        # Persist the blocked response
-                        blocked_ai_message = AIMessage(content=blocked_reason)
-                        await conversation_memory.add_message(conversation_id, blocked_ai_message)
-                        try:
-                            await save_assistant_message(conversation_id, blocked_reason)
-                        except Exception as e:
-                            logger.error(f"Failed to save blocked response: {e}")
-                        yield blocked_reason
-                        return
 
                 steps = 0
                 last_response: Optional[AIMessage] = None
@@ -852,7 +813,7 @@ class AgentExecutor:
                         
                         # NOW build and execute tool tasks in parallel
                         tool_tasks = [
-                            self._execute_single_tool(None, tool_call, selected_tools, None)
+                            self._execute_single_tool(None, tool_call, selected_tools, None, user_id=user_id, business_id=business_id)
                             for tool_call in response.tool_calls
                         ]
                         
@@ -909,7 +870,7 @@ class AgentExecutor:
                                 except Exception:
                                     pass
                             
-                            tool_message, success = await self._execute_single_tool(None, tool_call, selected_tools, None)
+                            tool_message, success = await self._execute_single_tool(None, tool_call, selected_tools, None, user_id=user_id, business_id=business_id)
                             
                             # Validate tool message content
                             if not tool_message.content:

@@ -51,6 +51,14 @@ REL: Dict[str, Dict[str, dict]] = {
             "as": "mailInfos",
             "many": True
         },
+        "pipeline": {
+            "target": "pipeline",
+            "localField": "pipeline._id",
+            "foreignField": "_id",
+            "as": "pipelineDetails",
+            "many": False
+
+        },
     },
     "task": {
         # Task references Lead via parentId
@@ -152,7 +160,7 @@ ALLOWED_FIELDS: Dict[str, Set[str]] = {
         "score", "emailCount", "callCount", "emailSentStatus", "callExecutedStatus", 
         "isMasked", "isSpamOrBot", "isRemainderMailSent", "createdTimeStamp", "updatedTimeStamp",
         "businessId", "createdById", "createdByName", "staffId", "staffName", "pipeline", 
-        "pipeline.name", "pipelineStage", "notes", "moreInfo", "fieldData", "company",
+        "pipeline.name", "pipelineStage","pipelineStage.stageName","pipelineStage.statusName", "notes", "moreInfo", "fieldData", "company",
         "gstDetails", "shippingAddress"
     },
     "task": {
@@ -193,6 +201,7 @@ ALLOWED_FIELDS: Dict[str, Set[str]] = {
         "_id", "name", "description", "conditions", "tags", "isActive", "business", "business._id",
         "business.name", "createdAt", "updatedAt"
     },
+    
 }
 
 # ---- Field Aliases (map common names to actual field names)
@@ -235,6 +244,24 @@ def validate_fields(collection: str, fields: List[str]) -> List[str]:
         return []
     allowed = ALLOWED_FIELDS[collection]
     return [field for field in fields if resolve_field_alias(collection, field) in allowed]
+
+def validate_joined_fields(joined_collection: str,fields: List[str],join_alias: str) -> List[str]:
+    """
+    Validate fields for joined collections (e.g. pipelineDetails.*)
+    """
+    if joined_collection not in ALLOWED_FIELDS:
+        return []
+
+    allowed = ALLOWED_FIELDS[joined_collection]
+    validated = []
+
+    for field in fields:
+        if field.startswith(f"{join_alias}."):
+            stripped = field.replace(f"{join_alias}.", "", 1)
+            if stripped in allowed:
+                validated.append(field)
+
+    return validated
 
 def build_lookup_stage(from_collection: str, relationship: Dict[str, Any], current_collection: str, additional_filters: Dict[str, Any] = None, local_field_prefix: str = None) -> Dict[str, Any]:
     """Build a MongoDB $lookup stage from a relationship definition.
