@@ -99,6 +99,10 @@ class LLMIntentParser:
             "score rule": "leadScoreRule",
             "lead score": "leadScoreRule",
             "leadscore": "leadScoreRule",
+            "pipeline": "pipeline",
+            "pipelines": "pipeline",
+            "sales funnel": "pipeline",
+            "crm pipeline": "pipeline"
         }
 
     def _is_placeholder(self, v) -> bool:
@@ -386,7 +390,15 @@ class LLMIntentParser:
             "- Notes capture important information and conversation details for leads\n"
             "- CallLogs record phone conversations and call outcomes\n"
             "- MailInfo stores email communications and marketing campaigns\n"
-            "- LeadScoreRule defines automated scoring criteria for lead qualification\n\n"
+            "- LeadScoreRule defines automated scoring criteria for lead qualification\n"
+            "- Pipelines define the sales workflow structure (stages and progression) for leads\n"
+            "- Pipelines are METADATA entities, not transactional lead data\n"
+            "- When users mention pipeline, pipelines, sales pipeline, or funnel:"
+            "- The primary_entity MUST be pipeline"
+            "- DO NOT default to Lead unless the user explicitly asks for leads in a pipeline \n"
+            "- Lead documents reference pipelines via embedded fields (pipeline._id, pipeline.name)"
+            "- To analyze leads within a pipeline, use Lead as primary_entity WITH a pipeline filter\n\n"
+            
 
             "## VERY IMPORTANT\n"
             "## AVAILABLE FILTERS (use these exact keys):\n"
@@ -423,6 +435,14 @@ class LLMIntentParser:
             "- remainder: (numeric - remainder count for Meeting/CallLog - optional field)\n"
             "- participantsRemainder: (numeric - participants remainder for Meeting - optional field)\n"
             "- taskId: (related task ID for Notes - optional field)\n"
+            "- isActive: true|false (for Pipeline)\n"
+            "- isDefault: true|false (for Pipeline)\n"
+            "- name: (pipeline name, exact or text match)\n"
+            "- createdAt, updatedAt: (date filters for Pipeline metadata)\n\n"
+            "IMPORTANT PIPELINE RULE:\n"
+            "When primary_entity is pipeline, you MUST NOT use lead-related, task-related, or activity-related filters.\n"
+            "Invalid for pipeline: leadStatus, taskStatus, meetingStatus, score, emailCount, callCount.\n"
+            "Only use pipeline metadata filters.\n\n"
             "NOTE: Optional fields may not always be present in documents. Handle empty/missing values gracefully.\n\n"
             "## ARRAY SIZE FILTERING (CRITICAL - MANDATORY DETECTION)\n"
             "YOU MUST ALWAYS DETECT array field quantity patterns and add the appropriate _count filter.\n"
@@ -440,6 +460,9 @@ class LLMIntentParser:
             "- 'customers', 'my clients', 'won leads' → MUST add: type: \"CUSTOMER\"\n"
             "- 'vendors', 'suppliers' → MUST add: type: \"VENDOR\"\n"
             "- 'prospects', 'show my prospects' → MUST add: type: \"PROSPECT\"\n"
+            "- Queries ABOUT pipelines → primary_entity = pipeline\n"
+            "- Queries ABOUT leads IN a pipeline → primary_entity = Lead with a pipeline filter\n"
+            "- NEVER mix pipeline metadata queries with lead analytics in the same intent.\n"
             "DO NOT return all records when a specific type is implied.\n\n"
             "ARRAY FIELD MAPPINGS (USE THESE EXACT KEYS):\n"
             "- fieldData → fieldData_count (for Lead)\n"
@@ -602,7 +625,43 @@ class LLMIntentParser:
             '  "wants_details": true,\n'
             '  "wants_count": false,\n'
             '  "fetch_one": false,\n'
-            "}\n\n"
+            "}\n"
+            "If primary_entity is pipeline:"
+            "- target_entities MUST be []"
+            "- group_by MUST be []"
+            "- aggregations MUST be []"
+            "- wants_count MUST be false"
+            "- wants_details MUST be true"
+            "- filters may only include: isActive, isDefault, name, createdAt, updatedAt\n\n"
+
+            "PIPELINE OUTPUT FORMAT (CRITICAL):\n"
+
+            "When primary_entity is pipeline, the response MUST represent pipeline METADATA\n"
+            "coming directly from the pipeline collection.\n"
+
+            "Allowed pipeline fields for output:\n"
+            "- name\n"
+            "- description\n"
+            "- isActive\n"
+            "- isDefault\n"
+            "- createdAt\n"
+            "- updatedAt\n"
+            "- createdBy.name\n"
+
+            "Rules:\n"
+            "- DO NOT include lead-level fields (leadStatus, score, pipelineStage, counts).\n"
+            "- DO NOT use group_by or aggregations.\n"
+            "- Pipelines are returned as individual documents with metadata only.\n"
+            "- wants_details MUST be true unless explicitly overridden.\n"
+
+            "PIPELINE DETAILS WITH LEADS (CRITICAL):\n"
+            "If the user asks for \"pipeline details of <PIPELINE_NAME>\":\n"
+            "-Use BOTH collections: pipeline AND Lead\n"
+            "- primary_entity MUST be pipeline \n"
+            "- target_entities MUST include Lead\n"
+            "- aggregations MUST include counts \n"
+            "- Do NOT restrict Lead.type (include LEAD, PROSPECT, CUSTOMER, VENDOR)\n\n"
+
 
             "## EXAMPLES\n"
             "- 'show me tasks for john' → {\"primary_entity\": \"Task\", \"filters\": {\"leadName\": \"john\"}, \"aggregations\": []}\n"
@@ -614,6 +673,17 @@ class LLMIntentParser:
             "- 'group leads by status' → {\"primary_entity\": \"Lead\", \"filters\": {\"type\": \"LEAD\"}, \"aggregations\": [\"group\"], \"group_by\": [\"leadStatus\"]}\n"
             "- 'show qualified leads' → {\"primary_entity\": \"Lead\", \"filters\": {\"leadStatus\": \"QUALIFIED\", \"type\": \"LEAD\"}, \"aggregations\": []}\n"
             "- 'find leads with high score' → {\"primary_entity\": \"Lead\", \"filters\": {\"score\": {\"$gte\": 80}}, \"aggregations\": []}\n"
+            "- 'show all pipelines' → {\"primary_entity\": \"pipeline\",\"filters\": {}, \"projections\": [\"name\", \"description\", \"isActive\", \"isDefault\", \"createdAt\", \"updatedAt\"],\"aggregations\": [],\"limit\": 10}\n"
+            "- 'list all pipelines' → {\"primary_entity\": \"pipeline\",\"filters\": {}, \"projections\": [\"name\", \"description\", \"isActive\", \"isDefault\", \"createdAt\", \"updatedAt\"],\"aggregations\": [],\"limit\": 10}\n" 
+            "- 'show pipelines for my business' → {\"primary_entity\": \"pipeline\",\"filters\": {}, \"projections\": [\"name\", \"description\", \"isActive\", \"isDefault\", \"createdAt\", \"updatedAt\"],\"aggregations\": [],\"limit\": 10}\n" 
+            "- 'show active pipelines' → {\"primary_entity\": \"pipeline\",\"filters\": {\"isActive\": true},\"aggregations\": []}\\n" 
+            "- 'list inactive pipelines' → {\"primary_entity\": \"pipeline\",\"filters\": {\"isActive\": false},\"aggregations\": []}\\n" 
+            "- 'show default pipeline' → {\"primary_entity\": \"pipeline\",\"filters\": {\"isDefault\": true},\"aggregations\": []}\\n" 
+            "-'show pipeline details of <PIPELINE_NAME>' → {\"primary_entity\": \"pipeline\", \"target_entities\": [\"Lead\"], \"filters\": {\"name\": \"<PIPELINE_NAME>\"}, \"aggregations\": [\"count\"],\"limit\":1,\"fetch_one\":true}\n"
+            "- 'list all non default pipelines' → {\"primary_entity\": \"pipeline\",\"filters\": {\"isDefault\": false},\"aggregations\": []}\\n" 
+            "- 'show pipelines created recently' → {\"primary_entity\": \"pipeline\",\"filters\": {},\"aggregations\": [],\"sort_order\": {\"createdAt\": -1}}\\n" 
+            "- 'list pipelines sorted by name' → {\"primary_entity\": \"pipeline\",\"filters\": {},\"aggregations\": [],\"sort_order\": {\"name\": 1}}\\n" 
+            "- 'get pipeline details' → {\"primary_entity\": \"pipeline\",\"filters\": {}, \"projections\": [\"name\", \"description\", \"isActive\", \"isDefault\", \"createdAt\", \"updatedAt\"],\"aggregations\": [],\"limit\": 10}\n"
             "- 'find leads with name containing john' → {\"primary_entity\": \"Lead\", \"filters\": {\"personalInfo.name\": \"john\"}, \"aggregations\": []}\n"
             "- 'who is assigned to this lead' → {\"primary_entity\": \"Lead\", \"filters\": {\"staffName\": \"assigned_person\"}, \"aggregations\": []}\n"
             "- 'find active meetings' → {\"primary_entity\": \"Meeting\", \"filters\": {\"meetingStatus\": \"SCHEDULED\"}, \"aggregations\": []}\n"
@@ -647,7 +717,18 @@ class LLMIntentParser:
             "- 'emails with multiple recipients' → {\"primary_entity\": \"MailInfo\", \"filters\": {\"toMails_count\": \">1\"}, \"aggregations\": []}\n"
             "- 'count emails with multiple recipients' → {\"primary_entity\": \"MailInfo\", \"filters\": {\"toMails_count\": \">1\"}, \"aggregations\": [\"count\"]}\n"
             "- 'epics with at least 3 custom properties' → {\"primary_entity\": \"epic\", \"filters\": {\"customProperties_count\": \">=3\"}, \"aggregations\": []}\n\n"
-            "CRITICAL: When you see phrases like 'multiple', 'more than', 'at least', 'exactly', 'no', 'unassigned', 'with X', 'has X' combined with array field names (assignees, labels, dependencies, etc.), you MUST add the corresponding _count filter.\n\n"
+            "CRITICAL: When you see phrases like 'multiple', 'more than', 'at least', 'exactly', 'no', 'unassigned', 'with X', 'has X' combined with array field names (assignees, labels, dependencies, etc.), you MUST add the corresponding _count filter.\n"\
+            
+            "- 'pipeline distribution' → {\"primary_entity\": \"pipeline\", \"filters\": {}, \"aggregations\": []}\n"
+            "- 'pipeline breakdown' → {\"primary_entity\": \"pipeline\", \"filters\": {}, \"aggregations\": []}\n"
+            "- 'pipeline overview' → {\"primary_entity\": \"pipeline\", \"filters\": {}, \"aggregations\": []}\n"
+            "NOTE: <PIPELINE_NAME> is a placeholder. Replace it with the actual pipeline name extracted from the query."
+            "- 'leads in <PIPELINE_NAME> pipeline' → {\"primary_entity\": \"Lead\",\"filters\": { \"pipeline.name\": \"<PIPELINE_NAME>\", \"type\": \"LEAD\"},\"aggregations\": []}\n"
+            "- 'count leads in <PIPELINE_NAME> pipeline' → {\"primary_entity\": \"Lead\",\"filters\": { \"pipeline.name\": \"<PIPELINE_NAME>\", \"type\": \"LEAD\"},\"aggregations\": [\"count\"]}\n"
+            "DO NOT DO THIS:\n"
+            "- 'pipeline distribution' → {\"primary_entity\" = \"Lead\}\n"
+            "- 'pipeline breakdown' → \"aggregations\" = [\"group\"]}\n" 
+            "- 'pipeline analysis' → count leads by stage\n\n"
 
             "Always output valid JSON. No explanations, no thinking, just the JSON object."
         )
@@ -769,13 +850,49 @@ class LLMIntentParser:
                 if pe:
                     data["primary_entity"] = self.entity_synonyms.get(pe.lower(), pe)
             return await self._sanitize_intent(data, query)
-        except Exception:
+        except Exception as e:
+            logger.exception("sanitize_intent failed")
             return None
 
-    async def _sanitize_intent(self, data: Dict[str, Any], original_query: str = "") -> QueryIntent:
+    async def _sanitize_intent(self, data: Dict[str, Any], original_query: str = "",*,business_id:Optional[str]=None,user_id:Optional[str]=None,) -> QueryIntent:
         # Primary entity - trust the LLM's choice unless it's completely invalid
         requested_primary = (data.get("primary_entity") or "").strip()
+        logger.error("DEBUG primary_entity check → requested=%s | entities=%s",requested_primary,self.entities)
         primary = requested_primary if requested_primary in self.entities else "Lead"
+
+        oq_text = (original_query or "").lower()
+       
+
+        if re.search(r"\b(pipelines?|crm\s+pipeline|funnel)\b", oq_text):
+            # Analytics keywords → pipeline is NOT the primary entity
+            if not re.search(r"\b(count|how many|breakdown|group by|distribution|leads?)\b", oq_text):
+                primary = "pipeline"
+        if primary == "pipeline":
+            oq = (original_query or "").lower()
+            # HARD OVERRIDE: pipeline details must NEVER become count queries
+            if re.search(r"\bpipeline\s+details\b|\bshow\s+pipeline\s+details\b|\bgive\s+pipeline\s+details\b", oq):
+                data["target_entities"] = []
+                data["aggregations"] = []
+                data["group_by"] = []
+                data["wants_details"] = True
+                data["wants_count"] = False
+
+            wants_pipeline_details = bool(
+                    re.search(r"\bpipeline\s+details\s+of\b|\bdetails\s+of\s+pipeline\b", oq)
+            )
+            if wants_pipeline_details:
+                # 1️Keep pipeline metadata intent
+                data["filters"] = data.get("filters", {})
+                data["wants_details"] = True
+                data["needs_pipeline_analytics"]=True
+
+                return data
+
+            # Remove lead-only or analytics-related filters if LLM hallucinated them
+            data["filters"] = {
+                k: v for k, v in (data.get("filters") or {}).items()
+                if k in {"isActive", "isDefault", "createdAt", "updatedAt", "name"}
+            }
 
         # Allowed relations for primary
         allowed_rels = set(self.entity_relations.get(primary, []))
@@ -1076,6 +1193,9 @@ class LLMIntentParser:
         cross_tokens = {"assignee", "business"}
         if any(g in cross_tokens for g in group_by) and primary not in self.entities:
             primary = "Lead"
+        # SAFETY: pipeline metadata queries must not aggregate
+        if primary == "pipeline" and data.get("wants_details"):
+            aggregations = []
 
         # Aggregations & group_by coherence
         if group_by and "group" not in aggregations:
@@ -1119,7 +1239,8 @@ class LLMIntentParser:
             if norm_key in {"createdTimeStamp", "createdAt", "updatedAt", "timestamp", "priority", "state", "status"} and norm_dir in (1, -1):
                 sort_order = {norm_key: norm_dir}
 
-        # Limit - intelligent handling based on query type
+
+          # Limit - intelligent handling based on query type
         limit_val = data.get("limit")
         try:
             # For count/aggregation-only queries, no limit needed unless specifically requested
@@ -1206,6 +1327,7 @@ class LLMIntentParser:
             wants_count=wants_count,
             fetch_one=fetch_one,
             needs_pattern_analysis=needs_pattern_analysis,
+
         )
 
     async def _disambiguate_name_entity(self, proposed: Dict[str, str]) -> Optional[str]:

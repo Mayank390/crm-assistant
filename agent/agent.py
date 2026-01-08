@@ -14,13 +14,14 @@ import asyncio
 import contextlib
 from typing import Dict, Any, List, AsyncGenerator, Optional
 from agent.memory import conversation_memory
-from typing import Tuple
+from typing import Optional,Tuple
 from agent import tools as agent_tools
 from datetime import datetime
 import time
 from time import perf_counter
 from collections import defaultdict, deque
 import os
+import re
 import json
 
 # Import tools list
@@ -34,6 +35,7 @@ from langchain_groq import ChatGroq
 from mongo.constants import DATABASE_NAME, mongodb_tools
 from mongo.conversations import save_assistant_message, save_action_event
 from agent.callback_handler import AgentCallbackHandler
+from agent.tools import get_generation_websocket
 # from tracking.credit_check import check_credit_balance_for_agent
 # from tracking.token_usage import record_usage
 # from tracking.token_accumulator import ensure_accumulator
@@ -88,6 +90,113 @@ from agent.callback_handler import AgentCallbackHandler
 #     # Return format: (toxic_passed, prompt_injection_safe, blocked_reason, violation_category)
 #     # toxic_passed is always True since we disabled that check
 #     return True, prompt_injection_safe, blocked_reason, violation_category
+def preprocess_lead_enrichment_query(query: str) -> Tuple[bool, Optional[str]]:
+        """
+        Detect if query is a lead enrichment request and extract context.
+        
+        Returns:
+            (is_lead_enrichment_query, clarified_query)
+        """
+        query_lower = query.lower()
+        
+        # Strong indicators that this is a lead enrichment request
+        lead_enrichment_patterns = [
+            r'\b(find|get|search|extract|show|list|give)\s+(me\s+)?(\d+\s+)?(leads?|businesses?|companies?|shops?|stores?|restaurants?|salons?|gyms?|clinics?|hotels?)',
+            r'\b(find|get|search)\s+.*\b(in|at|near)\s+\w+',  # "find X in Y"
+            r'\b(business|company|shop|store)\s+(leads?|list|directory)',
+        ]
+        
+        for pattern in lead_enrichment_patterns:
+            if re.search(pattern, query_lower):
+                logger.info(f"[preprocess] Detected lead enrichment query: '{query}'")
+                
+                # Add clarification to help LLM choose the right tool
+                clarified = f"{query}\n\nIMPORTANT: Use lead_enrichment_tool to search for REAL businesses using Google Maps."
+                return True, clarified
+        
+        return False, None
+
+    
+    
+def validate_and_correct_tool_usage(tool_calls: List[Dict], original_query: str) -> Tuple[List[Dict], bool]:
+        """
+        Validate tool usage and auto-correct common mistakes.
+        
+        Returns:
+            (corrected_tool_calls, was_corrected)
+        """
+        query_lower = original_query.lower()
+        corrected_calls = []
+        was_corrected = False
+        
+        # Detect if query is about finding/searching businesses
+        is_business_search = (
+            any(kw in query_lower for kw in ['find', 'get', 'search', 'extract', 'show', 'list']) and
+            any(entity in query_lower for entity in ['lead', 'business', 'company', 'shop', 'store', 'restaurant', 'salon', 'gym', 'clinic'])
+        )
+        
+        for tool_call in tool_calls:
+            tool_name = tool_call.get("name", "")
+            
+            # CORRECTION 1: Wrong tool for business search
+            if is_business_search and tool_name == "generate_content":
+                logger.warning(f"[validate_tool_usage] Wrong tool detected: generate_content for business search")
+                logger.info(f"[validate_tool_usage] Auto-correcting to lead_enrichment_tool")
+                
+                # Extract parameters from generate_content call
+                args = tool_call.get("args", {})
+                prompt = args.get("prompt", "")
+                
+                # Parse business type and location from prompt
+                # Example: "Generate 3 leads in Kondapur area - include local businesses"
+                import re
+                
+                # Try to extract city (common Indian cities)
+                cities = ['hyderabad', 'mumbai', 'delhi', 'bangalore', 'chennai', 'kolkata', 'pune', 'ahmedabad']
+                city = 'Hyderabad'  # Default
+                for c in cities:
+                    if c in query_lower or c in prompt.lower():
+                        city = c.title()
+                        break
+                
+                # Try to extract area
+                area_match = re.search(r'in\s+(\w+)', query_lower)
+                area = area_match.group(1).title() if area_match else ''
+                
+                # Try to extract count
+                count_match = re.search(r'(\d+)\s+leads?', query_lower)
+                max_leads = int(count_match.group(1)) if count_match else 50
+                
+                # Try to extract business type
+                business_type = 'businesses'  # Default
+                for entity in ['restaurant', 'salon', 'shop', 'store', 'gym', 'clinic', 'hotel']:
+                    if entity in query_lower:
+                        business_type = entity + 's'
+                        break
+                
+                # Create corrected tool call
+                corrected_call = {
+                    "name": "lead_enrichment_tool",
+                    "args": {
+                        "business_type": business_type,
+                        "city": city,
+                        "area": area,
+                        "max_leads": max_leads,
+                        "user_query": original_query
+                    },
+                    "id": tool_call.get("id", "")
+                }
+                
+                corrected_calls.append(corrected_call)
+                was_corrected = True
+                
+                logger.info(f"[validate_tool_usage] Corrected call: {corrected_call}")
+                
+            else:
+                # Keep original call
+                corrected_calls.append(tool_call)
+        
+        return corrected_calls, was_corrected
 
 DEFAULT_SYSTEM_PROMPT = (
     "You are a precise, non-speculative CRM assistant.\n\n"
@@ -100,6 +209,75 @@ DEFAULT_SYSTEM_PROMPT = (
     "Example: 'Found 35 jewellers in Gachibowli including Malabar Gold, Tanishq. Download full list: [link] Ready to import?'\n"
     "Always highlight CSV download links and encourage immediate CRM import action.\n"
     "- When returning 50+ leads, emphasize the comprehensiveness: e.g., \"Comprehensive list of 87 jewellers across Gachibowli, Hyderabad\" and strongly encourage CRM import.\n\n"
+    "CRM DATA MODEL — PIPELINE (AUTHORITATIVE):\n"
+    "- Pipeline is a FIRST-CLASS CRM entity.\n"
+    "- Pipelines are stored in the `pipeline` collection.\n"
+    "- Leads reference pipelines via `Lead.pipeline._id` and `Lead.pipeline.name`.\n"
+    "- Each pipeline has multiple stages stored in `Lead.pipelineStage.stageName`.\n"
+    "- A pipeline can contain Leads, Prospects, and Customers (via `Lead.type`).\n\n"
+
+    "PIPELINE QUERY RULES (STRICT):\n"
+    "- Never assume a single pipeline exists.\n"
+    "- Never infer pipeline names or stages.\n"
+    "- Always deduplicate pipelines by `_id`.\n"
+    "- Use the `pipeline` collection for listing pipelines and metadata.\n"
+    "- Use the `Lead` collection for pipeline breakdowns and stage analytics.\n\n"
+    "PIPELINE HARD RULES:\n"
+    "- NEVER query pipelines without business scoping\n"
+    "- Deduplication key = (business._id, pipeline._id)\n"
+    "- Metadata queries → show_all=true\n"
+    "- Analytics queries → show_all=false\n"
+    "- Pipeline details of <name> MUST run sequential queries\n\n"
+
+
+    "PIPELINE QUERY EXAMPLES (MANDATORY BEHAVIOR):\n"
+    "- 'show all pipelines' → mongo_query(\"list all pipelines for this business deduplicated by business._id and _id returning name,show_all=true\")\n"
+    "- 'list all pipelines' → mongo_query(\"list all pipelines for this business deduplicated by business._id and _id returning name,show_all=true\")\n"
+    "- 'pipeline breakdown' → mongo_query(\"list all pipelines for this business deduplicated by business._id and _id returning name,show_all=true\")\n"
+    "- 'pipeline details' → mongo_query(\"list all pipelines for this business deduplicated by business._id and _id with name, description, createdByName, isDefault, createdAt, updatedAt,show_all=true\")\n"
+    "- 'show pipeline details' → mongo_query(\"list all pipelines for this business deduplicated by business._id and _id with name, description, createdByName, isDefault, createdAt, updatedAt,show_all=true\")\n"
+    "- 'give pipeline details' → mongo_query(\"list all pipelines for this business deduplicated by business._id and _id with name, description, createdByName, isDefault, createdAt, updatedAt,show_all=true\")\n"
+    "- 'pipeline details of <pipeline_name>' →\n"
+    "   1) mongo_query(\"get pipeline metadata from pipeline collection where business._id is current business and name is <pipeline_name>,show_all=true\")\n"
+    "   2) mongo_query(\"list all leads where pipeline.name is <pipeline_name>,show_all=false\")\n\n"
+
+    "CRM DATA MODEL(AUTHORITATIVE):\n"
+    "The CRM contains the following core entities:\n"
+    "- Lead\n"
+    "- Each Lead belongs to exactly ONE Pipeline\n"
+    "- Stored in: Lead.pipeline\n"
+    "- Fields:\n"
+    "pipeline._id\n"
+    "pipeline.name\n"
+    "pipelineStage.stageName\n"
+    "pipelineStage.statusName\n"
+
+    "- Pipeline\n"
+    "- Represents a sales workflow (e.g., Default Pipeline, Enterprise Sales)\n"
+    "- Each Pipeline has multiple stages\n"
+    "- Leads reference pipelines via Lead.pipeline._id\n"
+
+    "PIPELINE TOOLING RULE (IMPORTANT):\n"
+    "- Any query that LISTS pipelines or FETCHES pipeline metadata MUST call mongo_query with show_all=true.\n"
+
+    "IMPORTANT PIPELINE RULES:\n"
+    "- Pipeline data is ALWAYS accessed via Lead → pipeline or via pipeline lookup\n"
+    "- Valid grouping keys include:\n"
+    "pipeline.name\n"
+    "pipelineStage.stageName\n"
+    "pipelineStage.statusName\n"
+    "- Questions mentioning:\n"
+    "pipeline\n"
+    "stage\n"
+    "funnel\n"
+    "sales flow\n"
+    "MUST consider pipeline context\n\n"    
+    "CRITICAL IMPORT RULES:\n"
+    "- NEVER use generate_content to import leads into CRM.\n"
+    "- Imports MUST use import_leads_tool followed by UI-based bulk import.\n"
+    "- When user says 'import leads', 'save to CRM', 'add these to CRM' → call import_leads_tool.\n"
+    "- After import_leads_tool returns '__LEADS_READY_FOR_IMPORT__', STOP immediately.\n"
+    "- Do NOT continue generating or calling other tools after leads ready for import.\n\n"
     "RESPONSE FORMATTING (CRITICAL):\n"
     "- ALWAYS format your responses using **markdown** for maximum readability.\n"
     "- Use headings (##, ###) to organize sections and break up content.\n"
@@ -166,7 +344,28 @@ DEFAULT_SYSTEM_PROMPT = (
     "   - If user says \"top 10\", \"just a few\", or \"sample\", use a lower max_leads (e.g., 20–30).\n"
     "   - Always respect explicit user requests for count.\n"
     "   If it fails gracefully, explain the limitation and offer alternate approaches.\n"
-    "1) Use 'mongo_query' for structured questions about entities/fields in collections: Lead, Task, Activity, Meeting, Notes, CallLog, MailInfo, LeadScoreRule, Segmentation.\n"
+    "   - Pass the FULL user query as user_query parameter for import intent detection\n\n"
+    "1) Structured questions about EXISTING CRM entities/fields use 'mongo_query'\n"
+    "   - Examples: counts, lists, filters, sort, group by, breakdowns by status/priority/assignee/date\n"
+    "   - Collections: Lead, Task, Activity, Meeting, Notes, CallLog, MailInfo, LeadScoreRule, Segmentation, pipeline\n"
+    "   - Do NOT answer from memory; run a query\n\n"
+    
+    "2) Content-based searches (semantic meaning) use 'rag_search'\n"
+    "   - Find leads/tasks/meetings/notes by meaning, analyze content patterns, search CRM content\n"
+    "   - Examples: 'find notes about follow-up', 'show meeting notes', 'content mentioning customer'\n\n"
+    
+    "3) CREATE new CRM entities (leads, tasks, meetings, notes) use 'generate_content'\n"
+    "   - ONLY when user explicitly asks to CREATE or GENERATE a new entity\n"
+    "   - Examples: 'create a new lead for TechCorp', 'generate a follow-up task', 'schedule a meeting'\n"
+    "   - NOT for searching or finding existing businesses - that's lead_enrichment_tool!\n"
+    "   - Content is sent DIRECTLY to frontend, tool returns only success/failure\n\n"
+    
+    "4) IMPORT leads to CRM  use 'import_leads_tool'\n"
+    "   - ONLY when user asks to import AFTER leads have been generated\n"
+    "   - Examples: 'import those leads', 'save to CRM', 'add them to my CRM'\n"
+    "   - Requires leads to have been generated in the same session\n"
+    "   - After calling, STOP immediately - do not continue generating\n\n"
+    "5) Use 'mongo_query' for structured questions about entities/fields in collections: Lead, Task, Activity, Meeting, Notes, CallLog, MailInfo, LeadScoreRule, Segmentation, pipeline.\n"
     "   - Examples: counts, lists, filters, sort, group by, breakdowns by leadStatus/taskStatus/assignedName/priority/date.\n"
     "   - The query planner automatically determines when complex joins are beneficial and adds strategic relationships only when they improve query performance.\n"
     "   - PAGINATION: For large datasets, use natural language pagination in queries:\n"
@@ -177,7 +376,7 @@ DEFAULT_SYSTEM_PROMPT = (
     "     * Pagination works with all query types (list, count, grouped, aggregated)\n"
     "     * Default page size is 50. Use 'all' or 'every' for maximum results (up to 1000)\n"
     "   - Do NOT answer from memory; run a query.\n"
-    "2) Use 'rag_search' for content-based searches (semantic meaning, not just keywords).\n"
+    "6) Use 'rag_search' for content-based searches (semantic meaning, not just keywords).\n"
     "   - Returns FULL chunk content (no truncation) for accurate synthesis and formatting.\n"
     "   - Find leads/tasks/meetings/notes by meaning, analyze content patterns, search CRM content.\n"
     "   - Examples: 'find notes about follow-up', 'show meeting notes', 'content mentioning customer', 'analyze patterns in descriptions'.\n"
@@ -191,14 +390,14 @@ DEFAULT_SYSTEM_PROMPT = (
     "     * Questions about 'activities' → content_type='activity'\n"
     "     * Questions about 'segmentation', 'segments' → content_type='segmentation'\n"
     "     * Ambiguous queries → omit content_type (searches all types) OR call rag_search multiple times with different types\n"
-    "3) Use 'generate_content' to CREATE new leads, tasks, meetings, or notes.\n"
+    "7) Use 'generate_content' to CREATE new leads, tasks, meetings, or notes.\n"
     "   - CRITICAL: Content is sent DIRECTLY to frontend, tool returns only '✅ Content generated' or '❌ Error'.\n"
     "   - Do NOT expect content details in the response - they go straight to the user's screen.\n"
     "   - Just acknowledge success: 'The [type] has been generated' or similar.\n"
     "   - Examples: 'create a new lead', 'generate task for follow-up', 'schedule meeting', 'create note'.\n"
     "   - REQUIRED: content_type ('lead', 'task', 'meeting', or 'note'), prompt (user's instruction).\n"
     "   - OPTIONAL: template_title, template_content, context.\n"
-    "4) Use MULTIPLE tools together when question needs different operations.\n"
+    "8) Use MULTIPLE tools together when question needs different operations.\n"
     "   - Example: 'Show task counts by priority (mongo_query) and find related notes (rag_search)'.\n"
     "   - Agent decides tool combination based on query complexity and dependencies.\n\n"
     "TOOL CHEATSHEET:\n"
@@ -217,6 +416,11 @@ DEFAULT_SYSTEM_PROMPT = (
     "  REQUIRED: 'business_type' - type of business (e.g., 'textile businesses'), 'city' - city name (e.g., 'Hyderabad').\n"
     "  OPTIONAL: 'area' - specific locality, 'max_leads' - limit results (default 100, max 100).\n"
     "  CAPABILITIES: Google Maps search, structured data extraction (name, address, phone, email, etc.), progress streaming.\n"
+    "- import_leads_tool(reason:str=''): Open CRM import UI for previously generated leads. STOP after calling this.\n"
+    "  REQUIRED: None (uses leads from most recent lead_enrichment call)\n"
+    "  USE FOR: Importing leads AFTER they've been found/generated\n"
+    "  BEHAVIOR: Retrieves leads from cache, sends signal to frontend, returns '__LEADS_READY_FOR_IMPORT__' to stop execution\n\n"
+
     "CONTENT TYPE ROUTING EXAMPLES:\n"
     "- 'What leads are about?' → rag_search(query='leads', content_type='lead')\n"
     "- 'What are recent tasks about?' → rag_search(query='recent tasks', content_type='task')\n"
@@ -261,6 +465,15 @@ DEFAULT_SYSTEM_PROMPT = (
     "- If user asks for 'next page', 'fetch more', 'page 2', 'show more' → modify the query to include skip/offset.\n"
     "- Examples: 'show next page' → add 'skip 50' or 'page 2' to the original query.\n"
     "- Always inform user about total count and offer to fetch more when pagination is available.\n\n"
+    "RESPONSE FORMATTING (CRITICAL):\n"
+    "- ALWAYS format your responses using **markdown** for maximum readability.\n"
+    "- Use headings (##, ###) to organize sections and break up content.\n"
+    "- Use **bold** for emphasis on key terms, numbers, and important concepts.\n"
+    "- Use code blocks (```language) for queries, code, or technical output.\n"
+    "- Use tables (| column |) when presenting structured data comparisons.\n"
+    "- Use horizontal rules (---) to separate distinct sections when appropriate.\n"
+    "- Use blockquotes (>) for important notes, warnings, or highlights.\n"
+    "- Keep paragraphs short (2-3 sentences max) for better scanning.\n\n"
     "Respond with tool calls first, then synthesize a concise answer grounded ONLY in tool outputs."
 )
 
@@ -348,7 +561,7 @@ def _select_tools_for_query(user_query: str):
     - Let the LLM decide routing based on instructions; no keyword gating.
     - Add CRM-specific query analysis hints for better tool selection.
     """
-    allowed_names = ["mongo_query", "rag_search", "generate_content", "lead_enrichment_tool"]
+    allowed_names = ["mongo_query", "rag_search", "generate_content", "lead_enrichment_tool","import_leads_tool"]
     selected_tools = [tool for name, tool in _TOOLS_BY_NAME.items() if name in allowed_names]
     if not selected_tools and "mongo_query" in _TOOLS_BY_NAME:
         selected_tools = [_TOOLS_BY_NAME["mongo_query"]]
@@ -481,8 +694,13 @@ class AgentExecutor:
                     args["user_id"] = user_id
 
                 tool_name = tool_call.get("name", "unknown")
+                logger.info(f"[_execute_single_tool] Executing tool: {tool_name}")
+                logger.info(f"[_execute_single_tool] Tool args: {args}")
                 
                 result = await actual_tool.ainvoke(args)
+
+                logger.info(f"[_execute_single_tool] Tool result type: {type(result)}")
+                logger.info(f"[_execute_single_tool] Tool result preview: {str(result)[:200]}")
                 
                 # Validate result is not None
                 if result is None:
@@ -508,6 +726,8 @@ class AgentExecutor:
                 tool_call_id=tool_call["id"],
             )
             tool_elapsed_ms = (perf_counter() - tool_start_time) * 1000
+            logger.info(f"[_execute_single_tool] Tool completed in {tool_elapsed_ms:.1f}ms")
+            logger.info(f"[_execute_single_tool] Success: {success}")
             return tool_message, success
 
     async def connect(self):
@@ -543,7 +763,6 @@ class AgentExecutor:
         business_id: Optional[str] = None
     ) -> AsyncGenerator[str, None]:
         """Run the agent with streaming support and conversation context"""
-        # Set websocket context for business filtering
         if business_id:
             try:
                 import websocket_handler
@@ -579,6 +798,15 @@ class AgentExecutor:
                 # Get conversation history (cached per session with async refresh)
                 conversation_context = await conversation_memory.get_recent_context(conversation_id)
 
+                is_lead_enrichment, clarified_query = preprocess_lead_enrichment_query(query)
+        
+                if is_lead_enrichment and clarified_query:
+                    logger.info(f"[run_streaming] Using clarified query for lead enrichment")
+                    # Use clarified query to help LLM choose correct tool
+                    query_for_llm = clarified_query
+                else:
+                    query_for_llm = query
+
                 # Build messages with optional system instruction
                 messages: List[BaseMessage] = []
                 if self.system_prompt:
@@ -587,7 +815,7 @@ class AgentExecutor:
                 messages.extend(conversation_context)
 
                 # Add current user message
-                human_message = HumanMessage(content=query)
+                human_message = HumanMessage(content=query_for_llm)
                 messages.append(human_message)
 
                 # Skip guardrails checks - all queries are allowed now
@@ -613,11 +841,35 @@ class AgentExecutor:
 
                     with (llm_cm if llm_cm is not None else contextlib.nullcontext()) as llm_span:
                         pass
+                        query_lower = query.lower()
+                        routing_hint = ""
+                        
+                        # Detect lead enrichment requests
+                        if any(keyword in query_lower for keyword in ['find', 'get', 'search', 'extract']) and \
+                        any(entity in query_lower for entity in ['lead', 'business', 'company', 'shop', 'store', 'restaurant']):
+                            routing_hint = (
+                                "\n\nROUTING HINT FOR THIS QUERY:\n"
+                                "This appears to be a BUSINESS SEARCH request. You MUST use 'lead_enrichment_tool' to search for REAL businesses.\n"
+                                "- DO NOT use 'generate_content' - that's for creating fictional/template entities\n"
+                                "- DO NOT use 'mongo_query' - that's for querying existing CRM data\n"
+                                "- DO NOT use 'rag_search' - that's for content-based searches\n"
+                                "- USE 'lead_enrichment_tool' to find actual businesses using Google Maps\n"
+                            )
+                        
+                        # Detect import requests
+                        elif any(keyword in query_lower for keyword in ['import', 'save to crm', 'add to crm']):
+                            routing_hint = (
+                                "\n\nROUTING HINT FOR THIS QUERY:\n"
+                                "This appears to be an IMPORT request. You MUST use 'import_leads_tool'.\n"
+                                "- This tool retrieves previously generated leads from cache\n"
+                                "- After calling this tool, STOP execution immediately\n"
+                            )
                         routing_instructions = SystemMessage(content=(
                             "PLANNING & ROUTING:\n"
                             "- Break the user request into logical steps.\n"
                             "- For INDEPENDENT operations: Call multiple tools together.\n"
-                            "- For DEPENDENT operations: Call tools separately (wait for results before next call).\n\n"
+                            "- For DEPENDENT operations: Call tools separately (wait for results before next call).\n"
+                            +routing_hint+"\n\n"
                             "RESPONSE FORMATTING (CRITICAL):\n"
                             "- ALWAYS format your responses using **markdown** for maximum readability.\n"
                             "- Use headings (##, ###) to organize sections and break up content.\n"
@@ -762,6 +1014,23 @@ class AgentExecutor:
                             )
                             main_llm_elapsed_ms = (perf_counter() - main_llm_start_time) * 1000
                             log_msg_type = "Final Synthesis" if is_finalizing else "Tool Planning"
+                            if getattr(response, "tool_calls", None):
+                                original_calls = response.tool_calls
+                                corrected_calls, was_corrected = validate_and_correct_tool_usage(original_calls, query)
+                                
+                                if was_corrected:
+                                    logger.info(f"[run_streaming] Tool usage auto-corrected")
+                                    # Update response with corrected calls
+                                    response.tool_calls = corrected_calls
+                                    
+                                    # Optionally send a message to user about correction
+                                    if callback_handler:
+                                        try:
+                                            await callback_handler.on_llm_new_token(
+                                                "\n\n_[System: Correcting tool selection for better results...]_\n\n"
+                                            )
+                                        except Exception:
+                                            pass
                             # Cache response for non-streaming calls (tool planning)
                             if not should_stream:
                                 _llm_response_cache.set(cache_key, response)
@@ -871,7 +1140,20 @@ class AgentExecutor:
                                     pass
                             
                             tool_message, success = await self._execute_single_tool(None, tool_call, selected_tools, None, user_id=user_id, business_id=business_id)
-                            
+                            logger.info(f"[run_streaming] Tool message content: '{tool_message.content}'")
+                            logger.info(f"[run_streaming] Checking for import signal...")
+
+                            if tool_message.content == "__LEADS_READY_FOR_IMPORT__":
+                                logger.info("[run_streaming] ========== IMPORT SIGNAL DETECTED ==========")
+                                logger.info("[run_streaming] Stopping agent execution immediately")
+                                # Import UI was triggered - STOP execution immediately
+                                if callback_handler:
+                                    try:
+                                        await callback_handler.on_tool_end("Opening import UI...")
+                                    except Exception:
+                                        pass
+                                return
+
                             # Validate tool message content
                             if not tool_message.content:
                                 tool_message.content = "Tool returned empty result"
@@ -916,6 +1198,8 @@ class AgentExecutor:
 
         except Exception as e:
             yield f"Error running streaming agent: {str(e)}"
+
+
 
 async def main():
     """Example usage of the ProjectManagement Insights Agent"""

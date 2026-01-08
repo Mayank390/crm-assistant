@@ -11,6 +11,7 @@ from glob import glob
 from datetime import datetime
 from agent.orchestrator import Orchestrator, StepSpec, as_async
 from qdrant.initializer import RAGTool
+from mongo.constants import uuid_str_to_mongo_binary
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -1251,6 +1252,8 @@ async def mongo_query(
     Returns: A compact result suitable for direct user display. Results are automatically
     formatted based on query type: lists, counts, grouped results, or trend/aggregated data.
     """
+    print("🔥 USING mongo_query FROM:", __file__)
+
     print(f"\n🔧 [TOOL] mongo_query() EXECUTING")
     print(f"   Input: query='{query}', show_all={show_all}")
     
@@ -1263,6 +1266,12 @@ async def mongo_query(
         # Resolve context ids for token tracking
         resolved_business_id = business_id
         resolved_user_id = user_id
+
+        if resolved_business_id:
+            try:
+                resolved_business_id = uuid_str_to_mongo_binary(resolved_business_id)
+            except ValueError as e:
+                raise RuntimeError(f"Invalid business_id UUID: {e}")
         if not resolved_business_id or not resolved_user_id:
             try:
                 import websocket_handler as root_ws
@@ -1287,8 +1296,17 @@ async def mongo_query(
         if len(query.strip()) == 0:
             return "❌ Invalid query: query cannot be empty."
         
+        print("DEBUG resolved_business_id =", resolved_business_id)
+        
+        if resolved_business_id is None:
+            raise ValueError(
+                "business_id is required for this query but was not resolved. "
+                "Multi-tenant queries must always be business-scoped."
+            )
+        
         result = await plan_and_execute_query(query, business_id=resolved_business_id, user_id=resolved_user_id)
         print(result)
+        formatted_result: Optional[str] = None
         # Validate result structure
         if not isinstance(result, dict):
             return f"❌ Unexpected result format from query planner: {type(result)}"
@@ -1302,6 +1320,29 @@ async def mongo_query(
             
             # Get parsed intent
             intent = result.get("intent")
+            response_parts=[]
+            if formatted_result:
+                response_parts.append(formatted_result)
+            if intent.get("needs_pipeline_analytics"):
+                pipeline_name = intent["filters"].get("name")
+
+                if pipeline_name:
+                    analytics_query = (
+                        f"count leads for this business grouped by type and pipelineStage.stageName "
+                        f"where pipeline.name is {pipeline_name}"
+                    )
+
+                    analytics_result = await plan_and_execute_query(
+                        analytics_query,
+                        business_id=resolved_business_id,
+                        user_id=resolved_user_id
+                    )
+
+                    response_parts.append(
+                        format_lead_analytics(analytics_result)
+                    )
+
+                return "\n\n".join(response_parts)
             if not intent:
                 return "❌ Query planner did not return intent information."
             
@@ -1361,6 +1402,38 @@ async def mongo_query(
             else:
                 # Not a list, filter as before
                 filtered = parsed
+
+            def format_lead_analytics(analytics_result: dict) -> str:
+                """
+                Format lead analytics (grouped by type + pipeline stage)
+                into deterministic, LLM-safe text.
+                """
+                if not analytics_result or not analytics_result.get("success"):
+                    return "\n📊 Lead Distribution:\nNo lead analytics available."
+
+                data = analytics_result.get("result")
+
+                if not data or not isinstance(data, list):
+                    return "\n📊 Lead Distribution:\nNo leads are currently assigned to this pipeline."
+
+                lines = ["\n📊 Lead Distribution:"]
+
+                for item in data:
+                    if not isinstance(item, dict):
+                        continue
+
+                    _id = item.get("_id", {})
+                    count = item.get("count", 0)
+
+                    lead_type = _id.get("type", "Unknown")
+                    stage = _id.get("pipelineStage.stageName", "Unknown Stage")
+
+                    lines.append(f"• {lead_type} → {stage}: {count}")
+
+                if len(lines) == 1:
+                    return "\n📊 Lead Distribution:\nNo leads are currently assigned to this pipeline."
+
+                return "\n".join(lines)
 
 
             def format_llm_friendly(data, max_items=50, primary_entity: Optional[str] = None):
@@ -1693,6 +1766,40 @@ async def mongo_query(
                             base += f", active={is_active}"
                         if business_name:
                             base += f", business={business_name}"
+                        return base
+                    if e == "pipeline":
+                        name = entity.get("name")
+                        description = entity.get("description")
+                        is_default = entity.get("isDefault")
+                        is_active = entity.get("isActive")
+                        created_at = entity.get("createdAt")
+                        updated_at = entity.get("updatedAt")
+                        created_by = get_nested(entity, "createdBy.name")
+                        updated_by = get_nested(entity, "lastUpdatedBy.name")
+
+                        base = f"• {name or 'Pipeline'}"
+
+                        if description:
+                            base += f"\n  Description: {truncate_str(description, 120)}"
+
+                        if is_default is not None:
+                            base += f"\n  Default: {'Yes' if is_default else 'No'}"
+
+                        if is_active is not None:
+                            base += f"\n  Active: {'Yes' if is_active else 'No'}"
+
+                        if created_by:
+                            base += f"\n  Created By: {created_by}"
+
+                        if created_at:
+                            base += f"\n  Created At: {created_at}"
+
+                        if updated_by:
+                            base += f"\n  Updated By: {updated_by}"
+
+                        if updated_at:
+                            base += f"\n  Updated At: {updated_at}"
+
                         return base
                     
                     # Default fallback
@@ -2614,33 +2721,27 @@ tools = [
 # Import lead_enrichment after tools list is defined to avoid circular import
 try:
     from agent.lead_enrichment import lead_enrichment
+    from agent.import_leads import import_leads_tool
 
     @tool
-    async def lead_enrichment_tool(business_type: str, city: str, area: str = "", max_leads: Optional[int] = None) -> str:
+    async def lead_enrichment_tool(business_type: str, city: str, area: str = "", max_leads: Optional[int] = None,user_query:str="") -> str:
         """
         Extract Indian business leads with 99.9% location accuracy.
         Use max_leads to control count (e.g. 15, 30, 50).
         """
+        logger.info(f"[lead_enrichment_tool] Called with: business_type={business_type}, city={city}, area={area}, max_leads={max_leads}")
+        logger.info(f"[lead_enrichment_tool] User query: '{user_query}'")
         try:
-            return await lead_enrichment.ainvoke({"business_type": business_type, "area": area, "city": city, "max_leads": max_leads})
+            result= await lead_enrichment.ainvoke({"business_type": business_type, "area": area, "city": city, "max_leads": max_leads,"user_query":user_query})
+            logger.info(f"[lead_enrichment_tool] Result type: {type(result)}")
+            logger.info(f"[lead_enrichment_tool] Result preview: {str(result)[:200]}")
+            return result
         except Exception as e:
-            logger.error(f"lead_enrichment tool failed: {e}")
+            logger.error(f"[lead_enrichment_tool] Error: {e}", exc_info=True)
             return f"Lead tool error: {e}"
 
     tools.append(lead_enrichment_tool)
-    logger.info("lead_enrichment tool registered")
+    tools.append(import_leads_tool)
+    logger.info("lead_enrichment and import lead tool registered")
 except ImportError as e:
-    logger.warning("lead_enrichment failed to import", exc_info=True)
-
-# import asyncio
-
-# if __name__ == "__main__":
-#     async def main():
-#         # Test the tools    
-#         while True:
-#             question = input("Enter your question: ")
-#             if question.lower() in ['exit', 'quit']:
-#                 break
-
-
-#     asyncio.run(main())
+    logger.warning("lead_enrichment/import_leads failed to import", exc_info=True)

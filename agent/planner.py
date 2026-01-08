@@ -30,6 +30,7 @@ from agent.orchestrator import Orchestrator, StepSpec, as_async
 
 
 
+
 from dotenv import load_dotenv
 load_dotenv()
 groq_api_key = os.getenv("GROQ_API_KEY")
@@ -54,6 +55,8 @@ class QueryIntent:
     wants_details: bool  # Prefer detailed documents over counts
     wants_count: bool  # Whether the user asked for a count
     fetch_one: bool  # Whether the user wants a single specific item
+    business_id: Optional[str] = None
+    user_id: Optional[str] = None
     # Advanced aggregation fields
     needs_pattern_analysis: bool = False  # Whether this query requires pattern analysis using both mongo_query and rag_search
 
@@ -147,17 +150,25 @@ class Planner:
                 return True
 
             async def _parse_intent(ctx: Dict[str, Any]) -> Optional[QueryIntent]:
-                return await self.llm_parser.parse(
+                intent= await self.llm_parser.parse(
                     ctx["query"], 
                     business_id=ctx.get("business_id"), 
                     user_id=ctx.get("user_id")
                 )  # type: ignore[index]
+                if not intent:
+                    return None
+                if ctx.get("business_id") and not intent.business_id:
+                    intent.business_id = ctx["business_id"]
+                if ctx.get("user_id") and not intent.user_id:
+                    intent.user_id = ctx["user_id"]
+                return intent
 
             def _parse_validator(result: Any, _ctx: Dict[str, Any]) -> bool:
                 return result is not None
 
             def _generate_pipeline(ctx: Dict[str, Any]) -> List[Dict[str, Any]]:
                 intent = ctx.get("intent")
+
                 if not intent:
                     raise ValueError("Intent is required for pipeline generation")
                 if not isinstance(intent, QueryIntent):
@@ -166,9 +177,9 @@ class Planner:
                 if not intent.primary_entity:
                     raise ValueError("Intent must have a primary_entity")
                 
-                 # Create generator with business_id from context
+                # Create generator with business_id from context
+                return self.generator.generate_pipeline(intent)
 
-                return self.generator.generate_pipeline(intent)  # type: ignore[index]
             
 
             async def _execute(ctx: Dict[str, Any]) -> Any:

@@ -18,6 +18,8 @@ from mongo.conversations import save_user_message
 import os
 import contextlib
 from time import perf_counter
+import httpx
+from agent.lead_enrichment import _coords_cache
 load_dotenv()
 
 # Import lead_support_agent websocket_handler to make its globals available
@@ -33,6 +35,10 @@ except ImportError:
 
 # Configure logging
 logger = logging.getLogger(__name__)
+IMPORT_INTENT_RE = re.compile(
+    r'\b(import|save|add)\b.*\b(crm)\b',
+    re.IGNORECASE
+)
 
 class StreamingCallbackHandler(AsyncCallbackHandler):
     """Callback handler for streaming LLM responses"""
@@ -102,6 +108,7 @@ class WebSocketManager:
 
     def __init__(self):
         self.active_connections: Dict[str, WebSocket] = {}
+        self.recent_leads: Dict[str, dict] = {}
 
     async def connect(self, websocket: WebSocket, user_id: str):
         """Accept and store a new WebSocket connection"""
@@ -129,11 +136,23 @@ class WebSocketManager:
             except Exception as e:
                 logger.error(f"Error broadcasting to {user_id}: {e}")
 
+    def set_recent_leads(self,user_id: str,payload: dict):
+        """Store recent leads for a user"""
+        self.recent_leads[user_id] = payload
+    def get_recent_leads(self,user_id: str) -> dict | None:
+        """Retrieve recent leads for a user"""
+        return self.recent_leads.get(user_id)
+    def get_user_id_by_ws(self, websocket: WebSocket) -> str | None:
+        for uid, ws in self.active_connections.items():
+            if ws is websocket:
+                return uid
+        return None
 # Global WebSocket manager instance
 ws_manager = WebSocketManager()
 
 user_id_global = None
 business_id_global = None
+
 
 async def handle_chat_websocket(websocket: WebSocket, mongodb_agent):
     """Handle WebSocket chat connections with streaming"""
@@ -149,7 +168,6 @@ async def handle_chat_websocket(websocket: WebSocket, mongodb_agent):
         }
 
         # Set a timeout for handshake completion (30 seconds)
-        import asyncio
         handshake_timeout = 30
         handshake_timer = None
         authenticated = False
@@ -227,6 +245,10 @@ async def handle_chat_websocket(websocket: WebSocket, mongodb_agent):
                     "timestamp": datetime.now().isoformat()
                 })
                 continue
+            #Handle lead import request
+            if data.get("type") == "import_leads":
+                await handle_import_leads(websocket, data, user_context)
+                continue
 
             # Check if handshake has been completed
             if not authenticated:
@@ -253,6 +275,7 @@ async def handle_chat_websocket(websocket: WebSocket, mongodb_agent):
             message = data.get("message", "")
             conversation_id = data.get("conversation_id") or f"conv_{user_id}"
             force_planner = data.get("planner", False)
+
 
             # Handle new vs existing conversations
             from agent.memory import conversation_memory
@@ -343,12 +366,12 @@ async def handle_chat_websocket(websocket: WebSocket, mongodb_agent):
                     # Clean up websocket reference after completion
                     from agent.tools import set_generation_websocket
                     set_generation_websocket(None)
-            total_elapsed_ms = (perf_counter() - message_start_time) * 1000
-            await websocket.send_json({
-                "type": "complete",
-                "conversation_id": conversation_id,
-                "timestamp": datetime.now().isoformat()
-            })
+                total_elapsed_ms = (perf_counter() - message_start_time) * 1000
+                await websocket.send_json({
+                    "type": "complete",
+                    "conversation_id": conversation_id,
+                    "timestamp": datetime.now().isoformat()
+                })
 
     except WebSocketDisconnect:
         # Cancel handshake timer if it exists
@@ -368,4 +391,135 @@ async def handle_chat_websocket(websocket: WebSocket, mongodb_agent):
             })
         if user_context["user_id"]:
             ws_manager.disconnect(user_context["user_id"])
+
+async def handle_import_leads(websocket: WebSocket, data: dict, user_context: dict):
+    """Handle lead import to CRM via bulk-create API"""
+    try:
+        leads_data = data.get("leads", [])
+        pipeline_id = data.get("pipeline_id")
+        staff_id = user_context.get("user_id")
+        business_id = user_context.get("businessId")
+        
+        if not leads_data:
+            await websocket.send_json({
+                "type": "import_error",
+                "message": "No leads data provided",
+                "timestamp": datetime.now().isoformat()
+            })
+            return
+        
+        if not pipeline_id:
+            await websocket.send_json({
+                "type": "import_error",
+                "message": "Pipeline ID is required",
+                "timestamp": datetime.now().isoformat()
+            })
+            return
+        logger.info(f"[handle_import_leads] Starting import of {len(leads_data)} leads to pipeline {pipeline_id}")
+        
+        # Transform leads to match bulk-create API format
+        transformed_leads = []
+        for lead in leads_data:
+            transformed_lead = {
+                "businessId": business_id,
+                "staffId": staff_id,
+                "personalInfo": {
+                    "name": lead.get("name", ""),
+                    "mobile": lead.get("phone", ""),
+                    "email": lead.get("email"),
+                },
+                "address": {
+                    "addressLine1": lead.get("address", ""),
+                },
+                "pipeline": {
+                    "id": pipeline_id
+                },
+                "type": "LEAD",
+                "leadActiveType": "ACTIVE",
+                "moreInfo": {
+                    "source": lead.get("source", "google_maps"),
+                    "rating": str(lead.get("rating", "")),
+                    "total_reviews": str(lead.get("total_reviews", "")),
+                    "url": lead.get("url", ""),
+                }
+            }
+            
+            # Add geolocation if available
+            if lead.get("geo"):
+                try:
+                    lat, lng = lead["geo"].split(",")
+                    transformed_lead["address"]["geolocation"] = {
+                        "latitude": float(lat),
+                        "longitude": float(lng)
+                    }
+                except:
+                    pass
+            
+            transformed_leads.append(transformed_lead)
+        
+        # Get API base URL from environment
+        api_base_url = 'https://stage-api.simpo.ai/crm'
+        if not api_base_url:
+            logger.error("[handle_import_leads] CRM_API_BASE_URL not configured")
+            await websocket.send_json({
+                "type": "import_error",
+                "message": "CRM API is not configured. Please contact support.",
+                "timestamp": datetime.now().isoformat()
+            })
+            return
+        
+        # Call bulk-create API
+        logger.info(f"[handle_import_leads] Calling CRM API: {api_base_url}/leads/bulk-create")
+        
+        # Call bulk-create API
+        async with httpx.AsyncClient(timeout=60.0) as client:
+            response = await client.post(
+                "https://stage-api.simpo.ai/crm/leads/bulk-create",
+                json={"leadList": transformed_leads},
+                headers={
+                    "Content-Type": "application/json",
+                }
+            )
+            logger.info(f"[handle_import_leads] API response status: {response.status_code}")
+            if response.status_code == 200:
+                result = response.json()
+                await websocket.send_json({
+                    "type": "import_success",
+                    "message": f"Successfully imported {len(transformed_leads)} leads to CRM",
+                    "count": len(transformed_leads),
+                    "data": result.get("data"),
+                    "timestamp": datetime.now().isoformat()
+                })
+                logger.info(f"[handle_import_leads] Successfully imported {len(transformed_leads)} leads")
+            else:
+                error_text = response.text[:500]  # Limit error text length
+                logger.error(f"[handle_import_leads] API error {response.status_code}: {error_text}")
+                await websocket.send_json({
+                    "type": "import_error",
+                    "message": f"API error: {response.status_code}",
+                    "details": response.text,
+                    "timestamp": datetime.now().isoformat()
+                })
+                
+    except httpx.TimeoutException as e:
+        logger.error(f"[handle_import_leads] Timeout error: {e}")
+        await websocket.send_json({
+            "type": "import_error",
+            "message": "Request timed out. Please try again.",
+            "timestamp": datetime.now().isoformat()
+        })
+    except httpx.RequestError as e:
+        logger.error(f"[handle_import_leads] Request error: {e}")
+        await websocket.send_json({
+            "type": "import_error",
+            "message": "Connection error. Please check your network.",
+            "timestamp": datetime.now().isoformat()
+        })
+    except Exception as e:
+        logger.error(f"[handle_import_leads] Unexpected error: {e}", exc_info=True)
+        await websocket.send_json({
+            "type": "import_error",
+            "message": str(e),
+            "timestamp": datetime.now().isoformat()
+        })
 

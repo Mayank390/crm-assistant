@@ -147,6 +147,15 @@ REL: Dict[str, Dict[str, dict]] = {
             "many": False
         },
     },
+    "pipeline": {
+        "business": {
+            "target": "business",
+            "localField": "business._id",
+            "foreignField": "_id",
+            "as": "business",
+            "many": False
+            }
+    },
 }
 
 # ---- Collections (one source of truth)
@@ -200,6 +209,10 @@ ALLOWED_FIELDS: Dict[str, Set[str]] = {
     "segmentation": {
         "_id", "name", "description", "conditions", "tags", "isActive", "business", "business._id",
         "business.name", "createdAt", "updatedAt"
+    },
+    "pipeline": {
+        "_id", "name", "description", "stages", "createdAt", "updatedAt","business", "business._id", "business.name","isActive",
+        "isDefault","createdBy", "createdBy.name","lastUpdatedBy", "lastUpdatedBy.name"
     },
     
 }

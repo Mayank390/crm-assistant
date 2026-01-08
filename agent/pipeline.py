@@ -135,13 +135,57 @@ class PipelineGenerator:
 
         # Start with the primary collection
         collection = intent.primary_entity
+
+        if collection == "pipeline" and "lead" in intent.target_entities:
+            # Switch physical collection to Lead for analytics
+            collection = "Lead"
+        if collection == "Lead" and "pipeline" in intent.primary_entity.lower():
+            pipeline_name = intent.filters.get("name")
+            if pipeline_name:
+                intent.filters["pipeline.name"] = pipeline_name
+
+        if collection == "pipeline":
+            if not intent.business_id:
+                raise RuntimeError("pipeline queries require business_id")
+            return [
+                # Only active pipelines
+                {"$match": {
+                    "business._id": intent.business_id,
+                    "isActive": True
+                    }
+                },
+
+                # Clean projection for LLM / UI
+                {
+                    "$project": {
+                       "_id": 1,
+                        "name": 1,
+                        "description": 1,
+                        "isDefault": 1,
+                        "isActive": 1,
+                        "createdAt": 1,
+                        "updatedAt": 1,
+                        "createdBy.name": 1,
+                        "lastUpdatedBy.name": 1
+                    }
+                },
+
+                # Optional sorting
+                {"$sort": {"createdAt": -1}},
+
+                # Limit results to 50 max for performance
+                {"$limit": min(intent.limit or 50, 50)}
+            ]
         
+
+
         #start with required relations
         required_relations: Set[str] = set()
 
         # Build sanitized filters once
         primary_filters = self._extract_primary_filters(intent.filters, collection) if intent.filters else {}
         secondary_filters = self._extract_secondary_filters(intent.filters, collection) if intent.filters else {}
+
 
         if collection == "Lead":
             inferred_type = self._infer_lead_type_from_intent(intent)
@@ -1249,6 +1293,9 @@ class PipelineGenerator:
             "leadScoreRule": [
                 "name", "description", "score", "change", "field", "operator", "value", "isActive", "createdAt", "updatedAt"
             ],
+            "pipeline": [
+                "name","description","isActive","isDefault","createdAt","updatedAt","createdBy.name","lastUpdatedBy.name"
+            ],
         }
 
         candidates = defaults_map.get(primary_entity, ["_id"])  # fallback _id
@@ -1408,116 +1455,4 @@ class PipelineGenerator:
         # Some bucket_expr entries may be None if field not applicable
         return val if val is not None else None
     
-    def pipeline_breakdown(self) -> list[dict]:
-        """
-        Returns all currently available pipelines.
-        Used for queries like:
-        - pipeline breakdown
-        - list pipelines
-        - show available pipelines
-        """
-        match_filter = {"isActive": True}
-        
-        # Add business filter if business_id is available
-        if self.business_id:
-            match_filter["business._id"] = self.business_id
-        return [
-            {
-                "$match": match_filter
-            },
-            {
-                "$project": {
-                    "_id": 1,
-                    "name": 1,
-                    "description": 1,
-                    "isActive": 1,
-                    "createdAt": 1,
-                    "createdBy": 1,
-                    "assignedStaff":1
 
-                }
-            },
-            {
-                "$sort": { "createdAt": -1 }
-            }
-        ]
-    
-    # --------------------------------------------------
-    # PIPELINE DETAILS (FULL ANALYTICS)
-    # --------------------------------------------------
-    def pipeline_details(self, pipeline_name: str) -> List[Dict]:
-        """
-        Full breakdown for a specific pipeline:
-        - total leads
-        - type split (LEAD / PROSPECT / CUSTOMER)
-        - stage → status → counts
-        """
-        match_filter = {"pipeline.name": pipeline_name}
-        
-        # Add business filter if business_id is available
-        if self.business_id:
-            match_filter["business._id"] = self.business_id
-
-        return [
-            # 🔹 Filter by pipeline
-            {
-                "$match": match_filter            },
-
-            # 🔹 Group by stage + status + type
-            {
-                "$group": {
-                    "_id": {
-                        "stage": "$pipelineStage.stageName",
-                        "status": "$pipelineStage.statusName",
-                        "type": "$type"
-                    },
-                    "count": { "$sum": 1 }
-                }
-            },
-
-            # 🔹 Regroup by stage + status
-            {
-                "$group": {
-                    "_id": {
-                        "stage": "$_id.stage",
-                        "status": "$_id.status"
-                    },
-                    "byType": {
-                        "$push": {
-                            "type": "$_id.type",
-                            "count": "$count"
-                        }
-                    },
-                    "total": { "$sum": "$count" }
-                }
-            },
-
-            # 🔹 Regroup by stage
-            {
-                "$group": {
-                    "_id": "$_id.stage",
-                    "stageTotal": { "$sum": "$total" },
-                    "statuses": {
-                        "$push": {
-                            "status": "$_id.status",
-                            "total": "$total",
-                            "byType": "$byType"
-                        }
-                    }
-                }
-            },
-
-            # 🔹 Final shape
-            {
-                "$project": {
-                    "_id": 0,
-                    "stage": "$_id",
-                    "stageTotal": 1,
-                    "statuses": 1
-                }
-            },
-
-            {
-                "$sort": { "stage": 1 }
-            }
-        ]
